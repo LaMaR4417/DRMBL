@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minor Player Waiver - DRMBL</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1c1c1c;
+            background: #fff;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .waiver-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #1c1c1c;
+            padding-bottom: 20px;
+        }
+
+        .waiver-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .waiver-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .waiver-header p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .waiver-section {
+            margin-bottom: 24px;
+        }
+
+        .waiver-section h3 {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 4px;
+        }
+
+        .waiver-section p {
+            margin-bottom: 10px;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 0;
+            margin-bottom: 16px;
+        }
+
+        .field {
+            flex: 1;
+            padding: 0 20px;
+            border-right: 1px solid #ccc;
+        }
+
+        .field:first-child {
+            padding-left: 0;
+        }
+
+        .field:last-child {
+            padding-right: 0;
+            border-right: none;
+        }
+
+        .field label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .field .line {
+            border-bottom: 1px solid #1c1c1c;
+            height: 28px;
+        }
+
+        .field input {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #1c1c1c;
+            height: 28px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            background: none;
+        }
+
+        .waiver-text {
+            background: #f5f5f5;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .waiver-text ol {
+            padding-left: 20px;
+        }
+
+        .waiver-text li {
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .waiver-text li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .signature-section {
+            margin-top: 40px;
+        }
+
+        .signature-row {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+        }
+
+        .signature-field {
+            flex: 1;
+            padding: 0 20px;
+            border-right: 1px solid #ccc;
+        }
+
+        .signature-field:first-child {
+            padding-left: 0;
+        }
+
+        .signature-field:last-child {
+            padding-right: 0;
+            border-right: none;
+        }
+
+        .signature-field label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .signature-field .line {
+            border-bottom: 1px solid #1c1c1c;
+            height: 40px;
+        }
+
+        .signature-field input {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #1c1c1c;
+            height: 40px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            background: none;
+        }
+
+        .notice {
+            margin-top: 30px;
+            padding: 12px;
+            border: 1px solid #1c1c1c;
+            font-size: 12px;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @media print {
+            @page {
+                margin: 0;
+            }
+
+            body {
+                padding: 15px 20px;
+                font-size: 12px;
+                line-height: 1.4;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .waiver-header {
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+            }
+
+            .waiver-header h1 {
+                font-size: 20px;
+            }
+
+            .waiver-header h2 {
+                font-size: 15px;
+            }
+
+            .waiver-section {
+                margin-bottom: 14px;
+            }
+
+            .waiver-section h3 {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+
+            .field-row {
+                margin-bottom: 10px;
+            }
+
+            .field .line {
+                height: 22px;
+            }
+
+            .field input {
+                height: 22px;
+                font-size: 12px;
+            }
+
+            .field label {
+                font-size: 9px;
+                margin-bottom: 2px;
+            }
+
+            .waiver-text {
+                padding: 10px;
+                font-size: 11px;
+                margin-bottom: 10px;
+            }
+
+            .waiver-text li {
+                padding-bottom: 6px;
+                margin-bottom: 6px;
+            }
+
+            .signature-section {
+                margin-top: 20px;
+            }
+
+            .signature-row {
+                margin-bottom: 16px;
+            }
+
+            .signature-field .line {
+                height: 30px;
+            }
+
+            .signature-field input {
+                height: 30px;
+                font-size: 12px;
+            }
+
+            .signature-field label {
+                font-size: 9px;
+                margin-bottom: 2px;
+            }
+
+            .notice {
+                margin-top: 16px;
+                padding: 8px;
+                font-size: 10px;
+            }
+        }
+
+        .print-btn {
+            display: block;
+            margin: 0 auto 30px;
+            padding: 12px 40px;
+            background: #c9302c;
+            color: #fff;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        .print-btn:hover {
+            background: #a02525;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn no-print" onclick="window.print()">Print / Save as PDF</button>
+
+    <div class="waiver-header">
+        <h1>Del Rio Men's Basketball League</h1>
+        <h2>Minor Player Waiver &amp; Parental Consent</h2>
+        <p>Spring 2026 Season</p>
+    </div>
+
+    <div class="waiver-section">
+        <h3>Player Information</h3>
+        <div class="field-row">
+            <div class="field">
+                <label>Player Full Name</label>
+                <input type="text" title="Player full name">
+            </div>
+            <div class="field" style="max-width: 200px;">
+                <label>Date of Birth</label>
+                <input type="text" title="Date of birth" placeholder="MM/DD/YYYY">
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label>Team Name</label>
+                <input type="text" title="Team name">
+            </div>
+            <div class="field">
+                <label>Player Phone Number</label>
+                <input type="tel" title="Player phone number">
+            </div>
+        </div>
+    </div>
+
+    <div class="waiver-section">
+        <h3>Parent / Guardian Information</h3>
+        <div class="field-row">
+            <div class="field">
+                <label>Parent / Guardian Full Name</label>
+                <input type="text" title="Parent or guardian full name">
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label>Phone Number</label>
+                <input type="tel" title="Phone number">
+            </div>
+            <div class="field">
+                <label>Email Address</label>
+                <input type="email" title="Email address">
+            </div>
+        </div>
+    </div>
+
+    <div class="waiver-section">
+        <h3>Waiver, Release &amp; Consent</h3>
+        <div class="waiver-text">
+            <p>By signing below, I, the undersigned parent or legal guardian of the above-named minor player, acknowledge and agree to the following:</p>
+            <ol>
+                <li>I grant permission for my child to participate in the Del Rio Men's Basketball League (DRMBL) Spring 2026 season, including all games, practices, and league-related activities.</li>
+                <li>I understand that basketball is a physical sport and that participation carries inherent risks of injury, including but not limited to sprains, fractures, concussions, and other bodily harm.</li>
+                <li>I voluntarily assume all risks associated with my child's participation and release DRMBL, its organizers, officials, volunteers, and the Boys &amp; Girls Club of Del Rio from any and all liability for injuries or damages sustained during league activities.</li>
+                <li>I confirm that my child is physically fit to participate and has no medical conditions that would prevent safe participation, or that appropriate medical clearance has been obtained.</li>
+                <li>I understand that <strong>valid photo identification may be required</strong> for the player at any game. League officials reserve the right to verify the identity and age of any player at any time during the season.</li>
+                <li>I agree to ensure this signed waiver is delivered <strong>in person</strong> to DRMBL league management before the player's first game.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="waiver-section signature-section">
+        <h3>Signatures</h3>
+        <div class="signature-row">
+            <div class="signature-field">
+                <label>Parent / Guardian Signature</label>
+                <div class="line"></div>
+            </div>
+            <div class="signature-field" style="max-width: 200px;">
+                <label>Date</label>
+                <input type="text" title="Date">
+            </div>
+        </div>
+        <div class="signature-row">
+            <div class="signature-field">
+                <label>Parent / Guardian Printed Name</label>
+                <input type="text" title="Parent or guardian printed name">
+            </div>
+        </div>
+    </div>
+
+    <div class="notice no-print">
+        This signed waiver must be presented in person to DRMBL league management before the player is eligible to play.<br>
+        Players may be asked to present valid photo ID at any game.
+    </div>
+
+    <script>
+        function formatPhone(input) {
+            var digits = input.value.replace(/\D/g, '').substring(0, 10);
+            var formatted = '';
+            if (digits.length > 0) formatted = '(' + digits.substring(0, 3);
+            if (digits.length >= 3) formatted += ') ' + digits.substring(3, 6);
+            if (digits.length >= 6) formatted += '-' + digits.substring(6);
+            input.value = formatted;
+        }
+
+        function formatDate(input) {
+            var digits = input.value.replace(/\D/g, '').substring(0, 8);
+            var formatted = '';
+            if (digits.length > 0) formatted = digits.substring(0, 2);
+            if (digits.length >= 2) formatted += '/' + digits.substring(2, 4);
+            if (digits.length >= 4) formatted += '/' + digits.substring(4);
+            input.value = formatted;
+        }
+
+        var phones = document.querySelectorAll('input[type="tel"]');
+        for (var i = 0; i < phones.length; i++) {
+            phones[i].addEventListener('input', function() { formatPhone(this); });
+        }
+
+        var dobField = document.querySelector('input[title="Date of birth"]');
+        dobField.addEventListener('input', function() { formatDate(this); });
+    </script>
+
+</body>
+</html>

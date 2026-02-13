@@ -1,0 +1,60 @@
+.placeholder-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 56px;
+}
+
+.placeholder-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.placeholder-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.placeholder-content h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.placeholder-content p {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 8px;
+}
+
+.placeholder-sub {
+    font-size: 15px !important;
+    color: rgba(255, 255, 255, 0.35) !important;
+    margin-bottom: 30px !important;
+}
+
+.placeholder-contact {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.placeholder-contact a {
+    color: var(--court-wood);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.placeholder-contact a:hover {
+    text-decoration: underline;
+}
+
+.nav-link.active {
+    color: var(--court-wood);
+}

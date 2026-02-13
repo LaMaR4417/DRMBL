@@ -1,3 +1,5 @@
 .claude/
 nul
 *.psd
+node_modules/
+.vercel/

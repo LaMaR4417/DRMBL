@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DRMBL - Del Rio Men's Basketball League</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/header.js"></script>
 </head>
 <body>
 
@@ -41,6 +42,11 @@
                 <div class="info-block">
                     <div class="label">Deadline</div>
                     <div class="value">March 20, 2026</div>
+                </div>
+                <div class="info-block info-block-cta">
+                    <a href="register.html" class="register-link">
+                        <div class="value">Register Now</div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -98,5 +104,9 @@
         &copy; 2026 Del Rio Men's Basketball League
     </footer>
 
+<script>
+    history.replaceState(null, '', window.location.pathname);
+    window.addEventListener('load', function() { setTimeout(function() { window.scrollTo(0, 0); }, 0); });
+</script>
 </body>
 </html>

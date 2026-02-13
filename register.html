@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - DRMBL</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/form.css">
+    <script src="js/header.js"></script>
+</head>
+<body>
+
+    <section class="form-page">
+        <div class="form-inner">
+            <h1 class="form-title">Team Registration</h1>
+            <hr class="section-rule">
+            <p class="form-subtitle">Spring 2026 Season &mdash; $275 / team + $25/game referee fee</p>
+            <p class="form-deadline">Registration closes March 20, 2026</p>
+
+            <form id="register-form">
+
+                <!-- Team Info -->
+                <fieldset class="form-section">
+                    <legend>Team Info</legend>
+                    <div class="form-group">
+                        <label for="team-name">Team Name <span class="req">*</span></label>
+                        <input type="text" id="team-name" name="team-name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="owner-name">Owner <span class="req">*</span></label>
+                            <input type="text" id="owner-name" name="owner-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="owner-phone">Phone Number <span class="req">*</span></label>
+                            <input type="tel" id="owner-phone" name="owner-phone" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="owner-email">Email <span class="req">*</span></label>
+                        <input type="email" id="owner-email" name="owner-email" required>
+                    </div>
+                </fieldset>
+
+                <!-- Roster -->
+                <fieldset class="form-section">
+                    <legend>Roster</legend>
+                    <p class="form-note">List your players below. You can add up to 12 players.</p>
+                    <div id="roster-list">
+                        <div class="roster-row">
+                            <span class="roster-num">1</span>
+                            <div class="roster-fields">
+                                <input type="text" name="player-1-name" placeholder="Full name *" required>
+                                <div class="dob-group">
+                                    <input type="text" name="player-1-mm" placeholder="MM" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-1-dd" placeholder="DD" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-1-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric" required>
+                                </div>
+                                <input type="tel" name="player-1-phone" placeholder="Phone (optional)">
+                            </div>
+                        </div>
+                        <div class="roster-row">
+                            <span class="roster-num">2</span>
+                            <div class="roster-fields">
+                                <input type="text" name="player-2-name" placeholder="Full name *" required>
+                                <div class="dob-group">
+                                    <input type="text" name="player-2-mm" placeholder="MM" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-2-dd" placeholder="DD" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-2-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric" required>
+                                </div>
+                                <input type="tel" name="player-2-phone" placeholder="Phone (optional)">
+                            </div>
+                        </div>
+                        <div class="roster-row">
+                            <span class="roster-num">3</span>
+                            <div class="roster-fields">
+                                <input type="text" name="player-3-name" placeholder="Full name *" required>
+                                <div class="dob-group">
+                                    <input type="text" name="player-3-mm" placeholder="MM" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-3-dd" placeholder="DD" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-3-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric" required>
+                                </div>
+                                <input type="tel" name="player-3-phone" placeholder="Phone (optional)">
+                            </div>
+                        </div>
+                        <div class="roster-row">
+                            <span class="roster-num">4</span>
+                            <div class="roster-fields">
+                                <input type="text" name="player-4-name" placeholder="Full name *" required>
+                                <div class="dob-group">
+                                    <input type="text" name="player-4-mm" placeholder="MM" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-4-dd" placeholder="DD" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-4-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric" required>
+                                </div>
+                                <input type="tel" name="player-4-phone" placeholder="Phone (optional)">
+                            </div>
+                        </div>
+                        <div class="roster-row">
+                            <span class="roster-num">5</span>
+                            <div class="roster-fields">
+                                <input type="text" name="player-5-name" placeholder="Full name *" required>
+                                <div class="dob-group">
+                                    <input type="text" name="player-5-mm" placeholder="MM" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-5-dd" placeholder="DD" maxlength="2" inputmode="numeric" required>
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" name="player-5-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric" required>
+                                </div>
+                                <input type="tel" name="player-5-phone" placeholder="Phone (optional)">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="add-player" class="btn-secondary">+ Add Player</button>
+                </fieldset>
+
+                <!-- Agreement -->
+                <fieldset class="form-section">
+                    <legend>Agreement</legend>
+                    <label class="checkbox-label" id="waiver-checkbox">
+                        <input type="checkbox" name="age-confirm">
+                        <span>I understand that all players under 18 must have a signed waiver presented to league officials in person before the player is eligible to participate.</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="fee-confirm" required>
+                        <span>I understand the registration fee is $275 per team, plus $25 per game for referee fees.</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="id-confirm" required>
+                        <span>I understand that league officials may request valid photo ID from any player at any game to verify identity and age.</span>
+                    </label>
+                </fieldset>
+
+                <button type="submit" class="btn-submit">Submit Registration</button>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        var playerCount = 5;
+        var maxPlayers = 12;
+
+        function isUnder18(dateStr) {
+            var parts = dateStr.split('/');
+            if (parts.length !== 3 || parts[2].length !== 4) return false;
+            var dob = new Date(parts[2], parts[0] - 1, parts[1]);
+            var today = new Date();
+            var age = today.getFullYear() - dob.getFullYear();
+            var m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+            return age < 18;
+        }
+
+        function checkAge(row, dateStr) {
+            var existing = row.querySelector('.waiver-notice');
+            if (existing) existing.remove();
+
+            if (dateStr && isUnder18(dateStr)) {
+                var notice = document.createElement('div');
+                notice.className = 'waiver-notice';
+                notice.innerHTML = '<span class="waiver-warning">Under 18 &mdash; Waiver required</span>' +
+                    '<a href="waiver.html" target="_blank" class="waiver-download">Download Waiver</a>';
+                row.appendChild(notice);
+            }
+            updateWaiverCheckbox();
+        }
+
+        function updateWaiverCheckbox() {
+            var hasMinor = document.querySelectorAll('.waiver-notice').length > 0;
+            var cb = document.getElementById('waiver-checkbox');
+            var input = cb.querySelector('input');
+            if (hasMinor) {
+                cb.classList.add('visible');
+                input.required = true;
+            } else {
+                cb.classList.remove('visible');
+                input.required = false;
+                input.checked = false;
+            }
+        }
+
+        // Listen for DOB changes on existing and dynamically added rows
+        document.getElementById('roster-list').addEventListener('input', function(e) {
+            var name = e.target.name || '';
+            if (name.indexOf('-mm') !== -1 || name.indexOf('-dd') !== -1 || name.indexOf('-yyyy') !== -1) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+                var max = parseInt(e.target.getAttribute('maxlength'));
+                if (e.target.value.length >= max) {
+                    e.target.value = e.target.value.substring(0, max);
+                    var dobGroup = e.target.closest('.dob-group');
+                    var inputs = dobGroup.querySelectorAll('input');
+                    for (var i = 0; i < inputs.length - 1; i++) {
+                        if (inputs[i] === e.target) { inputs[i + 1].focus(); break; }
+                    }
+                }
+                var row = e.target.closest('.roster-row');
+                var dobGroup = e.target.closest('.dob-group');
+                var mm = dobGroup.querySelector('input[name$="-mm"]').value;
+                var dd = dobGroup.querySelector('input[name$="-dd"]').value;
+                var yyyy = dobGroup.querySelector('input[name$="-yyyy"]').value;
+                if (mm.length === 2 && dd.length === 2 && yyyy.length === 4) {
+                    checkAge(row, mm + '/' + dd + '/' + yyyy);
+                } else {
+                    var existing = row.querySelector('.waiver-notice');
+                    if (existing) { existing.remove(); updateWaiverCheckbox(); }
+                }
+            }
+        });
+
+        document.getElementById('add-player').addEventListener('click', function() {
+            if (playerCount >= maxPlayers) return;
+            playerCount++;
+            var row = document.createElement('div');
+            row.className = 'roster-row';
+            row.innerHTML = '<span class="roster-num">' + playerCount + '</span>' +
+                '<div class="roster-fields">' +
+                    '<input type="text" name="player-' + playerCount + '-name" placeholder="Full name *">' +
+                    '<div class="dob-group">' +
+                        '<input type="text" name="player-' + playerCount + '-mm" placeholder="MM" maxlength="2" inputmode="numeric">' +
+                        '<span class="dob-sep">/</span>' +
+                        '<input type="text" name="player-' + playerCount + '-dd" placeholder="DD" maxlength="2" inputmode="numeric">' +
+                        '<span class="dob-sep">/</span>' +
+                        '<input type="text" name="player-' + playerCount + '-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric">' +
+                    '</div>' +
+                    '<input type="tel" name="player-' + playerCount + '-phone" placeholder="Phone (optional)">' +
+                '</div>';
+            document.getElementById('roster-list').appendChild(row);
+            if (playerCount >= maxPlayers) this.style.display = 'none';
+        });
+
+        function formatPhone(input) {
+            var digits = input.value.replace(/\D/g, '').substring(0, 10);
+            var formatted = '';
+            if (digits.length > 0) formatted = '(' + digits.substring(0, 3);
+            if (digits.length >= 3) formatted += ') ' + digits.substring(3, 6);
+            if (digits.length >= 6) formatted += '-' + digits.substring(6);
+            input.value = formatted;
+        }
+
+        function validateField(input) {
+            var valid = true;
+            var hasValue = input.value.trim().length > 0;
+            if (input.type === 'tel') {
+                var digits = input.value.replace(/\D/g, '');
+                if (digits.length > 0 && digits.length < 10) valid = false;
+                if (digits.length === 10) hasValue = true;
+            }
+            if (input.name && (input.name.indexOf('-mm') !== -1 || input.name.indexOf('-dd') !== -1 || input.name.indexOf('-yyyy') !== -1)) {
+                if (hasValue) {
+                    input.value = input.value.replace(/\D/g, '');
+                    var val = parseInt(input.value);
+                    if (input.name.indexOf('-mm') !== -1 && (val < 1 || val > 12)) valid = false;
+                    if (input.name.indexOf('-dd') !== -1) {
+                        if (val < 1 || val > 31) valid = false;
+                        if (valid) {
+                            var dobGroup = input.closest('.dob-group');
+                            var mmVal = parseInt(dobGroup.querySelector('input[name$="-mm"]').value);
+                            var yyyyVal = parseInt(dobGroup.querySelector('input[name$="-yyyy"]').value);
+                            if (mmVal >= 1 && mmVal <= 12) {
+                                var daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                                if (yyyyVal && ((yyyyVal % 4 === 0 && yyyyVal % 100 !== 0) || yyyyVal % 400 === 0)) daysInMonth[2] = 29;
+                                if (val > daysInMonth[mmVal]) valid = false;
+                            }
+                        }
+                    }
+                    if (input.name.indexOf('-yyyy') !== -1 && (input.value.length < 4 || val < 1930 || val > new Date().getFullYear())) valid = false;
+                }
+            }
+            if (input.name && (input.name === 'owner-name' || input.name.indexOf('-name') !== -1) && input.name.indexOf('team') === -1) {
+                if (hasValue && !/\S+\s+\S+/.test(input.value.trim())) valid = false;
+            }
+            if (input.type === 'email' && hasValue) {
+                if (/\s/.test(input.value) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim())) valid = false;
+            }
+            if (input.required && !input.value.trim()) valid = false;
+            input.classList.remove('invalid', 'valid');
+            if (!valid) {
+                input.classList.add('invalid');
+            } else if (hasValue) {
+                input.classList.add('valid');
+            }
+            return valid;
+        }
+
+        // Format and clear state on input
+        document.addEventListener('input', function(e) {
+            if (e.target.type === 'tel') formatPhone(e.target);
+            e.target.classList.remove('invalid', 'valid');
+        });
+
+        // Validate on blur
+        document.addEventListener('blur', function(e) {
+            if (e.target.tagName === 'INPUT') validateField(e.target);
+        }, true);
+
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var inputs = this.querySelectorAll('input');
+            var firstInvalid = null;
+            for (var i = 0; i < inputs.length; i++) {
+                if (!validateField(inputs[i]) && !firstInvalid) {
+                    firstInvalid = inputs[i];
+                }
+            }
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+                return;
+            }
+
+            // Build JSON matching sample-registration.json structure
+            var players = [];
+            var rows = document.querySelectorAll('.roster-row');
+            for (var r = 0; r < rows.length; r++) {
+                var nameInput = rows[r].querySelector('input[name$="-name"]');
+                if (!nameInput || !nameInput.value.trim()) continue;
+                var dobGroup = rows[r].querySelector('.dob-group');
+                var mm = dobGroup.querySelector('input[name$="-mm"]').value;
+                var dd = dobGroup.querySelector('input[name$="-dd"]').value;
+                var yyyy = dobGroup.querySelector('input[name$="-yyyy"]').value;
+                var phone = rows[r].querySelector('input[type="tel"]');
+                players.push({
+                    name: nameInput.value.trim(),
+                    dob: {
+                        month: mm ? parseInt(mm) : null,
+                        date: dd ? parseInt(dd) : null,
+                        year: yyyy ? parseInt(yyyy) : null
+                    },
+                    phone: phone ? phone.value.trim() : ''
+                });
+            }
+
+            var hasMinor = document.querySelectorAll('.waiver-notice').length > 0;
+            var waiverCb = document.querySelector('#waiver-checkbox input');
+
+            var registration = {
+                teamName: document.getElementById('team-name').value.trim(),
+                owner: {
+                    name: document.getElementById('owner-name').value.trim(),
+                    phone: document.getElementById('owner-phone').value.trim(),
+                    email: document.getElementById('owner-email').value.trim()
+                },
+                players: players,
+                agreements: {
+                    waiver: {
+                        needed: hasMinor,
+                        acknowledged: waiverCb ? waiverCb.checked : false
+                    },
+                    fee: document.querySelector('input[name="fee-confirm"]').checked,
+                    ids: document.querySelector('input[name="id-confirm"]').checked
+                }
+            };
+
+            var btn = document.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'SUBMITTING...';
+
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(registration)
+            })
+            .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+            .then(function(result) {
+                if (result.ok) {
+                    alert('Registration submitted! We will contact you to confirm and arrange payment.');
+                    document.getElementById('register-form').reset();
+                } else {
+                    alert('Error: ' + (result.data.error || 'Something went wrong. Please try again.'));
+                }
+            })
+            .catch(function() {
+                alert('Network error. Please check your connection and try again.');
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.textContent = 'SUBMIT REGISTRATION';
+            });
+        });
+    </script>
+
+</body>
+</html>

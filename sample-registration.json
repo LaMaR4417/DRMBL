@@ -1,0 +1,65 @@
+{
+  "id": "[teamName] - [submittedAt]",
+  "teamName": "",
+  "owner": {
+    "name": "",
+    "phone": "",
+    "email": ""
+  },
+  "players": [
+    {
+      "name": "",
+      "dob": {
+        "month": null,
+        "date": null,
+        "year": null
+      },
+      "phone": ""
+    },
+    {
+      "name": "",
+      "dob": {
+        "month": null,
+        "date": null,
+        "year": null
+      },
+      "phone": ""
+    },
+    {
+      "name": "",
+      "dob": {
+        "month": null,
+        "date": null,
+        "year": null
+      },
+      "phone": ""
+    },
+    {
+      "name": "",
+      "dob": {
+        "month": null,
+        "date": null,
+        "year": null
+      },
+      "phone": ""
+    },
+    {
+      "name": "",
+      "dob": {
+        "month": null,
+        "date": null,
+        "year": null
+      },
+      "phone": ""
+    }
+  ],
+  "agreements": {
+    "waiver": {
+      "needed": false,
+      "acknowledged": false
+    },
+    "fee": false,
+    "ids": false
+  },
+  "submittedAt": "2026-02-12T22:30:00.000Z"
+}
