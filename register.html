@@ -372,8 +372,8 @@
             .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
             .then(function(result) {
                 if (result.ok) {
-                    alert('Registration submitted! We will contact you to confirm and arrange payment.');
-                    document.getElementById('register-form').reset();
+                    window.location.href = 'thank-you.html';
+                    return;
                 } else {
                     alert('Error: ' + (result.data.error || 'Something went wrong. Please try again.'));
                 }
@@ -386,6 +386,45 @@
                 btn.textContent = 'SUBMIT REGISTRATION';
             });
         });
+
+        // Cheat code: hold SHIFT and type AUTO to autofill
+        (function() {
+            var buffer = '';
+            document.addEventListener('keydown', function(e) {
+                if (!e.shiftKey) { buffer = ''; return; }
+                if (e.key.length === 1) buffer += e.key.toUpperCase();
+                if (buffer.indexOf('AUTO') !== -1) {
+                    buffer = '';
+                    e.preventDefault();
+                    document.getElementById('team-name').value = 'Test Team';
+                    document.getElementById('owner-name').value = 'John Smith';
+                    document.getElementById('owner-phone').value = '(830) 555-1234';
+                    document.getElementById('owner-email').value = 'test@test.com';
+
+                    var names = ['Mike Johnson', 'Carlos Garcia', 'James Williams', 'David Brown', 'Chris Davis'];
+                    var rows = document.querySelectorAll('.roster-row');
+                    for (var i = 0; i < rows.length && i < names.length; i++) {
+                        var fields = rows[i].querySelector('.roster-fields');
+                        fields.querySelector('input[name$="-name"]').value = names[i];
+                        fields.querySelector('input[name$="-mm"]').value = '3';
+                        fields.querySelector('input[name$="-dd"]').value = '15';
+                        fields.querySelector('input[name$="-yyyy"]').value = '1995';
+                    }
+
+                    document.querySelector('input[name="fee-confirm"]').checked = true;
+                    document.querySelector('input[name="id-confirm"]').checked = true;
+
+                    // Clear any validation states
+                    var allInputs = document.querySelectorAll('input');
+                    for (var j = 0; j < allInputs.length; j++) {
+                        allInputs[j].classList.remove('invalid', 'valid');
+                    }
+                }
+            });
+            document.addEventListener('keyup', function(e) {
+                if (e.key === 'Shift') buffer = '';
+            });
+        })();
     </script>
 
 </body>
