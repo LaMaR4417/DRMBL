@@ -268,7 +268,7 @@ section {
 
 /* ── DETAILS SECTION ── */
 .details-section {
-    background: #111;
+    background: #0d0d0d;
 }
 
 .details-list {
@@ -296,7 +296,7 @@ section {
 
 /* ── CONTACT SECTION ── */
 .contact-section {
-    background: #0d0d0d;
+    background: #111;
 }
 
 .contact-row {
