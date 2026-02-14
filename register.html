@@ -136,6 +136,10 @@
                         <span>I understand the registration fee is $275 per team, plus $25 per game for referee fees.</span>
                     </label>
                     <label class="checkbox-label">
+                        <input type="checkbox" name="refund-confirm" required>
+                        <span>I understand the registration fee is non-refundable if my team drops out. Refunds are only issued if the league is cancelled.</span>
+                    </label>
+                    <label class="checkbox-label">
                         <input type="checkbox" name="id-confirm" required>
                         <span>I understand that league officials may request valid photo ID from any player at any game to verify identity and age.</span>
                     </label>
@@ -357,6 +361,7 @@
                         acknowledged: waiverCb ? waiverCb.checked : false
                     },
                     fee: document.querySelector('input[name="fee-confirm"]').checked,
+                    refund: document.querySelector('input[name="refund-confirm"]').checked,
                     ids: document.querySelector('input[name="id-confirm"]').checked
                 }
             };
@@ -413,6 +418,7 @@
                     }
 
                     document.querySelector('input[name="fee-confirm"]').checked = true;
+                    document.querySelector('input[name="refund-confirm"]').checked = true;
                     document.querySelector('input[name="id-confirm"]').checked = true;
 
                     // Clear any validation states

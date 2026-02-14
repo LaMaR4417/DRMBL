@@ -23,9 +23,13 @@ var SPONSOR_GOAL = 3000;
 var SPONSOR_EACH = 50;
 var SPONSORS = [
     // { id: 'example-biz', name: 'Example Biz', img: 'sponsors/example.png', amount: 200, bio: 'A great local business.', links: [{ label: 'Website', url: 'https://example.com' }] },
+    { id: 'navarro-mueblerias', name: 'Navarro Mueblerias', img: 'sponsors/Navarro Mueblerias/NM-Logo.jpeg', amount: 50, bio: 'Navarro Mueblerias has been furnishing Del Rio homes for over 20 years. From living rooms to bedrooms, we carry top-quality furniture at prices that work for every family. Stop by our showroom or visit us online \u2014 con Navarro siempre gano!', links: [{ label: 'Website', url: 'https://example.com' }, { label: 'Facebook', url: 'https://facebook.com/navarromueblerias' }, { label: 'Instagram', url: 'https://instagram.com/navarromueblerias' }] },
 ];
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Skip carousel on sponsor bio page
+    if (window.location.pathname.indexOf('sponsor-bio') !== -1) return;
+
     // Inject carousel HTML after the header
     var section = document.createElement('section');
     section.className = 'sponsors-section';

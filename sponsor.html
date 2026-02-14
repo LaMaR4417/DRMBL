@@ -7,21 +7,197 @@
     <link rel="icon" href="assets/favicon.ico">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/placeholder.css">
+    <link rel="stylesheet" href="css/sponsor.css">
     <script src="js/header.js"></script>
     <script src="js/sponsors.js"></script>
 </head>
 <body>
 
-    <section class="placeholder-page">
-        <div class="placeholder-content">
-            <div class="placeholder-icon">&#129309;</div>
-            <h1>Sponsor Us</h1>
-            <p>This page is under construction.</p>
-            <p class="placeholder-sub">Sponsorship packages and details will be available here soon.</p>
-            <a href="index.html" class="hero-cta">Back to Home</a>
+    <!-- HERO -->
+    <section class="sponsor-hero">
+        <h1 class="sponsor-hero-title">Sponsor Us</h1>
+        <p class="sponsor-hero-sub">Put your brand in front of hundreds of players, families, and fans every single Sunday. Support local basketball &mdash; and get seen doing it.</p>
+        <a href="sponsor-form.html" class="hero-cta sponsor-form-btn">Sponsor Form</a>
+    </section>
+
+    <!-- WHY SPONSOR -->
+    <section class="sponsor-section" id="why-sponsor">
+        <div class="section-inner">
+            <h2 class="section-heading">Why Sponsor the DRMBL?</h2>
+            <hr class="section-rule">
+            <div class="sponsor-why-grid">
+                <div class="sponsor-why-card">
+                    <div class="sponsor-why-icon">&#127936;</div>
+                    <h3 class="sponsor-why-title">11 Weeks of Exposure</h3>
+                    <p class="sponsor-why-text">Your logo scrolls on every page of our website for the entire season &mdash; schedule, live game, standings, stats, and more.</p>
+                </div>
+                <div class="sponsor-why-card">
+                    <div class="sponsor-why-icon">&#128101;</div>
+                    <h3 class="sponsor-why-title">Real Local Audience</h3>
+                    <p class="sponsor-why-text">12 teams, 100+ players, and their families, friends, and fans &mdash; all from Del Rio and surrounding areas.</p>
+                </div>
+                <div class="sponsor-why-card">
+                    <div class="sponsor-why-icon">&#128640;</div>
+                    <h3 class="sponsor-why-title">Dedicated Bio Page</h3>
+                    <p class="sponsor-why-text">Every sponsor gets a full profile page with your logo, description, and links to your website and socials.</p>
+                </div>
+                <div class="sponsor-why-card">
+                    <div class="sponsor-why-icon">&#129309;</div>
+                    <h3 class="sponsor-why-title">Support the Community</h3>
+                    <p class="sponsor-why-text">Your sponsorship helps cover court fees, equipment, and trophies &mdash; keeping the league running for everyone.</p>
+                </div>
+            </div>
         </div>
     </section>
 
+    <!-- WHAT YOU GET -->
+    <section class="sponsor-section sponsor-section-alt" id="what-you-get">
+        <div class="section-inner">
+            <h2 class="section-heading">What You Get</h2>
+            <hr class="section-rule">
+            <ul class="sponsor-perks-list">
+                <li>Logo in the scrolling carousel on every page of the website</li>
+                <li>Dedicated sponsor bio page with your logo, description, and links</li>
+                <li>Listed on the Our Sponsors throughout the website</li>
+            </ul>
+            <div class="sponsor-naming-rights">
+                <h3 class="sponsor-naming-title">Season Naming Rights &mdash; $1,000</h3>
+                <p class="sponsor-naming-text">Sponsor $1,000 and the entire season will be named after your business. Your brand front and center all season long.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- WHERE THE MONEY GOES -->
+    <section class="sponsor-section" id="fund-breakdown">
+        <div class="section-inner">
+            <h2 class="section-heading">Where the Money Goes</h2>
+            <hr class="section-rule">
+            <div class="fund-grid">
+                <div class="fund-item">
+                    <span class="fund-icon">&#127968;</span>
+                    <span class="fund-label">Court Rental</span>
+                </div>
+                <div class="fund-item">
+                    <span class="fund-icon">&#127936;</span>
+                    <span class="fund-label">Equipment &amp; Balls</span>
+                </div>
+                <div class="fund-item">
+                    <span class="fund-icon">&#128248;</span>
+                    <span class="fund-label">Media &amp; Coverage</span>
+                </div>
+                <div class="fund-item">
+                    <span class="fund-icon">&#127775;</span>
+                    <span class="fund-label">League Operations</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GOAL TRACKER -->
+    <section class="sponsor-section sponsor-section-alt" id="goal">
+        <div class="section-inner">
+            <h2 class="section-heading">Sponsorship Goal</h2>
+            <hr class="section-rule">
+            <div class="goal-tracker" id="goal-tracker">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- CURRENT SPONSORS -->
+    <section class="sponsor-section" id="current-sponsors">
+        <div class="section-inner">
+            <h2 class="section-heading">Our Sponsors</h2>
+            <hr class="section-rule">
+            <div id="sponsor-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- BECOME A SPONSOR CTA -->
+    <section class="sponsor-section sponsor-section-alt" id="contact">
+        <div class="section-inner sponsor-cta-section">
+            <h2 class="section-heading">Become a Sponsor</h2>
+            <hr class="section-rule">
+            <p class="sponsor-cta-text">Ready to get your brand in the game? Reach out to the commissioner to secure your spot.</p>
+            <a href="sponsor-form.html" class="hero-cta sponsor-form-btn">Sponsor Form</a>
+            <div class="sponsor-cta-methods">
+                <div class="sponsor-cta-method">
+                    <span class="detail-badge">Call / Text</span>
+                    <a href="tel:+18307197982" class="sponsor-cta-link">(830) 719-7982</a>
+                </div>
+                <div class="sponsor-cta-method">
+                    <span class="detail-badge">Email</span>
+                    <a href="mailto:luis.m.reyes28@gmail.com" class="sponsor-cta-link">luis.m.reyes28@gmail.com</a>
+                </div>
+            </div>
+            <div class="sponsor-cta-methods sponsor-cta-methods-second">
+                <div class="sponsor-cta-method">
+                    <span class="detail-badge">Venmo</span>
+                    <span class="sponsor-cta-value">@Luis-Reyes-83</span>
+                </div>
+                <div class="sponsor-cta-method">
+                    <span class="detail-badge">CashApp</span>
+                    <span class="sponsor-cta-value">$LMRN101</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        &copy; 2026 Del Rio Men's Basketball League
+    </footer>
+
+    <script>
+    (function () {
+        // Goal Tracker
+        var raised = 0;
+        for (var i = 0; i < SPONSORS.length; i++) {
+            raised += (SPONSORS[i].amount || 0);
+        }
+        var pct = Math.min(100, Math.round((raised / SPONSOR_GOAL) * 100));
+        var tracker = document.getElementById('goal-tracker');
+        if (tracker) {
+            tracker.innerHTML =
+                '<div class="goal-amounts">' +
+                    '<span class="goal-raised">$' + raised.toLocaleString() + ' raised</span>' +
+                    '<span class="goal-target">$' + SPONSOR_GOAL.toLocaleString() + ' goal</span>' +
+                '</div>' +
+                '<div class="goal-bar">' +
+                    '<div class="goal-bar-fill" style="width:' + pct + '%"></div>' +
+                '</div>' +
+                '<p class="goal-pct">' + pct + '% funded</p>';
+        }
+
+        // Current Sponsors List
+        var list = document.getElementById('sponsor-list');
+        if (!list) return;
+
+        if (SPONSORS.length === 0) {
+            list.innerHTML =
+                '<div class="sponsor-empty">' +
+                    '<p>No sponsors yet &mdash; be the first!</p>' +
+                    '<a href="#contact" class="hero-cta">Become a Sponsor</a>' +
+                '</div>';
+            return;
+        }
+
+        var html = '<div class="sponsor-logos-grid">';
+        for (var j = 0; j < SPONSORS.length; j++) {
+            var sp = SPONSORS[j];
+            html += '<a href="sponsor-bio.html?id=' + encodeURIComponent(sp.id) + '" class="sponsor-logo-card">';
+            if (sp.img) {
+                html += '<img src="' + sp.img + '" alt="' + sp.name + '">';
+            } else {
+                html += '<span class="sponsor-logo-text">' + sp.name + '</span>';
+            }
+            html += '</a>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
+    })();
+    </script>
 </body>
 </html>
