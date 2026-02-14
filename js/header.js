@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '<nav class="nav-inner">' +
             '<a href="index.html" class="nav-link nav-primary">Home</a>' +
             '<a href="index.html#info" class="nav-link nav-secondary">Join the League</a>' +
+            '<a href="sponsor.html#current-sponsors" class="nav-link nav-secondary">Our Sponsors</a>' +
             '<a href="schedule.html" class="nav-link nav-secondary">Schedule</a>' +
             '<a href="live-game.html" class="nav-link nav-secondary">Live Game</a>' +
             '<a href="standings.html" class="nav-link nav-secondary">Standings</a>' +
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '<div class="mobile-menu">' +
             '<a href="index.html" class="nav-link">Home</a>' +
             '<a href="index.html#info" class="nav-link">Join the League</a>' +
+            '<a href="sponsor.html#current-sponsors" class="nav-link">Our Sponsors</a>' +
             '<a href="schedule.html" class="nav-link">Schedule</a>' +
             '<a href="live-game.html" class="nav-link">Live Game</a>' +
             '<a href="standings.html" class="nav-link">Standings</a>' +

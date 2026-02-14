@@ -1,0 +1,20 @@
+{
+    "id": "",
+    "businessInfo": {
+        "name": "",
+        "contactName": "",
+        "phone": "",
+        "email": ""
+    },
+    "about": {
+        "description": "",
+        "links": [
+            {
+                "type": "",
+                "url": ""
+            }
+        ]
+    },
+    "notes": ""
+    
+}

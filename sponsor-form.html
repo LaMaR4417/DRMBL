@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsor Form - DRMBL</title>
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/form.css">
+    <link rel="stylesheet" href="css/sponsor.css">
+    <script src="js/header.js"></script>
+    <script src="js/sponsors.js"></script>
+</head>
+<body>
+
+    <section class="form-page">
+        <div class="form-inner">
+            <h1 class="form-title">Sponsor Form</h1>
+            <hr class="section-rule">
+            <p class="form-subtitle">Interested in sponsoring the DRMBL? Fill out the form below and we'll be in touch.</p>
+
+            <form id="sponsor-form">
+
+                <!-- Business Info -->
+                <fieldset class="form-section">
+                    <legend>Business Info</legend>
+                    <div class="form-group">
+                        <label for="biz-name">Business Name <span class="req">*</span></label>
+                        <input type="text" id="biz-name" name="biz-name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contact-name">Contact Name <span class="req">*</span></label>
+                            <input type="text" id="contact-name" name="contact-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-phone">Phone <span class="req">*</span></label>
+                            <input type="tel" id="contact-phone" name="contact-phone" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">Email <span class="req">*</span></label>
+                        <input type="email" id="contact-email" name="contact-email" required>
+                    </div>
+                </fieldset>
+
+                <!-- About Your Business -->
+                <fieldset class="form-section">
+                    <legend>About Your Business</legend>
+                    <p class="form-note">This info will be used on your dedicated sponsor profile page.</p>
+                    <div class="form-group">
+                        <label for="biz-description">Business Description</label>
+                        <textarea id="biz-description" name="biz-description" placeholder="Tell us about your business in a few sentences..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Links</label>
+                        <div id="link-list">
+                            <div class="link-row">
+                                <select class="link-type" aria-label="Link type">
+                                    <option value="">Select Type</option>
+                                    <option value="Website">Website</option>
+                                    <option value="Facebook">Facebook</option>
+                                    <option value="Instagram">Instagram</option>
+                                    <option value="TikTok">TikTok</option>
+                                    <option value="YouTube">YouTube</option>
+                                    <option value="X (Twitter)">X (Twitter)</option>
+                                    <option value="LinkedIn">LinkedIn</option>
+                                    <option value="Yelp">Yelp</option>
+                                    <option value="Google Business">Google Business</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <input type="text" class="link-url" placeholder="https://...">
+                                <button type="button" class="link-remove" title="Remove">&times;</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-secondary" id="add-link">+ Add Link</button>
+                    </div>
+                </fieldset>
+
+                <!-- Sponsorship -->
+                <fieldset class="form-section">
+                    <legend>Sponsorship</legend>
+                    <p class="form-note">Any amount of sponsorship helps us keep the league running &mdash; court fees, equipment, media coverage, and more. Every dollar counts.</p>
+                    <div class="sponsor-naming-rights">
+                        <h3 class="sponsor-naming-title">Season Naming Rights &mdash; $1,000</h3>
+                        <p class="sponsor-naming-text">Sponsor $1,000 and the entire season will be named after your business:</p>
+                        <p class="sponsor-naming-example">Del Rio Men's Basketball League &mdash; Spring 2026<br>brought to you by: <strong>Your Business</strong></p>
+                    </div>
+                    <div class="form-payment-methods">
+                        <span class="form-payment-method"><span class="detail-badge">Venmo</span> <span class="form-payment-value">@Luis-Reyes-83</span></span>
+                        <span class="form-payment-method"><span class="detail-badge">CashApp</span> <span class="form-payment-value">$LMRN101</span></span>
+                    </div>
+                    <div class="form-payment-methods">
+                        <span class="form-payment-method"><span class="detail-badge">Other Forms of Donation</span> <span class="form-payment-value">Contact <a href="tel:+18307197982" class="sponsor-cta-link">(830) 719-7982</a></span></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="sponsor-message">Message / Notes</label>
+                        <textarea id="sponsor-message" name="sponsor-message" placeholder="Anything else you'd like us to know..."></textarea>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn-submit">Submit Sponsor Form</button>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        // Phone formatting
+        function formatPhone(input) {
+            var digits = input.value.replace(/\D/g, '').substring(0, 10);
+            var formatted = '';
+            if (digits.length > 0) formatted = '(' + digits.substring(0, 3);
+            if (digits.length >= 3) formatted += ') ' + digits.substring(3, 6);
+            if (digits.length >= 6) formatted += '-' + digits.substring(6);
+            input.value = formatted;
+        }
+
+        // Field validation
+        function validateField(input) {
+            var valid = true;
+            var hasValue = input.value.trim().length > 0;
+
+            if (input.type === 'tel') {
+                var digits = input.value.replace(/\D/g, '');
+                if (digits.length > 0 && digits.length < 10) valid = false;
+                if (digits.length === 10) hasValue = true;
+            }
+
+            if (input.name === 'contact-name' && hasValue) {
+                if (!/\S+\s+\S+/.test(input.value.trim())) valid = false;
+            }
+
+            if (input.type === 'email' && hasValue) {
+                if (/\s/.test(input.value) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim())) valid = false;
+            }
+
+            if (input.required && !input.value.trim()) valid = false;
+
+            input.classList.remove('invalid', 'valid');
+            if (!valid) {
+                input.classList.add('invalid');
+            } else if (hasValue) {
+                input.classList.add('valid');
+            }
+            return valid;
+        }
+
+        // Format phone and clear state on input
+        document.addEventListener('input', function(e) {
+            if (e.target.type === 'tel') formatPhone(e.target);
+            e.target.classList.remove('invalid', 'valid');
+        });
+
+        // Validate on blur
+        document.addEventListener('blur', function(e) {
+            if (e.target.tagName === 'INPUT') validateField(e.target);
+        }, true);
+
+        // Link row management
+        function createLinkRow() {
+            var row = document.createElement('div');
+            row.className = 'link-row';
+            row.innerHTML = '<select class="link-type" aria-label="Link type">'
+                + '<option value="">Select Type</option>'
+                + '<option value="Website">Website</option>'
+                + '<option value="Facebook">Facebook</option>'
+                + '<option value="Instagram">Instagram</option>'
+                + '<option value="TikTok">TikTok</option>'
+                + '<option value="YouTube">YouTube</option>'
+                + '<option value="X (Twitter)">X (Twitter)</option>'
+                + '<option value="LinkedIn">LinkedIn</option>'
+                + '<option value="Yelp">Yelp</option>'
+                + '<option value="Google Business">Google Business</option>'
+                + '<option value="Other">Other</option>'
+                + '</select>'
+                + '<input type="text" class="link-url" placeholder="https://...">'
+                + '<button type="button" class="link-remove" title="Remove">&times;</button>';
+            return row;
+        }
+
+        document.getElementById('add-link').addEventListener('click', function() {
+            document.getElementById('link-list').appendChild(createLinkRow());
+        });
+
+        document.getElementById('link-list').addEventListener('click', function(e) {
+            if (e.target.classList.contains('link-remove')) {
+                var rows = document.querySelectorAll('.link-row');
+                if (rows.length > 1) {
+                    e.target.parentElement.remove();
+                } else {
+                    e.target.parentElement.querySelector('.link-type').value = '';
+                    e.target.parentElement.querySelector('.link-url').value = '';
+                }
+            }
+        });
+
+        function getLinks() {
+            var links = [];
+            var rows = document.querySelectorAll('.link-row');
+            for (var i = 0; i < rows.length; i++) {
+                var label = rows[i].querySelector('.link-type').value;
+                var url = rows[i].querySelector('.link-url').value.trim();
+                if (label && url) links.push({ type: label, url: url });
+            }
+            return links;
+        }
+
+        // Submit handler
+        document.getElementById('sponsor-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var inputs = this.querySelectorAll('input');
+            var firstInvalid = null;
+
+            for (var i = 0; i < inputs.length; i++) {
+                if (!validateField(inputs[i]) && !firstInvalid) {
+                    firstInvalid = inputs[i];
+                }
+            }
+
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+                return;
+            }
+
+            var sponsorship = {
+                businessInfo: {
+                    name: document.getElementById('biz-name').value.trim(),
+                    contactName: document.getElementById('contact-name').value.trim(),
+                    phone: document.getElementById('contact-phone').value.trim(),
+                    email: document.getElementById('contact-email').value.trim()
+                },
+                about: {
+                    description: document.getElementById('biz-description').value.trim(),
+                    links: getLinks()
+                },
+                notes: document.getElementById('sponsor-message').value.trim()
+            };
+
+            var btn = document.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'SUBMITTING...';
+
+            fetch('/api/sponsor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sponsorship)
+            })
+            .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+            .then(function(result) {
+                if (result.ok) {
+                    window.location.href = 'sponsor-thank-you.html';
+                    return;
+                } else {
+                    alert('Error: ' + (result.data.error || 'Something went wrong. Please try again.'));
+                }
+            })
+            .catch(function() {
+                alert('Network error. Please check your connection and try again.');
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.textContent = 'SUBMIT SPONSOR FORM';
+            });
+        });
+
+        // Cheat code: hold SHIFT and type AUTO to autofill
+        (function() {
+            var buffer = '';
+            document.addEventListener('keydown', function(e) {
+                if (!e.shiftKey) { buffer = ''; return; }
+                if (e.key.length === 1) buffer += e.key.toUpperCase();
+                if (buffer.indexOf('AUTO') !== -1) {
+                    buffer = '';
+                    e.preventDefault();
+                    document.getElementById('biz-name').value = 'Test Business';
+                    document.getElementById('contact-name').value = 'John Smith';
+                    document.getElementById('contact-phone').value = '(830) 555-1234';
+                    document.getElementById('contact-email').value = 'test@testbiz.com';
+                    document.getElementById('biz-description').value = 'A great local business serving the Del Rio community for over 10 years.';
+                    // Populate link rows
+                    var linkList = document.getElementById('link-list');
+                    linkList.innerHTML = '';
+                    var testLinks = [
+                        { label: 'Website', url: 'https://testbiz.com' },
+                        { label: 'Facebook', url: 'https://facebook.com/testbiz' },
+                        { label: 'Instagram', url: 'https://instagram.com/testbiz' }
+                    ];
+                    for (var k = 0; k < testLinks.length; k++) {
+                        var row = createLinkRow();
+                        row.querySelector('.link-type').value = testLinks[k].label;
+                        row.querySelector('.link-url').value = testLinks[k].url;
+                        linkList.appendChild(row);
+                    }
+                    document.getElementById('sponsor-message').value = 'Looking forward to supporting the league!';
+
+                    var allInputs = document.querySelectorAll('input, select, textarea');
+                    for (var j = 0; j < allInputs.length; j++) {
+                        allInputs[j].classList.remove('invalid', 'valid');
+                    }
+                }
+            });
+            document.addEventListener('keyup', function(e) {
+                if (e.key === 'Shift') buffer = '';
+            });
+        })();
+    </script>
+
+</body>
+</html>

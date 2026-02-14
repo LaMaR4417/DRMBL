@@ -99,7 +99,8 @@
 
 /* Naming Rights */
 .sponsor-naming-rights {
-    margin-top: 50px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     padding: 40px 30px;
     border: 1px solid var(--court-wood);
     text-align: center;
@@ -121,6 +122,18 @@
     font-size: 15px;
     color: rgba(255, 255, 255, 0.6);
     line-height: 1.6;
+}
+
+.sponsor-naming-example {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.6;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.sponsor-naming-example strong {
+    color: var(--court-wood);
 }
 
 /* Where the Money Goes */
