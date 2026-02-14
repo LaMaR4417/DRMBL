@@ -1,0 +1,250 @@
+/* ── SCHEDULE PAGE ── */
+
+/* Hero */
+.schedule-hero {
+    padding: 200px 20px 60px;
+    text-align: center;
+    background: #0a0602;
+}
+
+.schedule-hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 8vw, 64px);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.schedule-hero-sub {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.5);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Week Navigation */
+.week-nav {
+    position: sticky;
+    top: 53px;
+    z-index: 90;
+    background: rgba(17, 17, 17, 0.95);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.week-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.week-nav-inner {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    padding: 0 20px;
+    min-width: max-content;
+}
+
+.week-tab {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 14px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.week-tab:hover {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.week-tab.active {
+    color: var(--white);
+    border-bottom-color: var(--accent);
+}
+
+.week-tab-playoff {
+    color: var(--court-wood);
+}
+
+.week-tab-playoff.active {
+    color: var(--court-wood);
+    border-bottom-color: var(--court-wood);
+}
+
+/* Week Sections */
+.week-section {
+    padding: 60px 20px;
+    background: #0d0d0d;
+}
+
+.week-section:nth-child(even) {
+    background: #111;
+}
+
+.week-section.hidden {
+    display: none;
+}
+
+.week-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.week-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.week-date {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* Game Cards */
+.games-grid {
+    max-width: 700px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.game-card {
+    display: grid;
+    grid-template-columns: 80px 1fr auto 1fr 80px;
+    align-items: center;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 16px 20px;
+}
+
+.game-time {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: var(--court-wood);
+}
+
+.game-team {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+}
+
+.game-team-away {
+    text-align: right;
+    padding-right: 14px;
+}
+
+.game-team-home {
+    text-align: left;
+    padding-left: 14px;
+}
+
+.game-vs {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.game-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.25);
+    text-align: right;
+}
+
+/* Playoff Styles */
+.week-section-playoff .week-title {
+    color: var(--court-wood);
+}
+
+.game-card-playoff {
+    border-color: rgba(200, 164, 92, 0.2);
+}
+
+.game-round {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--court-wood);
+}
+
+.game-round-championship {
+    color: var(--accent);
+}
+
+/* All Weeks View */
+.week-divider {
+    max-width: 700px;
+    margin: 0 auto 40px;
+    text-align: center;
+}
+
+.week-divider-line {
+    width: 60px;
+    height: 3px;
+    background: var(--accent);
+    margin: 0 auto;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .schedule-hero {
+        padding: 180px 16px 40px;
+    }
+
+    .week-nav-inner {
+        justify-content: flex-start;
+        padding: 0 12px;
+    }
+
+    .week-tab {
+        font-size: 13px;
+        padding: 12px 10px;
+    }
+
+    .week-section {
+        padding: 40px 16px;
+    }
+
+    .week-title {
+        font-size: 28px;
+    }
+
+    .game-card {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .game-time {
+        font-size: 14px;
+    }
+
+    .game-team-away,
+    .game-team-home {
+        text-align: center;
+        padding: 0;
+    }
+}

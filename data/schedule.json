@@ -1,0 +1,163 @@
+{
+  "season": "Spring 2026",
+  "gameDay": "Sunday",
+  "timeSlots": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM"],
+  "teams": [
+    { "id": "A", "name": "Team A" },
+    { "id": "B", "name": "Team B" },
+    { "id": "C", "name": "Team C" },
+    { "id": "D", "name": "Team D" },
+    { "id": "E", "name": "Team E" },
+    { "id": "F", "name": "Team F" },
+    { "id": "G", "name": "Team G" },
+    { "id": "H", "name": "Team H" },
+    { "id": "I", "name": "Team I" },
+    { "id": "J", "name": "Team J" },
+    { "id": "K", "name": "Team K" },
+    { "id": "L", "name": "Team L" }
+  ],
+  "weeks": [
+    {
+      "week": 1,
+      "date": "2026-04-05",
+      "label": "Week 1",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "A" },
+        { "time": "9:00 AM",  "away": "B", "home": "K" },
+        { "time": "10:00 AM", "away": "C", "home": "J" },
+        { "time": "11:00 AM", "away": "D", "home": "I" },
+        { "time": "12:00 PM", "away": "E", "home": "H" },
+        { "time": "1:00 PM",  "away": "F", "home": "G" }
+      ]
+    },
+    {
+      "week": 2,
+      "date": "2026-04-12",
+      "label": "Week 2",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "B" },
+        { "time": "9:00 AM",  "away": "C", "home": "A" },
+        { "time": "10:00 AM", "away": "D", "home": "K" },
+        { "time": "11:00 AM", "away": "E", "home": "J" },
+        { "time": "12:00 PM", "away": "F", "home": "I" },
+        { "time": "1:00 PM",  "away": "G", "home": "H" }
+      ]
+    },
+    {
+      "week": 3,
+      "date": "2026-04-19",
+      "label": "Week 3",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "C" },
+        { "time": "9:00 AM",  "away": "D", "home": "B" },
+        { "time": "10:00 AM", "away": "E", "home": "A" },
+        { "time": "11:00 AM", "away": "F", "home": "K" },
+        { "time": "12:00 PM", "away": "G", "home": "J" },
+        { "time": "1:00 PM",  "away": "H", "home": "I" }
+      ]
+    },
+    {
+      "week": 4,
+      "date": "2026-04-26",
+      "label": "Week 4",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "D" },
+        { "time": "9:00 AM",  "away": "E", "home": "C" },
+        { "time": "10:00 AM", "away": "F", "home": "B" },
+        { "time": "11:00 AM", "away": "G", "home": "A" },
+        { "time": "12:00 PM", "away": "H", "home": "K" },
+        { "time": "1:00 PM",  "away": "I", "home": "J" }
+      ]
+    },
+    {
+      "week": 5,
+      "date": "2026-05-03",
+      "label": "Week 5",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "E" },
+        { "time": "9:00 AM",  "away": "F", "home": "D" },
+        { "time": "10:00 AM", "away": "G", "home": "C" },
+        { "time": "11:00 AM", "away": "H", "home": "B" },
+        { "time": "12:00 PM", "away": "I", "home": "A" },
+        { "time": "1:00 PM",  "away": "J", "home": "K" }
+      ]
+    },
+    {
+      "week": 6,
+      "date": "2026-05-10",
+      "label": "Week 6",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "F" },
+        { "time": "9:00 AM",  "away": "G", "home": "E" },
+        { "time": "10:00 AM", "away": "H", "home": "D" },
+        { "time": "11:00 AM", "away": "I", "home": "C" },
+        { "time": "12:00 PM", "away": "J", "home": "B" },
+        { "time": "1:00 PM",  "away": "K", "home": "A" }
+      ]
+    },
+    {
+      "week": 7,
+      "date": "2026-05-17",
+      "label": "Week 7",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "G" },
+        { "time": "9:00 AM",  "away": "H", "home": "F" },
+        { "time": "10:00 AM", "away": "I", "home": "E" },
+        { "time": "11:00 AM", "away": "J", "home": "D" },
+        { "time": "12:00 PM", "away": "K", "home": "C" },
+        { "time": "1:00 PM",  "away": "A", "home": "B" }
+      ]
+    },
+    {
+      "week": 8,
+      "date": "2026-05-24",
+      "label": "Week 8",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "H" },
+        { "time": "9:00 AM",  "away": "I", "home": "G" },
+        { "time": "10:00 AM", "away": "J", "home": "F" },
+        { "time": "11:00 AM", "away": "K", "home": "E" },
+        { "time": "12:00 PM", "away": "A", "home": "D" },
+        { "time": "1:00 PM",  "away": "B", "home": "C" }
+      ]
+    },
+    {
+      "week": 9,
+      "date": "2026-05-31",
+      "label": "Week 9",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "I" },
+        { "time": "9:00 AM",  "away": "J", "home": "H" },
+        { "time": "10:00 AM", "away": "K", "home": "G" },
+        { "time": "11:00 AM", "away": "A", "home": "F" },
+        { "time": "12:00 PM", "away": "B", "home": "E" },
+        { "time": "1:00 PM",  "away": "C", "home": "D" }
+      ]
+    },
+    {
+      "week": 10,
+      "date": "2026-06-07",
+      "label": "Week 10",
+      "games": [
+        { "time": "8:00 AM",  "away": "L", "home": "J" },
+        { "time": "9:00 AM",  "away": "K", "home": "I" },
+        { "time": "10:00 AM", "away": "A", "home": "H" },
+        { "time": "11:00 AM", "away": "B", "home": "G" },
+        { "time": "12:00 PM", "away": "C", "home": "F" },
+        { "time": "1:00 PM",  "away": "D", "home": "E" }
+      ]
+    },
+    {
+      "week": 11,
+      "date": "2026-06-14",
+      "label": "Playoff Sunday",
+      "type": "playoffs",
+      "games": [
+        { "time": "8:00 AM",  "away": "#4 Seed", "home": "#1 Seed", "round": "Semifinal 1" },
+        { "time": "9:30 AM",  "away": "#3 Seed", "home": "#2 Seed", "round": "Semifinal 2" },
+        { "time": "11:00 AM", "away": "Loser SF1", "home": "Loser SF2", "round": "3rd Place" },
+        { "time": "12:30 PM", "away": "Winner SF1", "home": "Winner SF2", "round": "Championship" }
+      ]
+    }
+  ]
+}

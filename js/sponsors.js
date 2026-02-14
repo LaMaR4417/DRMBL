@@ -19,7 +19,7 @@
        ]
    }
 ──────────────────────────────────────────────────────────── */
-var SPONSOR_GOAL = 1000;
+var SPONSOR_GOAL = 3000;
 var SPONSOR_EACH = 50;
 var SPONSORS = [
     // { id: 'example-biz', name: 'Example Biz', img: 'sponsors/example.png', amount: 200, bio: 'A great local business.', links: [{ label: 'Website', url: 'https://example.com' }] },
