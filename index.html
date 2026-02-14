@@ -6,9 +6,9 @@
     <title>DRMBL - Del Rio Men's Basketball League</title>
     <link rel="icon" href="assets/favicon.ico">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/skeleton.css">
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/header.js"></script>
-    <script src="js/sponsors.js"></script>
+    <script src="js/skeleton.js"></script>
 </head>
 <body>
 
@@ -141,8 +141,20 @@
     </footer>
 
 <script>
-    history.replaceState(null, '', window.location.pathname);
-    window.addEventListener('load', function() { setTimeout(function() { window.scrollTo(0, 0); }, 0); });
+    (function() {
+        var hash = window.location.hash;
+        history.replaceState(null, '', window.location.pathname);
+        if (hash) {
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    var el = document.querySelector(hash);
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            });
+        } else {
+            window.addEventListener('load', function() { setTimeout(function() { window.scrollTo(0, 0); }, 0); });
+        }
+    })();
 </script>
 </body>
 </html>

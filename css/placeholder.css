@@ -3,7 +3,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 145px;
+    padding-top: 200px;
+}
+
+@media (max-width: 600px) {
+    .placeholder-page {
+        padding-top: 180px;
+    }
 }
 
 .placeholder-content {
@@ -53,8 +59,4 @@
 
 .placeholder-contact a:hover {
     text-decoration: underline;
-}
-
-.nav-link.active {
-    color: var(--court-wood);
 }

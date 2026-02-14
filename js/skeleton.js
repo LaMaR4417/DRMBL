@@ -1,9 +1,14 @@
+/* ── SKELETON: Global Nav + Sponsor Carousel ──
+   Single entry point for the persistent site shell.
+   Builds the header nav, mobile menu, and sponsor carousel.
+──────────────────────────────────────────────── */
+
 /* ── SPONSOR DATA ──────────────────────────────────────────
    Shared config used by the carousel on every page.
 
-   SPONSOR_GOAL  = total sponsorship target ($1000)
-   SPONSOR_EACH  = dollar value one slot represents ($50)
-   -> 1000 / 50 = 20 slots per carousel set
+   SPONSOR_GOAL  = total sponsorship target
+   SPONSOR_EACH  = dollar value one slot represents
+   -> SPONSOR_GOAL / SPONSOR_EACH = slots per carousel set
 
    Add sponsors here:
    {
@@ -27,8 +32,51 @@ var SPONSORS = [
 ];
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Skip carousel on sponsor bio page
-    if (window.location.pathname.indexOf('sponsor-bio') !== -1) return;
+    // ── HEADER NAV ──
+    var header = document.createElement('header');
+    header.className = 'site-header';
+    header.innerHTML =
+        '<nav class="nav-inner">' +
+            '<a href="index.html" class="nav-link nav-primary">Home</a>' +
+            '<a href="index.html#info" class="nav-link nav-secondary">Join the League</a>' +
+            '<a href="sponsor.html#current-sponsors" class="nav-link nav-secondary">Our Sponsors</a>' +
+            '<a href="schedule.html" class="nav-link nav-secondary">Schedule</a>' +
+            '<a href="live-game.html" class="nav-link nav-secondary">Live Game</a>' +
+            '<a href="standings.html" class="nav-link nav-secondary">Standings</a>' +
+            '<a href="stats.html" class="nav-link nav-secondary">Stats</a>' +
+            '<a href="owner.html" class="nav-link nav-secondary">Owner</a>' +
+            '<a href="rules.html" class="nav-link nav-secondary">Rules</a>' +
+            '<a href="sponsor.html" class="nav-link nav-secondary">Sponsor Us</a>' +
+            '<button type="button" class="menu-toggle" aria-label="Menu">' +
+                '<span></span><span></span><span></span>' +
+            '</button>' +
+        '</nav>' +
+        '<div class="mobile-menu">' +
+            '<a href="index.html" class="nav-link">Home</a>' +
+            '<a href="index.html#info" class="nav-link">Join the League</a>' +
+            '<a href="sponsor.html#current-sponsors" class="nav-link">Our Sponsors</a>' +
+            '<a href="schedule.html" class="nav-link">Schedule</a>' +
+            '<a href="live-game.html" class="nav-link">Live Game</a>' +
+            '<a href="standings.html" class="nav-link">Standings</a>' +
+            '<a href="stats.html" class="nav-link">Stats</a>' +
+            '<a href="owner.html" class="nav-link">Owner</a>' +
+            '<a href="rules.html" class="nav-link">Rules</a>' +
+            '<a href="sponsor.html" class="nav-link">Sponsor Us</a>' +
+        '</div>';
+
+    document.body.insertBefore(header, document.body.firstChild);
+
+    var toggle = header.querySelector('.menu-toggle');
+    var menu = header.querySelector('.mobile-menu');
+    toggle.addEventListener('click', function() {
+        toggle.classList.toggle('open');
+        menu.classList.toggle('open');
+    });
+
+    // ── SPONSOR CAROUSEL ──
+    // Skip carousel on sponsor bio and sponsor form pages
+    if (window.location.pathname.indexOf('sponsor-bio') !== -1) { document.body.classList.add('no-carousel'); return; }
+    if (window.location.pathname.indexOf('sponsor-form') !== -1) { document.body.classList.add('no-carousel'); return; }
 
     // Inject carousel HTML after the header
     var section = document.createElement('section');
@@ -38,8 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<div class="sponsors-track"></div>' +
         '</div>';
 
-    var header = document.querySelector('.site-header');
-    if (header && header.nextSibling) {
+    if (header.nextSibling) {
         header.parentNode.insertBefore(section, header.nextSibling);
     } else {
         document.body.insertBefore(section, document.body.firstChild);
@@ -87,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var ad = document.createElement('a');
             ad.href = 'sponsor.html';
             ad.className = 'sponsor-slot-link';
-            ad.textContent = 'YOUR AD HERE';
+            ad.textContent = 'BECOME A SPONSOR';
             div.appendChild(ad);
         }
         track.appendChild(div);
