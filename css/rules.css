@@ -1,0 +1,164 @@
+/* ── RULES PAGE ── */
+
+/* Hero */
+.rules-hero {
+    padding: 200px 20px 60px;
+    text-align: center;
+    background: #0a0602;
+}
+
+.rules-hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 8vw, 64px);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.rules-hero-sub {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.5);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Table of Contents */
+.rules-toc {
+    background: #111;
+    padding: 60px 20px;
+}
+
+.toc-list {
+    list-style: none;
+    counter-reset: toc;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.toc-list li {
+    counter-increment: toc;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.toc-list li:last-child {
+    border-bottom: none;
+}
+
+.toc-list li a {
+    display: block;
+    padding: 14px 0;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.2s ease;
+}
+
+.toc-list li a::before {
+    content: counter(toc) ". ";
+    color: var(--accent);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    margin-right: 8px;
+}
+
+.toc-list li a:hover {
+    color: var(--court-wood);
+}
+
+/* Rule Sections */
+.rules-section {
+    background: #0d0d0d;
+    padding: 80px 20px;
+    scroll-margin-top: 60px;
+}
+
+.rules-section-alt {
+    background: #111;
+}
+
+.rules-placeholder {
+    text-align: center;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.3);
+    font-style: italic;
+}
+
+/* Rule items - badge:value format matching homepage */
+.rules-list {
+    list-style: none;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.rules-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.75);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.rules-list li:last-child {
+    border-bottom: none;
+}
+
+/* Sub-headings within sections */
+.rules-subheading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    margin: 40px auto 16px;
+    max-width: 700px;
+}
+
+.rules-subheading:first-of-type {
+    margin-top: 0;
+}
+
+/* Note/callout text */
+.rules-note {
+    max-width: 700px;
+    margin: 20px auto 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.6;
+}
+
+/* NFHS link in hero */
+.rules-nfhs-link {
+    color: var(--court-wood);
+    text-decoration: underline;
+}
+
+/* Back to top */
+.rules-back-top {
+    padding: 50px 20px;
+    text-align: center;
+    background: #0d0d0d;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .rules-hero {
+        padding: 180px 16px 40px;
+    }
+
+    .rules-toc {
+        padding: 40px 16px;
+    }
+
+    .rules-section {
+        padding: 60px 16px;
+    }
+
+    .toc-list li a {
+        padding: 12px 0;
+        font-size: 15px;
+    }
+}

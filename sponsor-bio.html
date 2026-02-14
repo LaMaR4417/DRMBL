@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsor - DRMBL</title>
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/header.js"></script>
+    <script src="js/sponsors.js"></script>
+</head>
+<body>
+
+    <section class="sponsor-page">
+        <div class="section-inner" id="sponsor-profile"></div>
+    </section>
+
+    <footer>
+        &copy; 2026 Del Rio Men's Basketball League
+    </footer>
+
+<script>
+(function () {
+    var id = new URLSearchParams(window.location.search).get('id');
+    var container = document.getElementById('sponsor-profile');
+
+    var sponsor = null;
+    for (var i = 0; i < SPONSORS.length; i++) {
+        if (SPONSORS[i].id === id) { sponsor = SPONSORS[i]; break; }
+    }
+
+    if (!sponsor) {
+        container.innerHTML =
+            '<div class="sponsor-not-found">' +
+                '<h2 class="section-heading">Sponsor Not Found</h2>' +
+                '<hr class="section-rule">' +
+                '<p>This sponsor doesn\'t exist or the link is invalid.</p>' +
+                '<a href="index.html" class="hero-cta">Back to Home</a>' +
+            '</div>';
+        return;
+    }
+
+    document.title = sponsor.name + ' - DRMBL Sponsor';
+
+    var html =
+        '<div class="sponsor-profile">' +
+            '<div class="sponsor-logo-col">' +
+                (sponsor.img
+                    ? '<img src="' + sponsor.img + '" alt="' + sponsor.name + '">'
+                    : '<div class="sponsor-logo-placeholder">' + sponsor.name + '</div>') +
+            '</div>' +
+            '<div class="sponsor-info-col">' +
+                '<h2 class="section-heading">' + sponsor.name + '</h2>' +
+                '<hr class="section-rule">' +
+                (sponsor.bio ? '<p class="sponsor-bio">' + sponsor.bio + '</p>' : '') +
+                buildLinks(sponsor.links) +
+                '<a href="index.html" class="sponsor-back">&larr; Back to Home</a>' +
+            '</div>' +
+        '</div>';
+
+    container.innerHTML = html;
+
+    function buildLinks(links) {
+        if (!links || !links.length) return '';
+        var out = '<div class="sponsor-links">';
+        links.forEach(function (link) {
+            out += '<a href="' + link.url + '" target="_blank" rel="noopener" class="sponsor-link">' + link.label + '</a>';
+        });
+        out += '</div>';
+        return out;
+    }
+})();
+</script>
+</body>
+</html>

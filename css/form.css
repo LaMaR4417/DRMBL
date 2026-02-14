@@ -1,5 +1,5 @@
 .form-page {
-    padding-top: 80px;
+    padding-top: 160px;
     padding-bottom: 60px;
     min-height: 100vh;
     background: #0d0d0d;
@@ -299,7 +299,7 @@
 /* Responsive */
 @media (max-width: 600px) {
     .form-page {
-        padding-top: 60px;
+        padding-top: 145px;
     }
 
     .form-row {
