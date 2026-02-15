@@ -1,19 +1,22 @@
 (function () {
+    // Fallback team names used until live data loads
+    var DEFAULT_TEAMS = [
+        { "id": "A", "name": "TBD" },
+        { "id": "B", "name": "TBD" },
+        { "id": "C", "name": "TBD" },
+        { "id": "D", "name": "TBD" },
+        { "id": "E", "name": "TBD" },
+        { "id": "F", "name": "TBD" },
+        { "id": "G", "name": "TBD" },
+        { "id": "H", "name": "TBD" },
+        { "id": "I", "name": "TBD" },
+        { "id": "J", "name": "TBD" },
+        { "id": "K", "name": "TBD" },
+        { "id": "L", "name": "TBD" }
+    ];
+
     var SCHEDULE_DATA = {
-        "teams": [
-            { "id": "A", "name": "Team A" },
-            { "id": "B", "name": "Team B" },
-            { "id": "C", "name": "Team C" },
-            { "id": "D", "name": "Team D" },
-            { "id": "E", "name": "Team E" },
-            { "id": "F", "name": "Team F" },
-            { "id": "G", "name": "Team G" },
-            { "id": "H", "name": "Team H" },
-            { "id": "I", "name": "Team I" },
-            { "id": "J", "name": "Team J" },
-            { "id": "K", "name": "Team K" },
-            { "id": "L", "name": "Team L" }
-        ],
+        "teams": DEFAULT_TEAMS,
         "weeks": [
             {
                 "week": 1, "date": "2026-04-05", "label": "Week 1",
@@ -268,9 +271,32 @@
         container.innerHTML = html;
     }
 
+    function loadLiveTeams() {
+        fetch('/api/season')
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data && data.teams) {
+                    var liveTeams = [];
+                    for (var i = 0; i < data.teams.length; i++) {
+                        var t = data.teams[i];
+                        liveTeams.push({
+                            id: t.slot,
+                            name: t.name || "TBD"
+                        });
+                    }
+                    SCHEDULE_DATA.teams = liveTeams;
+                    buildSchedule(SCHEDULE_DATA);
+                }
+            })
+            .catch(function () {
+                // Keep fallback names on error
+            });
+    }
+
     function init() {
         buildWeekNav(SCHEDULE_DATA.weeks);
         buildSchedule(SCHEDULE_DATA);
+        loadLiveTeams();
     }
 
     if (document.readyState === 'loading') {
