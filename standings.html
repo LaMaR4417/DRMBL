@@ -8,20 +8,30 @@
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="stylesheet" href="css/skeleton.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/placeholder.css">
+    <link rel="stylesheet" href="css/standings.css">
     <script src="js/skeleton.js"></script>
 </head>
 <body>
 
-    <section class="placeholder-page">
-        <div class="placeholder-content">
-            <div class="placeholder-icon">&#127942;</div>
-            <h1>Standings</h1>
-            <p>This page is under construction.</p>
-            <p class="placeholder-sub">Standings will be updated once the season begins.</p>
-            <a href="index.html" class="hero-cta">Back to Home</a>
+    <section class="standings-hero">
+        <h1 class="standings-hero-title">Standings</h1>
+        <p class="standings-hero-sub">Current season rankings for the Del Rio Men's Basketball League.</p>
+    </section>
+
+    <div id="standings-banner" class="standings-banner">
+        <p>Season begins April 5, 2026</p>
+    </div>
+
+    <section class="standings-section">
+        <div id="standings-content">
+            <div class="standings-empty">Loading standings...</div>
         </div>
     </section>
 
+    <footer>
+        &copy; 2026 Del Rio Men's Basketball League
+    </footer>
+
+    <script src="js/standings.js"></script>
 </body>
 </html>
