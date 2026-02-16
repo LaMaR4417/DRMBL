@@ -21,6 +21,13 @@ export async function fetchGameSettings() {
   return data.presets;
 }
 
+export async function fetchLiveGames() {
+  const res = await fetch('/api/live-game');
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.games || [];
+}
+
 export function syncLiveGame(boxScore) {
   fetch('/api/live-game', {
     method: 'POST',

@@ -554,6 +554,17 @@ body {
   opacity: 0.25;
 }
 
+.team-in-game-badge {
+  margin-left: auto;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #c9302c;
+  background: rgba(201, 48, 44, 0.15);
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
 .team-slot {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
@@ -1748,6 +1759,12 @@ body {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 13px;
   letter-spacing: 4px;
+}
+
+/* Scoreboard clock editable hint in correction mode */
+.correction-mode .scoreboard-time.editable {
+  cursor: pointer;
+  border-bottom: 2px dashed #ff6f00;
 }
 
 .correction-mode .selection-banner {

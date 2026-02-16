@@ -1069,11 +1069,51 @@ export default function GameScreen() {
         </div>
         <div className="scoreboard-clock">
           <span className="scoreboard-quarter">{formatQuarter(quarter)}</span>
-          <span className={`scoreboard-time ${!isActive ? 'stopped' : ''}`}>
-            {periodOver && breakCountdown != null && breakCountdown > 0
-              ? formatClock(breakCountdown)
-              : formatClock(timeLeft)}
-          </span>
+          {clockEdit != null ? (
+            <div className="clock-edit">
+              <div className="clock-edit-inputs">
+                <input
+                  type="number"
+                  min="0"
+                  max="99"
+                  value={clockEdit.minutes}
+                  onChange={(e) => setClockEdit({ ...clockEdit, minutes: Math.max(0, parseInt(e.target.value) || 0) })}
+                />
+                <span>:</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={clockEdit.seconds}
+                  onChange={(e) => setClockEdit({ ...clockEdit, seconds: Math.min(59, Math.max(0, parseInt(e.target.value) || 0)) })}
+                />
+              </div>
+              <div className="clock-edit-actions">
+                <button onClick={() => {
+                  dispatch({ type: 'SET_CLOCK_TIME', timeLeft: (clockEdit.minutes * 60) + clockEdit.seconds });
+                  shouldSync.current = true;
+                  setClockEdit(null);
+                  setCorrectionMode(false);
+                }}>SET</button>
+                <button onClick={() => setClockEdit(null)}>X</button>
+              </div>
+            </div>
+          ) : (
+            <span
+              className={`scoreboard-time ${!isActive ? 'stopped' : ''} ${correctionMode ? 'editable' : ''}`}
+              onClick={() => {
+                if (correctionMode) {
+                  const m = Math.floor(timeLeft / 60);
+                  const s = timeLeft % 60;
+                  setClockEdit({ minutes: m, seconds: s });
+                }
+              }}
+            >
+              {periodOver && breakCountdown != null && breakCountdown > 0
+                ? formatClock(breakCountdown)
+                : formatClock(timeLeft)}
+            </span>
+          )}
           {periodOver && !isGameOver && !isFinal && (
             <span className="btn btn-small btn-next-quarter period-break-label">
               NEXT: {formatQuarter(quarter + 1)}
@@ -1125,36 +1165,7 @@ export default function GameScreen() {
             <span>STOP</span>
           </button>
 
-          {clockEdit != null ? (
-            <div className="clock-edit">
-              <div className="clock-edit-inputs">
-                <input
-                  type="number"
-                  min="0"
-                  max="99"
-                  value={clockEdit.minutes}
-                  onChange={(e) => setClockEdit({ ...clockEdit, minutes: Math.max(0, parseInt(e.target.value) || 0) })}
-                />
-                <span>:</span>
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={clockEdit.seconds}
-                  onChange={(e) => setClockEdit({ ...clockEdit, seconds: Math.min(59, Math.max(0, parseInt(e.target.value) || 0)) })}
-                />
-              </div>
-              <div className="clock-edit-actions">
-                <button onClick={() => {
-                  dispatch({ type: 'SET_CLOCK_TIME', timeLeft: (clockEdit.minutes * 60) + clockEdit.seconds });
-                  shouldSync.current = true;
-                  setClockEdit(null);
-                  setCorrectionMode(false);
-                }}>SET</button>
-                <button onClick={() => setClockEdit(null)}>X</button>
-              </div>
-            </div>
-          ) : periodOver && !isGameOver && !isFinal ? (
+          {periodOver && !isGameOver && !isFinal ? (
             <button
               className="btn-clock next-period"
               onClick={() => { dispatch({ type: 'ADVANCE_QUARTER' }); dispatch({ type: 'TOGGLE_CLOCK' }); shouldSync.current = true; }}
@@ -1167,16 +1178,8 @@ export default function GameScreen() {
           ) : (
             <button
               className={`btn-clock ${isActive ? 'running' : 'stopped'} ${suggestStopClock && isActive ? 'suggest' : ''}`}
-              onClick={() => {
-                if (correctionMode) {
-                  const m = Math.floor(timeLeft / 60);
-                  const s = timeLeft % 60;
-                  setClockEdit({ minutes: m, seconds: s });
-                } else {
-                  dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true;
-                }
-              }}
-              disabled={!correctionMode && ((periodOver && (isGameOver || isFinal)) || (!isActive && timeoutCountdown != null))}
+              onClick={() => { dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true; }}
+              disabled={(periodOver && (isGameOver || isFinal)) || (!isActive && timeoutCountdown != null)}
             >
               <span>{isActive ? 'STOP' : 'RUN'}</span>
               <span>CLOCK</span>

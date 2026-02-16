@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGame, useGameDispatch } from '../context/GameContext';
-import { fetchSeasonTeams, fetchTeamRoster } from '../data/api';
+import { fetchSeasonTeams, fetchTeamRoster, fetchLiveGames } from '../data/api';
 
 export default function TeamSelectScreen() {
   const game = useGame();
@@ -10,14 +10,29 @@ export default function TeamSelectScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [advancing, setAdvancing] = useState(false);
+  const [inGameTeams, setInGameTeams] = useState(new Set());
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetchSeasonTeams()
-      .then((data) => {
-        if (!cancelled) setTeams(data);
+
+    Promise.all([fetchSeasonTeams(), fetchLiveGames()])
+      .then(([teamsData, liveGames]) => {
+        if (cancelled) return;
+        setTeams(teamsData);
+
+        // Build set of team names currently in non-final live games
+        const busy = new Set();
+        for (const g of liveGames) {
+          const status = g.boxScore?.gameInfo?.general?.status;
+          if (status === 'final') continue;
+          const home = g.boxScore?.teamInfo?.home?.name;
+          const away = g.boxScore?.teamInfo?.away?.name;
+          if (home) busy.add(home);
+          if (away) busy.add(away);
+        }
+        setInGameTeams(busy);
       })
       .catch((err) => {
         if (!cancelled) setError(err.message);
@@ -145,15 +160,18 @@ export default function TeamSelectScreen() {
             {teams.map((team) => {
               const isSelected = game.homeTeam?.teamID === team.teamID;
               const isOtherSide = game.awayTeam?.teamID === team.teamID;
+              const isInGame = inGameTeams.has(team.name);
+              const isDisabled = isOtherSide || isInGame;
               return (
                 <button
                   key={team.teamID}
-                  className={`btn btn-team ${isSelected ? 'selected' : ''} ${isOtherSide ? 'disabled' : ''}`}
-                  disabled={isOtherSide}
+                  className={`btn btn-team ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                  disabled={isDisabled}
                   onClick={() => selectTeam('home', team)}
                 >
                   <span className="team-slot">{team.slot}</span>
                   <span className="team-name">{team.name}</span>
+                  {isInGame && <span className="team-in-game-badge">IN GAME</span>}
                 </button>
               );
             })}
@@ -167,15 +185,18 @@ export default function TeamSelectScreen() {
             {teams.map((team) => {
               const isSelected = game.awayTeam?.teamID === team.teamID;
               const isOtherSide = game.homeTeam?.teamID === team.teamID;
+              const isInGame = inGameTeams.has(team.name);
+              const isDisabled = isOtherSide || isInGame;
               return (
                 <button
                   key={team.teamID}
-                  className={`btn btn-team ${isSelected ? 'selected' : ''} ${isOtherSide ? 'disabled' : ''}`}
-                  disabled={isOtherSide}
+                  className={`btn btn-team ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                  disabled={isDisabled}
                   onClick={() => selectTeam('away', team)}
                 >
                   <span className="team-slot">{team.slot}</span>
                   <span className="team-name">{team.name}</span>
+                  {isInGame && <span className="team-in-game-badge">IN GAME</span>}
                 </button>
               );
             })}
