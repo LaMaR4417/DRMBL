@@ -1,7 +1,7 @@
 /* ── LIVE GAME PAGE ── */
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 /* No-game state */
