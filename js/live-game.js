@@ -124,6 +124,19 @@
         renderAllGames();
     }
 
+    function pickBestGame() {
+        // Priority: live (clock running) > stopped (in-progress but paused) > final
+        var live = null, stopped = null;
+        for (var i = 0; i < allGames.length; i++) {
+            var bs = allGames[i].boxScore;
+            var isFinal = bs.gameInfo.general.status === 'final';
+            var isActive = bs.gameInfo.state.active;
+            if (!isFinal && isActive && !live) live = allGames[i].gameId;
+            if (!isFinal && !isActive && !stopped) stopped = allGames[i].gameId;
+        }
+        return live || stopped || allGames[0].gameId;
+    }
+
     function renderGameSelector() {
         if (allGames.length <= 1) {
             els.gameSelector.classList.add('hidden');
@@ -171,12 +184,12 @@
             return;
         }
 
-        // If the selected game is no longer in the list, reset to first
+        // If the selected game is no longer in the list, pick the best default
         var found = false;
         for (var i = 0; i < allGames.length; i++) {
             if (allGames[i].gameId === selectedGameId) { found = true; break; }
         }
-        if (!found) selectedGameId = allGames[0].gameId;
+        if (!found) selectedGameId = pickBestGame();
 
         renderGameSelector();
 

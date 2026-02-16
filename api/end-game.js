@@ -12,6 +12,7 @@ var teamsContainer = database.container("Teams");
 var SEASON_ID = "Spring - Mens - 2026";
 var BOX_SCORES_CONTAINER_ID = "Box Scores";
 var PLAYERS_CONTAINER_ID = "Players";
+var LIVE_GAMES_CONTAINER_ID = "Live Games";
 
 async function getBoxScoresContainer() {
     var { container } = await database.containers.createIfNotExists({
@@ -440,6 +441,23 @@ module.exports = async function (req, res) {
         }
     }
     await Promise.allSettled(playerPromises);
+
+    // ── E. Remove from Live Games container ──
+    var liveGameId = body.gameId || (boxScore && boxScore.gameId);
+    if (liveGameId) {
+        try {
+            var liveContainer = await database.containers.createIfNotExists({
+                id: LIVE_GAMES_CONTAINER_ID,
+                partitionKey: { paths: ["/id"] }
+            });
+            await liveContainer.container.item(liveGameId, liveGameId).delete();
+        } catch (err) {
+            if (err.code !== 404) {
+                console.error("Live game cleanup failed:", err.message);
+                errors.push("Live game cleanup failed: " + err.message);
+            }
+        }
+    }
 
     // ── Response ──
     if (errors.length > 0) {

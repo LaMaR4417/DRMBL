@@ -42,6 +42,8 @@ export default function GameScreen() {
   const game = useGame();
   const dispatch = useGameDispatch();
   const [pendingAction, setPendingAction] = useState(null);
+  const [correctionMode, setCorrectionMode] = useState(false);
+  const [clockEdit, setClockEdit] = useState(null); // null | { minutes, seconds }
   const [suggestRebound, setSuggestRebound] = useState(false);
   const [suggestAssist, setSuggestAssist] = useState(null); // 'home' | 'away' | null
   const [suggestShot, setSuggestShot] = useState(null); // 'home' | 'away' | null
@@ -223,6 +225,13 @@ export default function GameScreen() {
       .catch((err) => { setSaveStatus('error'); setSaveError(err.message); });
   }, [saveStatus, bs?.gameInfo?.general?.status]);
 
+  // --- Cancel helper (clears pending + correction + clock edit) ---
+  function cancelPending() {
+    setPendingAction(null);
+    setCorrectionMode(false);
+    setClockEdit(null);
+  }
+
   // --- Scoring button handler ---
   function handleShotTap(side, points, made) {
     setSuggestRebound(false);
@@ -237,7 +246,7 @@ export default function GameScreen() {
       pendingAction?.points === points &&
       pendingAction?.made === made
     ) {
-      setPendingAction(null);
+      cancelPending();
       return;
     }
     setPendingAction({ type: 'shot', side, points, made });
@@ -261,7 +270,7 @@ export default function GameScreen() {
     setSuggestSteal(null);
     setSuggestStopClock(false);
     if (pendingAction?.type === 'stat' && pendingAction?.side === side && pendingAction?.action === action) {
-      setPendingAction(null);
+      cancelPending();
       return;
     }
     setPendingAction({ type: 'stat', side, action });
@@ -278,7 +287,7 @@ export default function GameScreen() {
   // --- Sub-menu handler (for rebound, foul) ---
   function handleSubMenuTap(side, action) {
     if (pendingAction?.type === 'stat' && pendingAction?.side === side && pendingAction?.action === action) {
-      setPendingAction(null);
+      cancelPending();
       return;
     }
     setPendingAction({ type: 'stat', side, action });
@@ -309,17 +318,22 @@ export default function GameScreen() {
     setSuggestTurnover(null);
     setSuggestSteal(null);
     setSuggestStopClock(false);
-    dispatch({ type: 'RECORD_TIMEOUT', side, timeoutType });
+    const isCorrection = correctionMode;
+    dispatch({ type: 'RECORD_TIMEOUT', side, timeoutType, correction: isCorrection });
     shouldSync.current = true;
     setPendingAction(null);
-    maybeAutoStop('Timeout');
-    const duration = game.settings.timeouts?.duration?.[timeoutType] || (timeoutType === 'full' ? 60 : 30);
-    setTimeoutCountdown({ side, type: timeoutType, timeLeft: duration });
+    if (!isCorrection) {
+      maybeAutoStop('Timeout');
+      const duration = game.settings.timeouts?.duration?.[timeoutType] || (timeoutType === 'full' ? 60 : 30);
+      setTimeoutCountdown({ side, type: timeoutType, timeLeft: duration });
+    }
+    if (isCorrection) setCorrectionMode(false);
   }
 
   // --- Player selection handler ---
   function handlePlayerSelect(side, playerIndex) {
     if (!pendingAction || pendingAction.side !== side) return;
+    const isCorrection = correctionMode;
 
     if (pendingAction.type === 'shot') {
       dispatch({
@@ -327,50 +341,55 @@ export default function GameScreen() {
         side,
         playerIndex,
         points: pendingAction.points,
+        correction: isCorrection,
       });
-      if (pendingAction.made) {
-        maybeAutoStop('Made Shot');
-        if (pendingAction.points >= 2) {
-          setSuggestAssist(side);
+      if (!isCorrection) {
+        if (pendingAction.made) {
+          maybeAutoStop('Made Shot');
+          if (pendingAction.points >= 2) {
+            setSuggestAssist(side);
+          }
+        } else {
+          setSuggestRebound(true);
         }
-      } else {
-        setSuggestRebound(true);
       }
     }
 
     if (pendingAction.type === 'stat') {
       const act = pendingAction.action;
       if (act === 'rebound-offensive') {
-        dispatch({ type: 'RECORD_REBOUND', side, playerIndex, reboundType: 'offensive' });
+        dispatch({ type: 'RECORD_REBOUND', side, playerIndex, reboundType: 'offensive', correction: isCorrection });
       } else if (act === 'rebound-defensive') {
-        dispatch({ type: 'RECORD_REBOUND', side, playerIndex, reboundType: 'defensive' });
+        dispatch({ type: 'RECORD_REBOUND', side, playerIndex, reboundType: 'defensive', correction: isCorrection });
       } else if (act === 'assist') {
-        dispatch({ type: 'RECORD_ASSIST', side, playerIndex });
-        setSuggestShot(side);
+        dispatch({ type: 'RECORD_ASSIST', side, playerIndex, correction: isCorrection });
+        if (!isCorrection) setSuggestShot(side);
       } else if (act === 'steal') {
-        dispatch({ type: 'RECORD_STEAL', side, playerIndex });
-        setSuggestTurnover(side === 'home' ? 'away' : 'home');
+        dispatch({ type: 'RECORD_STEAL', side, playerIndex, correction: isCorrection });
+        if (!isCorrection) setSuggestTurnover(side === 'home' ? 'away' : 'home');
       } else if (act === 'block') {
-        dispatch({ type: 'RECORD_BLOCK', side, playerIndex });
-        setSuggestRebound(true);
+        dispatch({ type: 'RECORD_BLOCK', side, playerIndex, correction: isCorrection });
+        if (!isCorrection) setSuggestRebound(true);
       } else if (act === 'turnover-steal' || act === 'turnover-error') {
-        dispatch({ type: 'RECORD_TURNOVER', side, playerIndex });
-        if (act === 'turnover-steal') {
-          setSuggestSteal(side === 'home' ? 'away' : 'home');
+        dispatch({ type: 'RECORD_TURNOVER', side, playerIndex, correction: isCorrection });
+        if (!isCorrection) {
+          if (act === 'turnover-steal') {
+            setSuggestSteal(side === 'home' ? 'away' : 'home');
+          }
+          maybeAutoStop('Turnover');
         }
-        maybeAutoStop('Turnover');
       } else if (act === 'foul-personal') {
-        dispatch({ type: 'RECORD_FOUL', side, playerIndex, foulType: 'personal' });
-        maybeAutoStop('Foul');
+        dispatch({ type: 'RECORD_FOUL', side, playerIndex, foulType: 'personal', correction: isCorrection });
+        if (!isCorrection) maybeAutoStop('Foul');
       } else if (act === 'foul-technical') {
-        dispatch({ type: 'RECORD_FOUL', side, playerIndex, foulType: 'technical' });
-        maybeAutoStop('Foul');
+        dispatch({ type: 'RECORD_FOUL', side, playerIndex, foulType: 'technical', correction: isCorrection });
+        if (!isCorrection) maybeAutoStop('Foul');
       } else if (act === 'foul-flagrant') {
-        dispatch({ type: 'RECORD_FOUL', side, playerIndex, foulType: 'flagrant' });
-        maybeAutoStop('Foul');
+        dispatch({ type: 'RECORD_FOUL', side, playerIndex, foulType: 'flagrant', correction: isCorrection });
+        if (!isCorrection) maybeAutoStop('Foul');
       } else if (act === 'foul-offensive') {
-        dispatch({ type: 'RECORD_FOUL', side, playerIndex, foulType: 'offensive' });
-        maybeAutoStop('Foul');
+        dispatch({ type: 'RECORD_FOUL', side, playerIndex, foulType: 'offensive', correction: isCorrection });
+        if (!isCorrection) maybeAutoStop('Foul');
       } else {
         // Parent actions (rebound, foul, turnover) need sub-menu first — ignore tap
         return;
@@ -378,6 +397,7 @@ export default function GameScreen() {
     }
 
     shouldSync.current = true;
+    if (isCorrection) setCorrectionMode(false);
     setPendingAction(null);
   }
 
@@ -581,7 +601,7 @@ export default function GameScreen() {
         <div className="game-section game-section-players">
           <div className="selection-banner">
             <span className="selection-banner-text">LATE ADD: SELECT PLAYER</span>
-            <button className="btn btn-small" onClick={() => { setLateAddNumbers({}); setPendingAction(null); }}>
+            <button className="btn btn-small" onClick={() => { setLateAddNumbers({}); cancelPending(); }}>
               Cancel
             </button>
           </div>
@@ -627,7 +647,7 @@ export default function GameScreen() {
         <div className="game-section game-section-players">
           <div className="selection-banner">
             <span className="selection-banner-text">LATE ADD SUB IN: SELECT PLAYER</span>
-            <button className="btn btn-small" onClick={() => setPendingAction(null)}>
+            <button className="btn btn-small" onClick={() => cancelPending()}>
               Cancel
             </button>
           </div>
@@ -705,9 +725,9 @@ export default function GameScreen() {
         {isSelecting && (
           <div className="selection-banner">
             <span className="selection-banner-text">
-              SELECT: {pendingLabel(pendingAction)}
+              {correctionMode ? 'CORRECT' : 'SELECT'}: {pendingLabel(pendingAction)}
             </span>
-            <button className="btn btn-small" onClick={() => setPendingAction(null)}>
+            <button className="btn btn-small" onClick={() => cancelPending()}>
               Cancel
             </button>
           </div>
@@ -1030,7 +1050,7 @@ export default function GameScreen() {
   const awayInfo = getSideInfo('away');
 
   return (
-    <div className="screen game-screen">
+    <div className={`screen game-screen ${correctionMode ? 'correction-mode' : ''}`}>
       {/* Scoreboard */}
       <div className="game-scoreboard">
         <div className="scoreboard-team home">
@@ -1105,7 +1125,36 @@ export default function GameScreen() {
             <span>STOP</span>
           </button>
 
-          {periodOver && !isGameOver && !isFinal ? (
+          {clockEdit != null ? (
+            <div className="clock-edit">
+              <div className="clock-edit-inputs">
+                <input
+                  type="number"
+                  min="0"
+                  max="99"
+                  value={clockEdit.minutes}
+                  onChange={(e) => setClockEdit({ ...clockEdit, minutes: Math.max(0, parseInt(e.target.value) || 0) })}
+                />
+                <span>:</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={clockEdit.seconds}
+                  onChange={(e) => setClockEdit({ ...clockEdit, seconds: Math.min(59, Math.max(0, parseInt(e.target.value) || 0)) })}
+                />
+              </div>
+              <div className="clock-edit-actions">
+                <button onClick={() => {
+                  dispatch({ type: 'SET_CLOCK_TIME', timeLeft: (clockEdit.minutes * 60) + clockEdit.seconds });
+                  shouldSync.current = true;
+                  setClockEdit(null);
+                  setCorrectionMode(false);
+                }}>SET</button>
+                <button onClick={() => setClockEdit(null)}>X</button>
+              </div>
+            </div>
+          ) : periodOver && !isGameOver && !isFinal ? (
             <button
               className="btn-clock next-period"
               onClick={() => { dispatch({ type: 'ADVANCE_QUARTER' }); dispatch({ type: 'TOGGLE_CLOCK' }); shouldSync.current = true; }}
@@ -1118,8 +1167,16 @@ export default function GameScreen() {
           ) : (
             <button
               className={`btn-clock ${isActive ? 'running' : 'stopped'} ${suggestStopClock && isActive ? 'suggest' : ''}`}
-              onClick={() => { dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true; }}
-              disabled={(periodOver && (isGameOver || isFinal)) || (!isActive && timeoutCountdown != null)}
+              onClick={() => {
+                if (correctionMode) {
+                  const m = Math.floor(timeLeft / 60);
+                  const s = timeLeft % 60;
+                  setClockEdit({ minutes: m, seconds: s });
+                } else {
+                  dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true;
+                }
+              }}
+              disabled={!correctionMode && ((periodOver && (isGameOver || isFinal)) || (!isActive && timeoutCountdown != null))}
             >
               <span>{isActive ? 'STOP' : 'RUN'}</span>
               <span>CLOCK</span>
@@ -1134,6 +1191,18 @@ export default function GameScreen() {
           <button className="btn-divider" onClick={() => { dispatch({ type: 'JUMP_BALL' }); maybeAutoStop('Jump Ball'); shouldSync.current = true; }}>
             <span>JUMP</span>
             <span>BALL</span>
+          </button>
+
+          <button
+            className={`btn-divider ${correctionMode ? 'correction-active' : ''}`}
+            onClick={() => {
+              setCorrectionMode(!correctionMode);
+              setPendingAction(null);
+              setClockEdit(null);
+            }}
+          >
+            <span>CORR</span>
+            <span>ECT</span>
           </button>
         </div>
 

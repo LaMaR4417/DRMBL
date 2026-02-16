@@ -1725,6 +1725,120 @@ body {
   border-color: inherit;
 }
 
+/* ── Correction mode ── */
+.btn-divider.correction-active {
+  background: #ff6f00;
+  color: var(--bg-page);
+  border-color: #ff6f00;
+  animation: correction-pulse 1s ease-in-out infinite;
+}
+
+@keyframes correction-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(255, 111, 0, 0.3); }
+  50% { box-shadow: 0 0 16px rgba(255, 111, 0, 0.7); }
+}
+
+.correction-mode .game-status-banner::after {
+  content: 'CORRECTION MODE';
+  display: block;
+  background: #ff6f00;
+  color: var(--bg-page);
+  text-align: center;
+  padding: 3px 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 4px;
+}
+
+.correction-mode .selection-banner {
+  background: rgba(255, 111, 0, 0.15);
+  border-color: #ff6f00;
+}
+
+.correction-mode .selection-banner-text {
+  color: #ff6f00;
+}
+
+.correction-mode .player-card.selectable {
+  border-color: #ff6f00;
+  box-shadow: 0 0 6px rgba(255, 111, 0, 0.25);
+}
+
+.correction-mode .btn-action.active {
+  border-color: #ff6f00;
+  background: rgba(255, 111, 0, 0.15);
+  color: #ff6f00;
+}
+
+/* Clock edit inline UI */
+.clock-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.clock-edit-inputs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.clock-edit-inputs input {
+  width: 36px;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid #ff6f00;
+  border-radius: 4px;
+  padding: 4px 2px;
+}
+
+/* Hide number input spinners */
+.clock-edit-inputs input::-webkit-inner-spin-button,
+.clock-edit-inputs input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.clock-edit-inputs input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.clock-edit-inputs span {
+  color: #ff6f00;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+}
+
+.clock-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.clock-edit-actions button {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 4px;
+  border: 1px solid;
+  cursor: pointer;
+}
+
+.clock-edit-actions button:first-child {
+  background: #ff6f00;
+  color: var(--bg-page);
+  border-color: #ff6f00;
+}
+
+.clock-edit-actions button:last-child {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
 /* Substitution section labels */
 .sub-section-label {
   font-family: 'Bebas Neue', sans-serif;
