@@ -3,3 +3,5 @@ nul
 *.psd
 node_modules/
 .vercel/
+
+.env*.local

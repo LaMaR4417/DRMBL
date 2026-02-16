@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer } from 'react';
-import { DRMBL_DEFAULT } from '../data/gameSettings';
+import { buildBoxScore } from '../data/boxScore';
 
 const GameContext = createContext(null);
 const GameDispatchContext = createContext(null);
@@ -8,8 +8,8 @@ const initialState = {
   // Pre-game setup step tracking
   setupStep: 0, // 0=home, 1=settings, 2=teams, 3=attendance, 4=numbers, 5=starters, 6=tipoff
 
-  // Game settings (loaded from preset, overridable)
-  settings: structuredClone(DRMBL_DEFAULT),
+  // Game settings (loaded from API at step 1, null until then)
+  settings: null,
 
   // Team selections — set during team pick, roster loaded async from API
   // { teamID, name, slot, roster: [...] | null }
@@ -28,9 +28,29 @@ const initialState = {
   homeStarters: new Set(),
   awayStarters: new Set(),
 
+  // Captain: one playerID per team (or null)
+  homeCaptain: null,
+  awayCaptain: null,
+
   // Tip-off winner: 'home' | 'away' | null
   tipOffWinner: null,
+
+  // First possession after tip-off: 'home' | 'away' | null
+  firstPossession: null,
+
+  // Box score: initialized after tip-off, before game tracking
+  boxScore: null,
 };
+
+// Helpers for game tracking reducers
+function calcPercentage(made, attempted) {
+  return attempted === 0 ? 0 : Math.round((made / attempted) * 100);
+}
+
+const QUARTER_KEYS = { 1: 'first', 2: 'second', 3: 'third', 4: 'fourth' };
+function getQuarterKey(q) {
+  return QUARTER_KEYS[q] || 'fourth';
+}
 
 function gameReducer(state, action) {
   switch (action.type) {
@@ -53,6 +73,17 @@ function gameReducer(state, action) {
         homeAttendance: new Set(),
         homeNumberOverrides: {},
         homeStarters: new Set(),
+        homeCaptain: null,
+      };
+
+    case 'CLEAR_HOME_TEAM':
+      return {
+        ...state,
+        homeTeam: null,
+        homeAttendance: new Set(),
+        homeNumberOverrides: {},
+        homeStarters: new Set(),
+        homeCaptain: null,
       };
 
     case 'SET_AWAY_TEAM':
@@ -62,6 +93,17 @@ function gameReducer(state, action) {
         awayAttendance: new Set(),
         awayNumberOverrides: {},
         awayStarters: new Set(),
+        awayCaptain: null,
+      };
+
+    case 'CLEAR_AWAY_TEAM':
+      return {
+        ...state,
+        awayTeam: null,
+        awayAttendance: new Set(),
+        awayNumberOverrides: {},
+        awayStarters: new Set(),
+        awayCaptain: null,
       };
 
     case 'SET_TEAM_ROSTER': {
@@ -122,8 +164,269 @@ function gameReducer(state, action) {
       return { ...state, [key]: next };
     }
 
+    case 'SET_STARTERS': {
+      const key = action.side === 'home' ? 'homeStarters' : 'awayStarters';
+      return { ...state, [key]: new Set(action.playerIDs) };
+    }
+
+    case 'SET_CAPTAIN': {
+      const key = action.side === 'home' ? 'homeCaptain' : 'awayCaptain';
+      return { ...state, [key]: action.playerID };
+    }
+
+    case 'CLEAR_CAPTAIN': {
+      const key = action.side === 'home' ? 'homeCaptain' : 'awayCaptain';
+      return { ...state, [key]: null };
+    }
+
     case 'SET_TIP_OFF_WINNER':
       return { ...state, tipOffWinner: action.winner };
+
+    case 'INIT_BOX_SCORE':
+      return { ...state, boxScore: buildBoxScore(state) };
+
+    case 'RECORD_MADE_SHOT': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex, points } = action;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+      const teamStats = bs.teamInfo[side].stats;
+      const qKey = getQuarterKey(bs.gameInfo.state.currentQuarter);
+
+      player.stats.offense.points += points;
+
+      if (points === 1) {
+        const ft = player.stats.offense.shootingBreakdown.freeThrows;
+        ft.attempted += 1;
+        ft.made += 1;
+        ft.percentage = calcPercentage(ft.made, ft.attempted);
+        const tft = teamStats.shootingBreakdown.freeThrows;
+        tft.attempted += 1;
+        tft.made += 1;
+        tft.percentage = calcPercentage(tft.made, tft.attempted);
+      } else {
+        const shotKey = points === 2 ? '2-PointShots' : '3-PointShots';
+        const fg = player.stats.offense.shootingBreakdown.fieldGoals;
+        fg.totalAttempted += 1;
+        fg.totalMade += 1;
+        fg[shotKey].attempted += 1;
+        fg[shotKey].made += 1;
+        fg[shotKey].percentage = calcPercentage(fg[shotKey].made, fg[shotKey].attempted);
+        fg.totalPercentage = calcPercentage(fg.totalMade, fg.totalAttempted);
+        const tfg = teamStats.shootingBreakdown.fieldGoals;
+        tfg.totalAttempted += 1;
+        tfg.totalMade += 1;
+        tfg[shotKey].attempted += 1;
+        tfg[shotKey].made += 1;
+        tfg[shotKey].percentage = calcPercentage(tfg[shotKey].made, tfg[shotKey].attempted);
+        tfg.totalPercentage = calcPercentage(tfg.totalMade, tfg.totalAttempted);
+      }
+
+      bs.teamInfo[side].score.current += points;
+      bs.teamInfo[side].score.perQuarter[qKey] =
+        (bs.teamInfo[side].score.perQuarter[qKey] || 0) + points;
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'RECORD_MISSED_SHOT': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex, points } = action;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+      const teamStats = bs.teamInfo[side].stats;
+
+      if (points === 1) {
+        const ft = player.stats.offense.shootingBreakdown.freeThrows;
+        ft.attempted += 1;
+        ft.missed += 1;
+        ft.percentage = calcPercentage(ft.made, ft.attempted);
+        const tft = teamStats.shootingBreakdown.freeThrows;
+        tft.attempted += 1;
+        tft.missed += 1;
+        tft.percentage = calcPercentage(tft.made, tft.attempted);
+      } else {
+        const shotKey = points === 2 ? '2-PointShots' : '3-PointShots';
+        const fg = player.stats.offense.shootingBreakdown.fieldGoals;
+        fg.totalAttempted += 1;
+        fg.totalMissed += 1;
+        fg[shotKey].attempted += 1;
+        fg[shotKey].missed += 1;
+        fg[shotKey].percentage = calcPercentage(fg[shotKey].made, fg[shotKey].attempted);
+        fg.totalPercentage = calcPercentage(fg.totalMade, fg.totalAttempted);
+        const tfg = teamStats.shootingBreakdown.fieldGoals;
+        tfg.totalAttempted += 1;
+        tfg.totalMissed += 1;
+        tfg[shotKey].attempted += 1;
+        tfg[shotKey].missed += 1;
+        tfg[shotKey].percentage = calcPercentage(tfg[shotKey].made, tfg[shotKey].attempted);
+        tfg.totalPercentage = calcPercentage(tfg.totalMade, tfg.totalAttempted);
+      }
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'SET_CLOCK_TIME':
+      return {
+        ...state,
+        boxScore: {
+          ...state.boxScore,
+          gameInfo: {
+            ...state.boxScore.gameInfo,
+            state: {
+              ...state.boxScore.gameInfo.state,
+              clock: { ...state.boxScore.gameInfo.state.clock, timeLeft: action.timeLeft },
+            },
+          },
+        },
+      };
+
+    case 'TOGGLE_CLOCK': {
+      const wasActive = state.boxScore.gameInfo.state.active;
+      return {
+        ...state,
+        boxScore: {
+          ...state.boxScore,
+          gameInfo: {
+            ...state.boxScore.gameInfo,
+            general: { ...state.boxScore.gameInfo.general, status: 'in-progress' },
+            state: {
+              ...state.boxScore.gameInfo.state,
+              active: !wasActive,
+            },
+          },
+        },
+      };
+    }
+
+    case 'ADVANCE_QUARTER': {
+      const bs = structuredClone(state.boxScore);
+      bs.gameInfo.state.currentQuarter += 1;
+      bs.gameInfo.state.clock.timeLeft = bs.gameInfo.state.clock.perQuarter * 60;
+      bs.gameInfo.state.active = false;
+      return { ...state, boxScore: bs };
+    }
+
+    case 'RECORD_REBOUND': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex, reboundType } = action;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+      const teamStats = bs.teamInfo[side].stats;
+
+      player.stats.rebounds[reboundType] += 1;
+      player.stats.rebounds.total += 1;
+      teamStats.rebounds[reboundType] += 1;
+      teamStats.rebounds.total += 1;
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'RECORD_ASSIST': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex } = action;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+
+      player.stats.offense.assists += 1;
+      bs.teamInfo[side].stats.assists += 1;
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'RECORD_STEAL': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex } = action;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+
+      player.stats.defense.steals += 1;
+      bs.teamInfo[side].stats.defense.steals += 1;
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'RECORD_BLOCK': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex } = action;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+
+      player.stats.defense.blocks += 1;
+      bs.teamInfo[side].stats.defense.blocks += 1;
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'RECORD_TURNOVER': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex } = action;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+
+      player.stats.general.turnovers += 1;
+      bs.teamInfo[side].stats.turnovers += 1;
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'RECORD_FOUL': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex, foulType } = action;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+      const teamStats = bs.teamInfo[side].stats;
+      const qKey = getQuarterKey(bs.gameInfo.state.currentQuarter);
+
+      if (foulType === 'personal') {
+        player.stats.general.fouls.personal.total += 1;
+      } else if (foulType === 'offensive') {
+        player.stats.general.fouls.personal.total += 1;
+        player.stats.general.fouls.personal.offensive += 1;
+      } else if (foulType === 'technical') {
+        player.stats.general.fouls.technical += 1;
+      } else if (foulType === 'flagrant') {
+        player.stats.general.fouls.flagrant += 1;
+      }
+
+      teamStats.fouls.total += 1;
+      if (!teamStats.fouls.perQuarter[qKey]) {
+        teamStats.fouls.perQuarter[qKey] = { committed: 0, opponentInBonus: false };
+      }
+      teamStats.fouls.perQuarter[qKey].committed += 1;
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'SET_FIRST_POSSESSION':
+      return { ...state, firstPossession: action.side };
+
+    case 'SET_POSSESSION': {
+      return {
+        ...state,
+        boxScore: {
+          ...state.boxScore,
+          gameInfo: {
+            ...state.boxScore.gameInfo,
+            state: {
+              ...state.boxScore.gameInfo.state,
+              possession: action.side,
+            },
+          },
+        },
+      };
+    }
+
+    case 'RECORD_TIMEOUT': {
+      const bs = structuredClone(state.boxScore);
+      const { side, timeoutType } = action; // timeoutType: 'full' | 'short'
+      const timeouts = bs.teamInfo[side].stats.timeouts;
+
+      timeouts.used[timeoutType] += 1;
+      timeouts.remaining[timeoutType] -= 1;
+
+      return { ...state, boxScore: bs };
+    }
+
+    case 'JUMP_BALL': {
+      const bs = structuredClone(state.boxScore);
+      const arrow = bs.gameInfo.state.possessionArrow;
+      bs.gameInfo.state.possession = arrow;
+      bs.gameInfo.state.possessionArrow = arrow === 'home' ? 'away' : 'home';
+      return { ...state, boxScore: bs };
+    }
 
     default:
       return state;

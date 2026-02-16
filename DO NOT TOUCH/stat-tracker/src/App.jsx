@@ -3,6 +3,10 @@ import HomeScreen from './screens/HomeScreen';
 import GameSettingsScreen from './screens/GameSettingsScreen';
 import TeamSelectScreen from './screens/TeamSelectScreen';
 import AttendanceScreen from './screens/AttendanceScreen';
+import AssignNumbersScreen from './screens/AssignNumbersScreen';
+import PickStartersScreen from './screens/PickStartersScreen';
+import TipOffScreen from './screens/TipOffScreen';
+import GameScreen from './screens/GameScreen';
 
 function AppContent() {
   const game = useGame();
@@ -16,6 +20,14 @@ function AppContent() {
       return <TeamSelectScreen />;
     case 3:
       return <AttendanceScreen />;
+    case 4:
+      return <AssignNumbersScreen />;
+    case 5:
+      return <PickStartersScreen />;
+    case 6:
+      return <TipOffScreen />;
+    case 7:
+      return <GameScreen />;
     default:
       return <HomeScreen />;
   }

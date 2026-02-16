@@ -1,0 +1,79 @@
+{
+    "offense": {
+        "madeShot": [
+            { "id": "1pt-make", "name": "1-Point Make", "value": 1 },
+            { "id": "2pt-make", "name": "2-Point Make", "value": 2 },
+            { "id": "3pt-make", "name": "3-Point Make", "value": 3 },
+            { "id": "and-1", "name": "And-1 Make", "value": {
+                "2pt": false, "3pt": false 
+            }}
+        ],
+        "missedShot": [
+            { "id": "1pt-miss", "name": "1-Point Miss", "value": 1 },
+            { "id": "2pt-miss", "name": "2-Point Miss", "value": 2 },
+            { "id": "3pt-miss", "name": "3-Point Miss", "value": 3 }
+        ],
+        "assist": {
+            "id": "assist",
+            "name": "Assist"
+        },
+        "turnover": {
+            "id": "turnover",
+            "name": "Turnover",
+            "types": [
+                { "id": "turnover-steal", "name": "Steal" },
+                { "id": "turnover-error", "name": "Player Error" }
+            ]
+        }
+    },
+    "defense": {
+        "steal": {
+            "id": "steal",
+            "name": "Steal"
+        },
+        "block": {
+            "id": "block",
+            "name": "Block"
+        }
+    },
+    "general": {
+        "rebound": {
+            "id": "rebound",
+            "name": "Rebound",
+            "types": [
+                { "id": "rebound-offensive", "name": "Offensive" },
+                { "id": "rebound-defensive", "name": "Defensive" }
+            ]
+        },
+        "foul": {
+            "id": "foul",
+            "name": "Foul",
+            "types": [
+                { "id": "foul-personal", "name": "Personal" },
+                { "id": "foul-technical", "name": "Technical" },
+                { "id": "foul-flagrant", "name": "Flagrant" },
+                { "id": "foul-offensive", "name": "Offensive" }
+            ]
+        },
+        "timeout": {
+            "id": "timeout",
+            "name": "Timeout",
+            "types": [
+                { "id": "timeout-full", "name": "Full" },
+                { "id": "timeout-short", "name": "Short" }
+            ]
+        },
+        "substitution": {
+            "id": "substitution",
+            "name": "Substitution"
+        },
+        "jumpBall": {
+            "id": "jump-ball",
+            "name": "Jump Ball"
+        },
+        "refereeTimeout": {
+            "id": "referee-timeout",
+            "name": "Referee Timeout"
+        }
+    }
+}

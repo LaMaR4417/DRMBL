@@ -32,6 +32,11 @@ export default function TeamSelectScreen() {
     game.homeTeam && game.awayTeam && game.homeTeam.teamID !== game.awayTeam.teamID;
 
   function selectTeam(side, team) {
+    const current = side === 'home' ? game.homeTeam : game.awayTeam;
+    if (current?.teamID === team.teamID) {
+      dispatch({ type: side === 'home' ? 'CLEAR_HOME_TEAM' : 'CLEAR_AWAY_TEAM' });
+      return;
+    }
     dispatch({
       type: side === 'home' ? 'SET_HOME_TEAM' : 'SET_AWAY_TEAM',
       teamID: team.teamID,
@@ -114,12 +119,22 @@ export default function TeamSelectScreen() {
 
   return (
     <div className="screen team-select-screen">
-      <div className="screen-header">
+      <div className={`screen-header ${canProceed ? 'has-matchup' : ''}`}>
         <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 1 })}>
           Back
         </button>
-        <h2>Pick Teams</h2>
-        <div className="header-spacer" />
+        {canProceed ? (
+          <div className="matchup-bar">
+            <span className="matchup-bar-team home">{game.homeTeam.name}</span>
+            <span className="matchup-bar-vs">VS</span>
+            <span className="matchup-bar-team away">{game.awayTeam.name}</span>
+          </div>
+        ) : (
+          <>
+            <h2>Pick Teams</h2>
+            <div className="header-spacer" />
+          </>
+        )}
       </div>
 
       <div className="team-select-content">
@@ -143,18 +158,6 @@ export default function TeamSelectScreen() {
               );
             })}
           </div>
-        </div>
-
-        {/* VS Divider */}
-        <div className="vs-divider">
-          <span className="vs-text">VS</span>
-          {canProceed && (
-            <div className="matchup-preview">
-              <span className="matchup-team">{game.homeTeam.name}</span>
-              <span className="matchup-vs">vs</span>
-              <span className="matchup-team">{game.awayTeam.name}</span>
-            </div>
-          )}
         </div>
 
         {/* Away Team */}

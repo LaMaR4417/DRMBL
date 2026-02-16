@@ -13,3 +13,10 @@ export async function fetchTeamRoster(teamID) {
   if (!res.ok) throw new Error('Failed to load team data');
   return res.json();
 }
+
+export async function fetchGameSettings() {
+  const res = await fetch('/api/game-settings');
+  if (!res.ok) throw new Error('Failed to load game settings');
+  const data = await res.json();
+  return data.presets;
+}

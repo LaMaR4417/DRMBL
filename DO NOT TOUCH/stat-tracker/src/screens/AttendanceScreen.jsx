@@ -6,23 +6,108 @@ export default function AttendanceScreen() {
 
   const homePresent = game.homeAttendance.size;
   const awayPresent = game.awayAttendance.size;
-  const canProceed = homePresent >= 5 && awayPresent >= 5;
+
+  function getNumber(side, playerID) {
+    const overrides = side === 'home' ? game.homeNumberOverrides : game.awayNumberOverrides;
+    return overrides[playerID] ?? '';
+  }
+
+  function setNumber(side, playerID, value) {
+    if (value === '') {
+      dispatch({ type: 'CLEAR_NUMBER_OVERRIDE', side, playerID });
+    } else {
+      dispatch({ type: 'SET_NUMBER_OVERRIDE', side, playerID, number: value });
+    }
+  }
+
+  function allNumbersAssigned(side) {
+    const team = side === 'home' ? game.homeTeam : game.awayTeam;
+    const attendance = side === 'home' ? game.homeAttendance : game.awayAttendance;
+    if (!team || !team.roster) return false;
+    return team.roster
+      .filter((p) => attendance.has(p.playerID))
+      .every((p) => getNumber(side, p.playerID) !== '');
+  }
+
+  const homeStarters = game.homeStarters;
+  const awayStarters = game.awayStarters;
+
+  const canProceed =
+    homePresent >= 5 && awayPresent >= 5 &&
+    allNumbersAssigned('home') && allNumbersAssigned('away') &&
+    game.homeCaptain !== null && game.awayCaptain !== null &&
+    homeStarters.size === 5 && awayStarters.size === 5;
 
   function togglePlayer(side, playerID) {
-    dispatch({ type: 'TOGGLE_ATTENDANCE', side, playerID });
+    const attendance = side === 'home' ? game.homeAttendance : game.awayAttendance;
+    const captain = side === 'home' ? game.homeCaptain : game.awayCaptain;
+    const isCheckedIn = attendance.has(playerID);
+
+    if (isCheckedIn) {
+      // Unchecking: clear captain and starter if needed
+      if (captain === playerID) {
+        dispatch({ type: 'CLEAR_CAPTAIN', side });
+      }
+      dispatch({ type: 'TOGGLE_ATTENDANCE', side, playerID });
+      // After removing, if exactly 5 remain, auto-select them as starters
+      const remaining = [...attendance].filter((id) => id !== playerID);
+      if (remaining.length === 5) {
+        dispatch({ type: 'SET_STARTERS', side, playerIDs: remaining });
+      } else {
+        // Remove this player from starters if they were one
+        const starters = side === 'home' ? game.homeStarters : game.awayStarters;
+        if (starters.has(playerID)) {
+          dispatch({ type: 'TOGGLE_STARTER', side, playerID });
+        }
+      }
+    } else {
+      // Checking in
+      dispatch({ type: 'TOGGLE_ATTENDANCE', side, playerID });
+      const newCount = attendance.size + 1;
+      if (newCount === 5) {
+        // Exactly 5: auto-select all as starters
+        dispatch({ type: 'SET_STARTERS', side, playerIDs: [...attendance, playerID] });
+      } else if (newCount === 6) {
+        // 6th player added: clear auto-selected starters
+        dispatch({ type: 'SET_STARTERS', side, playerIDs: [] });
+      }
+    }
   }
 
   function selectAll(side) {
+    const team = side === 'home' ? game.homeTeam : game.awayTeam;
     dispatch({ type: 'SELECT_ALL_ATTENDANCE', side });
+    if (team && team.roster && team.roster.length === 5) {
+      dispatch({ type: 'SET_STARTERS', side, playerIDs: team.roster.map((p) => p.playerID) });
+    } else {
+      dispatch({ type: 'SET_STARTERS', side, playerIDs: [] });
+    }
   }
 
   function clearAll(side) {
+    dispatch({ type: 'CLEAR_CAPTAIN', side });
+    dispatch({ type: 'SET_STARTERS', side, playerIDs: [] });
     dispatch({ type: 'CLEAR_ATTENDANCE', side });
+  }
+
+  function toggleCaptain(side, playerID) {
+    const current = side === 'home' ? game.homeCaptain : game.awayCaptain;
+    if (current === playerID) {
+      dispatch({ type: 'CLEAR_CAPTAIN', side });
+    } else {
+      dispatch({ type: 'SET_CAPTAIN', side, playerID });
+    }
+  }
+
+  function toggleStarter(side, playerID) {
+    dispatch({ type: 'TOGGLE_STARTER', side, playerID });
   }
 
   function renderTeamRoster(side) {
     const team = side === 'home' ? game.homeTeam : game.awayTeam;
     const attendance = side === 'home' ? game.homeAttendance : game.awayAttendance;
+    const captain = side === 'home' ? game.homeCaptain : game.awayCaptain;
+    const starters = side === 'home' ? game.homeStarters : game.awayStarters;
 
     if (!team) return null;
 
@@ -44,11 +129,11 @@ export default function AttendanceScreen() {
         <div className="attendance-team-header">
           <h3>{team.name}</h3>
           <div className="attendance-actions">
-            <button
-              className="btn btn-small"
-              onClick={() => (allSelected ? clearAll(side) : selectAll(side))}
-            >
-              {allSelected ? 'Clear All' : 'Select All'}
+            <button className="btn btn-small" onClick={() => selectAll(side)}>
+              Select All
+            </button>
+            <button className="btn btn-small" onClick={() => clearAll(side)}>
+              Clear All
             </button>
             <span className="attendance-count">{attendance.size}/{team.roster.length}</span>
           </div>
@@ -56,15 +141,48 @@ export default function AttendanceScreen() {
         <div className="player-list">
           {team.roster.map((player) => {
             const present = attendance.has(player.playerID);
+            const isCaptain = captain === player.playerID;
+            const canSetCaptain = present && (captain === null || isCaptain);
+            const isStarter = starters.has(player.playerID);
+            const canSetStarter = present && (starters.size < 5 || isStarter);
             return (
-              <button
-                key={player.playerID}
-                className={`btn btn-player ${present ? 'checked' : ''}`}
-                onClick={() => togglePlayer(side, player.playerID)}
-              >
-                <span className="player-check">{present ? '\u2713' : ''}</span>
-                <span className="player-name">{player.name}</span>
-              </button>
+              <div key={player.playerID} className={`attendance-row ${present ? 'checked' : ''}`}>
+                <button
+                  tabIndex={-1}
+                  className={`btn btn-player ${present ? 'checked' : ''}`}
+                  onClick={() => togglePlayer(side, player.playerID)}
+                >
+                  <span className="player-check">{present ? '\u2713' : ''}</span>
+                  <span className="player-name">{player.name}</span>
+                </button>
+                <button
+                  tabIndex={-1}
+                  className={`btn btn-captain ${isCaptain ? 'active' : ''}`}
+                  disabled={!canSetCaptain}
+                  onClick={() => toggleCaptain(side, player.playerID)}
+                >
+                  C
+                </button>
+                <button
+                  tabIndex={-1}
+                  className={`btn btn-starter ${isStarter ? 'active' : ''}`}
+                  disabled={!canSetStarter}
+                  onClick={() => toggleStarter(side, player.playerID)}
+                >
+                  Starter
+                </button>
+                <input
+                  className="number-input"
+                  type="number"
+                  min="0"
+                  max="99"
+                  placeholder="#"
+                  disabled={!present}
+                  value={getNumber(side, player.playerID)}
+                  onChange={(e) => setNumber(side, player.playerID, e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
             );
           })}
         </div>
@@ -77,6 +195,24 @@ export default function AttendanceScreen() {
       </div>
     );
   }
+
+  function getFooterHint() {
+    if (homePresent < 5 || awayPresent < 5) {
+      return 'Each team needs at least 5 players checked in';
+    }
+    if (!allNumbersAssigned('home') || !allNumbersAssigned('away')) {
+      return 'Every checked-in player needs a number assigned';
+    }
+    if (game.homeCaptain === null || game.awayCaptain === null) {
+      return 'Each team needs a captain selected';
+    }
+    if (homeStarters.size < 5 || awayStarters.size < 5) {
+      return `Pick 5 starters per team (Home: ${homeStarters.size}/5, Away: ${awayStarters.size}/5)`;
+    }
+    return null;
+  }
+
+  const footerHint = getFooterHint();
 
   return (
     <div className="screen attendance-screen">
@@ -98,12 +234,12 @@ export default function AttendanceScreen() {
         <button
           className="btn btn-primary btn-large"
           disabled={!canProceed}
-          onClick={() => dispatch({ type: 'SET_STEP', step: 4 })}
+          onClick={() => dispatch({ type: 'SET_STEP', step: 6 })}
         >
-          Next: Correct Numbers
+          Next: Tip-Off
         </button>
-        {!canProceed && (
-          <p className="footer-hint">Each team needs at least 5 players checked in</p>
+        {!canProceed && footerHint && (
+          <p className="footer-hint">{footerHint}</p>
         )}
       </div>
     </div>
