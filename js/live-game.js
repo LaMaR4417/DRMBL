@@ -7,6 +7,9 @@
     // All active games from the latest poll
     var allGames = [];
 
+    // Currently selected game ID (null = auto-select first)
+    var selectedGameId = null;
+
     // Per-game local clock state, keyed by gameId
     var gameClocks = {};
 
@@ -86,11 +89,12 @@
                     gc.localTimeLeft -= 1;
                 }
             }
-            // Update the displayed clock for the first game
-            if (allGames.length > 0) {
-                var gc = gameClocks[allGames[0].gameId];
-                if (gc && els.clock) {
-                    els.clock.textContent = formatClock(gc.localTimeLeft);
+            // Update the displayed clock for the selected game
+            var activeId = selectedGameId || (allGames.length > 0 ? allGames[0].gameId : null);
+            if (activeId) {
+                var selGc = gameClocks[activeId];
+                if (selGc && els.clock) {
+                    els.clock.textContent = formatClock(selGc.localTimeLeft);
                 }
             }
         }, 1000);
@@ -108,22 +112,81 @@
     function showNoGame() {
         els.noGame.classList.remove('hidden');
         els.liveGame.classList.add('hidden');
+        els.gameSelector.classList.add('hidden');
         els.lastUpdated.classList.add('hidden');
         stopLocalClock();
     }
 
     // ── RENDER ──
 
+    function selectGame(gameId) {
+        selectedGameId = gameId;
+        renderAllGames();
+    }
+
+    function renderGameSelector() {
+        if (allGames.length <= 1) {
+            els.gameSelector.classList.add('hidden');
+            return;
+        }
+
+        els.gameSelector.classList.remove('hidden');
+        var activeId = selectedGameId || allGames[0].gameId;
+
+        var html = '';
+        for (var i = 0; i < allGames.length; i++) {
+            var g = allGames[i];
+            var bs = g.boxScore;
+            var home = bs.teamInfo.home;
+            var away = bs.teamInfo.away;
+            var isFinal = bs.gameInfo.general.status === 'final';
+            var isActive = bs.gameInfo.state.active;
+            var isSelected = g.gameId === activeId;
+
+            var statusClass = isFinal ? 'final' : (isActive ? 'live' : 'stopped');
+
+            html += '<button class="game-card' + (isSelected ? ' selected' : '') + '" data-game-id="' + g.gameId + '">';
+            html += '<span class="game-card-status ' + statusClass + '">' + (isFinal ? 'FINAL' : (isActive ? 'LIVE' : 'STOPPED')) + '</span>';
+            html += '<span class="game-card-teams">' + home.name + ' vs ' + away.name + '</span>';
+            html += '<span class="game-card-score">' + home.score.current + ' - ' + away.score.current + '</span>';
+            html += '</button>';
+        }
+
+        els.gameSelector.innerHTML = html;
+
+        // Attach click handlers
+        var cards = els.gameSelector.querySelectorAll('.game-card');
+        for (var j = 0; j < cards.length; j++) {
+            cards[j].addEventListener('click', function () {
+                selectGame(this.getAttribute('data-game-id'));
+            });
+        }
+    }
+
     function renderAllGames() {
         if (allGames.length === 0) {
             showNoGame();
+            els.gameSelector.classList.add('hidden');
             stopLocalClock();
             return;
         }
 
-        // Render the first game using existing single-game layout.
-        // UI agent can extend this to render multiple game cards.
-        var game = allGames[0];
+        // If the selected game is no longer in the list, reset to first
+        var found = false;
+        for (var i = 0; i < allGames.length; i++) {
+            if (allGames[i].gameId === selectedGameId) { found = true; break; }
+        }
+        if (!found) selectedGameId = allGames[0].gameId;
+
+        renderGameSelector();
+
+        // Find the selected game and render it
+        var game = null;
+        for (var k = 0; k < allGames.length; k++) {
+            if (allGames[k].gameId === selectedGameId) { game = allGames[k]; break; }
+        }
+        if (!game) game = allGames[0];
+
         var gc = gameClocks[game.gameId] || { localTimeLeft: 0, clockIsActive: false };
         renderGame(game.boxScore, game.updatedAt, gc);
     }
@@ -330,6 +393,7 @@
         els = {
             noGame: document.getElementById('no-game'),
             liveGame: document.getElementById('live-game'),
+            gameSelector: document.getElementById('game-selector'),
             header: document.getElementById('live-header'),
             headerLabel: document.getElementById('live-header-label'),
             headerSub: document.getElementById('live-header-sub'),

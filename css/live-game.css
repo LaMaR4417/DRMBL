@@ -38,11 +38,84 @@
     color: rgba(255, 255, 255, 0.35) !important;
 }
 
+/* ── GAME SELECTOR ── */
+.game-selector {
+    padding-top: 141px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 0;
+    background: #0d0d0d;
+    flex-wrap: wrap;
+}
+
+.game-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 20px;
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.game-card:hover {
+    background: #222;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.game-card.selected {
+    border-color: var(--court-wood);
+    background: #1c1408;
+}
+
+.game-card-status {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.game-card-status.live {
+    color: #4caf50;
+}
+
+.game-card-status.stopped {
+    color: #c9302c;
+}
+
+.game-card-status.final {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.game-card-teams {
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.game-card-score {
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: #fff;
+}
+
 /* ── LIVE GAME CONTAINER ── */
 .live-game-section {
     padding-top: 141px;
     padding-bottom: 40px;
     background: #0d0d0d;
+}
+
+.game-selector:not(.hidden) + .live-game-section {
+    padding-top: 0;
 }
 
 /* ── STATUS HEADER ── */
@@ -376,6 +449,27 @@
 
     .live-game-section {
         padding-top: 141px;
+    }
+
+    .game-selector {
+        padding-top: 141px;
+        gap: 8px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .game-card {
+        padding: 8px 14px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .game-card-teams {
+        font-size: 13px;
+    }
+
+    .game-card-score {
+        font-size: 18px;
     }
 
     .live-score-row {
