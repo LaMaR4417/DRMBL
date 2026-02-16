@@ -337,6 +337,14 @@ function gameReducer(state, action) {
         : bs.gameInfo.state.clock.perQuarter * 60;
       bs.gameInfo.state.active = false;
       if (isOT) bs.gameInfo.state.overtimes += 1;
+
+      // Clear clock-entry timestamps (time already finalized when clock stopped at 0:00)
+      for (const side of ['home', 'away']) {
+        for (const p of bs.teamInfo[side].roster.inGame) {
+          p._clockTimeAtEntry = null;
+        }
+      }
+
       return { ...state, boxScore: bs };
     }
 
@@ -347,6 +355,20 @@ function gameReducer(state, action) {
       const awayScore = bs.teamInfo.away.score.current;
       bs.gameInfo.state.winner = homeScore >= awayScore ? 'home' : 'away';
       bs.gameInfo.state.loser = homeScore >= awayScore ? 'away' : 'home';
+
+      // Finalize any remaining on-court time if clock was still active
+      if (bs.gameInfo.state.active) {
+        const timeLeftNow = bs.gameInfo.state.clock.timeLeft;
+        for (const side of ['home', 'away']) {
+          for (const p of bs.teamInfo[side].roster.inGame) {
+            if (p.playerID && p.onCourt && p._clockTimeAtEntry != null) {
+              p.stats.general.minutesPlayed += finalizeTime(p._clockTimeAtEntry, timeLeftNow);
+            }
+            p._clockTimeAtEntry = null;
+          }
+        }
+      }
+
       bs.gameInfo.state.active = false;
       return { ...state, boxScore: bs };
     }
@@ -476,8 +498,20 @@ function gameReducer(state, action) {
     case 'RECORD_SUBSTITUTION': {
       const bs = structuredClone(state.boxScore);
       const { side, outIndex, inIndex } = action;
-      bs.teamInfo[side].roster.inGame[outIndex].onCourt = false;
-      bs.teamInfo[side].roster.inGame[inIndex].onCourt = true;
+      const clockActive = bs.gameInfo.state.active;
+      const timeLeftNow = bs.gameInfo.state.clock.timeLeft;
+      const outPlayer = bs.teamInfo[side].roster.inGame[outIndex];
+      const inPlayer = bs.teamInfo[side].roster.inGame[inIndex];
+
+      if (clockActive && outPlayer._clockTimeAtEntry != null) {
+        outPlayer.stats.general.minutesPlayed += finalizeTime(outPlayer._clockTimeAtEntry, timeLeftNow);
+      }
+      outPlayer.onCourt = false;
+      outPlayer._clockTimeAtEntry = null;
+
+      inPlayer.onCourt = true;
+      inPlayer._clockTimeAtEntry = clockActive ? timeLeftNow : null;
+
       return { ...state, boxScore: bs };
     }
 
@@ -495,6 +529,7 @@ function gameReducer(state, action) {
         captain: false,
         position: null,
         stats: buildEmptyPlayerStats(),
+        _clockTimeAtEntry: null,
       };
       return { ...state, boxScore: bs };
     }
@@ -502,7 +537,11 @@ function gameReducer(state, action) {
     case 'SUB_IN_PLAYER': {
       const bs = structuredClone(state.boxScore);
       const { side, playerIndex } = action;
-      bs.teamInfo[side].roster.inGame[playerIndex].onCourt = true;
+      const player = bs.teamInfo[side].roster.inGame[playerIndex];
+      player.onCourt = true;
+      player._clockTimeAtEntry = bs.gameInfo.state.active
+        ? bs.gameInfo.state.clock.timeLeft
+        : null;
       return { ...state, boxScore: bs };
     }
 

@@ -516,6 +516,7 @@ export default function GameScreen() {
             <div className="stat-row"><span className="stat-label">FG%</span><span className="stat-value">{player.stats.offense.shootingBreakdown.fieldGoals.totalPercentage}%</span></div>
             <div className="stat-row"><span className="stat-label">REB</span><span className="stat-value">{player.stats.rebounds.total}</span></div>
             <div className="stat-row"><span className="stat-label">AST</span><span className="stat-value">{player.stats.offense.assists}</span></div>
+            <div className="stat-row"><span className="stat-label">MIN</span><span className="stat-value">{formatClock(player.stats.general.minutesPlayed)}</span></div>
           </div>
           <div className="stats-divider" />
           <div className="stats-col">
@@ -523,6 +524,7 @@ export default function GameScreen() {
             <div className="stat-row"><span className="stat-label">BLK</span><span className="stat-value">{player.stats.defense.blocks}</span></div>
             <div className="stat-row"><span className="stat-label">TO</span><span className="stat-value">{player.stats.general.turnovers}</span></div>
             <div className="stat-row"><span className="stat-label">PF</span><span className="stat-value">{player.stats.general.fouls.personal.total}</span></div>
+            <div className="stat-row"><span className="stat-label">+/-</span><span className="stat-value">{player.stats.general.plusMinus >= 0 ? '+' : ''}{player.stats.general.plusMinus}</span></div>
           </div>
         </div>
       </div>
@@ -796,7 +798,7 @@ export default function GameScreen() {
     const PLAYER_COLUMNS = [
       { key: '#', label: '#', className: 'ept-num', get: (p) => Number(p.number) || 0, display: (p) => p.number || '?' },
       { key: 'PLAYER', label: 'PLAYER', className: 'ept-name', get: (p) => p.name, display: (p) => p.name },
-      { key: 'MIN', label: 'MIN', get: (p) => p.stats.general.minutesPlayed },
+      { key: 'MIN', label: 'MIN', get: (p) => p.stats.general.minutesPlayed, display: (p) => formatClock(p.stats.general.minutesPlayed) },
       { key: 'PTS', label: 'PTS', get: (p) => p.stats.offense.points },
       { key: 'FG', label: 'FG', get: (p) => p.stats.offense.shootingBreakdown.fieldGoals.totalMade, display: (p) => `${p.stats.offense.shootingBreakdown.fieldGoals.totalMade}/${p.stats.offense.shootingBreakdown.fieldGoals.totalAttempted}` },
       { key: 'FG%', label: 'FG%', get: (p) => p.stats.offense.shootingBreakdown.fieldGoals.totalPercentage, display: (p) => `${p.stats.offense.shootingBreakdown.fieldGoals.totalPercentage}%` },
