@@ -13,7 +13,7 @@
 </head>
 <body>
 
-    <!-- No-game state (shown by default, hidden when game is active) -->
+    <!-- No-game state (shown by default) -->
     <section id="no-game" class="live-no-game">
         <div class="live-no-game-content">
             <h1 class="live-no-game-title">Live Game</h1>
@@ -22,33 +22,45 @@
         </div>
     </section>
 
-    <!-- Live game content (hidden by default, shown when game data arrives) -->
+    <!-- Live game content (hidden by default) -->
     <section id="live-game" class="live-game-section hidden">
-        <!-- Scoreboard -->
-        <div class="live-scoreboard">
-            <div class="live-team live-team-home">
+
+        <!-- Status header banner -->
+        <div id="live-header" class="live-header in-progress">
+            <span id="live-header-label" class="live-header-label">LIVE</span>
+            <span id="live-header-sub" class="live-header-sub"></span>
+        </div>
+
+        <!-- Score row -->
+        <div class="live-score-row">
+            <div class="live-team">
                 <span class="live-team-name" id="home-name">HOME</span>
                 <span class="live-team-score" id="home-score">0</span>
             </div>
-            <div class="live-clock-area">
+            <div class="live-clock-inline">
                 <span class="live-quarter" id="live-quarter">Q1</span>
                 <span class="live-clock" id="live-clock">10:00</span>
-                <span class="live-status" id="live-status"></span>
             </div>
-            <div class="live-team live-team-away">
+            <div class="live-team">
                 <span class="live-team-score" id="away-score">0</span>
                 <span class="live-team-name" id="away-name">AWAY</span>
             </div>
         </div>
 
-        <!-- Quarter-by-quarter scoring -->
-        <div id="quarter-scores" class="live-quarter-scores"></div>
-
-        <!-- Team stats comparison -->
-        <div id="team-stats" class="live-team-stats"></div>
-
-        <!-- Player stats tables -->
-        <div id="player-stats" class="live-player-stats"></div>
+        <!-- Body: left (period scores + team stats) | right (player box scores) -->
+        <div class="live-body">
+            <div class="live-left">
+                <div class="live-section">
+                    <div class="live-section-title">SCORING BY PERIOD</div>
+                    <div id="quarter-scores"></div>
+                </div>
+                <div class="live-section">
+                    <div class="live-section-title">TEAM STATS</div>
+                    <div id="team-stats"></div>
+                </div>
+            </div>
+            <div class="live-right" id="player-stats"></div>
+        </div>
     </section>
 
     <!-- Last updated indicator -->

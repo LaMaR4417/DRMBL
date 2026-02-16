@@ -33,7 +33,6 @@
                     return;
                 }
 
-                // Stale final game check (> 2 hours old + status final)
                 var bs = data.boxScore;
                 if (bs.gameInfo.general.status === 'final' && data.updatedAt) {
                     var age = Date.now() - new Date(data.updatedAt).getTime();
@@ -45,9 +44,7 @@
 
                 renderGame(bs, data.updatedAt);
             })
-            .catch(function () {
-                // Network error — keep showing whatever we had
-            });
+            .catch(function () {});
     }
 
     function startPolling() {
@@ -94,7 +91,24 @@
         var home = bs.teamInfo.home;
         var away = bs.teamInfo.away;
 
-        // Scoreboard
+        // Status header banner
+        var isFinal = general.status === 'final';
+        if (isFinal) {
+            els.header.className = 'live-header final';
+            els.headerLabel.textContent = 'FINAL';
+            var otCount = state.overtimes || 0;
+            els.headerSub.textContent = otCount > 0 ? (otCount > 1 ? '(' + otCount + 'OT)' : '(OT)') : '';
+        } else if (state.active) {
+            els.header.className = 'live-header in-progress';
+            els.headerLabel.textContent = 'LIVE';
+            els.headerSub.textContent = formatQuarter(state.currentQuarter);
+        } else {
+            els.header.className = 'live-header clock-stopped';
+            els.headerLabel.textContent = 'CLOCK STOPPED';
+            els.headerSub.textContent = formatQuarter(state.currentQuarter);
+        }
+
+        // Score row
         els.homeName.textContent = home.name;
         els.awayName.textContent = away.name;
         els.homeScore.textContent = home.score.current;
@@ -110,26 +124,15 @@
         clockIsActive = state.active;
         els.clock.textContent = formatClock(localTimeLeft);
 
-        if (clockIsActive) {
+        if (isFinal) {
+            els.clock.classList.add('stopped');
+            stopLocalClock();
+        } else if (clockIsActive) {
             els.clock.classList.remove('stopped');
             startLocalClock();
         } else {
             els.clock.classList.add('stopped');
             stopLocalClock();
-        }
-
-        // Status
-        if (general.status === 'final') {
-            els.status.textContent = 'FINAL';
-            els.status.className = 'live-status final';
-            els.clock.classList.add('stopped');
-            stopLocalClock();
-        } else if (state.active) {
-            els.status.textContent = '';
-            els.status.className = 'live-status';
-        } else {
-            els.status.textContent = 'CLOCK STOPPED';
-            els.status.className = 'live-status stopped';
         }
 
         renderQuarterScores(bs);
@@ -149,6 +152,8 @@
         }
     }
 
+    // ── QUARTER SCORES (flex-based, matching endgame) ──
+
     function renderQuarterScores(bs) {
         var state = bs.gameInfo.state;
         var periods = ['first', 'second', 'third', 'fourth'];
@@ -159,19 +164,17 @@
             labels.push('OT' + i);
         }
 
-        var html = '<table class="live-quarter-table">';
-        html += '<thead><tr><th></th>';
+        var html = '<div class="eq-row eq-header"><span class="eq-team-col"></span>';
         for (var j = 0; j < labels.length; j++) {
-            html += '<th>' + labels[j] + '</th>';
+            html += '<span class="eq-cell">' + labels[j] + '</span>';
         }
-        html += '<th class="total">T</th></tr></thead>';
-        html += '<tbody>';
+        html += '<span class="eq-cell eq-total">T</span></div>';
 
         var sides = ['home', 'away'];
         for (var s = 0; s < sides.length; s++) {
             var side = sides[s];
             var team = bs.teamInfo[side];
-            html += '<tr><td class="team-col">' + team.name + '</td>';
+            html += '<div class="eq-row"><span class="eq-team-col">' + team.name + '</span>';
             for (var k = 0; k < periods.length; k++) {
                 var p = periods[k];
                 var val = 0;
@@ -180,26 +183,33 @@
                 } else {
                     val = (team.score.perQuarter.overtime && team.score.perQuarter.overtime[p]) || 0;
                 }
-                html += '<td>' + val + '</td>';
+                html += '<span class="eq-cell">' + val + '</span>';
             }
-            html += '<td class="total">' + team.score.current + '</td>';
-            html += '</tr>';
+            html += '<span class="eq-cell eq-total">' + team.score.current + '</span>';
+            html += '</div>';
         }
 
-        html += '</tbody></table>';
         els.quarterScores.innerHTML = html;
     }
+
+    // ── TEAM STATS (grid-based, matching endgame) ──
 
     function renderTeamStats(bs) {
         var home = bs.teamInfo.home.stats;
         var away = bs.teamInfo.away.stats;
 
         var rows = [
-            { label: 'FG%', home: home.shootingBreakdown.fieldGoals.totalPercentage + '%', away: away.shootingBreakdown.fieldGoals.totalPercentage + '%' },
             { label: 'FG', home: home.shootingBreakdown.fieldGoals.totalMade + '/' + home.shootingBreakdown.fieldGoals.totalAttempted, away: away.shootingBreakdown.fieldGoals.totalMade + '/' + away.shootingBreakdown.fieldGoals.totalAttempted },
+            { label: 'FG%', home: home.shootingBreakdown.fieldGoals.totalPercentage + '%', away: away.shootingBreakdown.fieldGoals.totalPercentage + '%' },
+            { label: '2PT', home: home.shootingBreakdown.fieldGoals['2-PointShots'].made + '/' + home.shootingBreakdown.fieldGoals['2-PointShots'].attempted, away: away.shootingBreakdown.fieldGoals['2-PointShots'].made + '/' + away.shootingBreakdown.fieldGoals['2-PointShots'].attempted },
+            { label: '2P%', home: home.shootingBreakdown.fieldGoals['2-PointShots'].percentage + '%', away: away.shootingBreakdown.fieldGoals['2-PointShots'].percentage + '%' },
             { label: '3PT', home: home.shootingBreakdown.fieldGoals['3-PointShots'].made + '/' + home.shootingBreakdown.fieldGoals['3-PointShots'].attempted, away: away.shootingBreakdown.fieldGoals['3-PointShots'].made + '/' + away.shootingBreakdown.fieldGoals['3-PointShots'].attempted },
+            { label: '3P%', home: home.shootingBreakdown.fieldGoals['3-PointShots'].percentage + '%', away: away.shootingBreakdown.fieldGoals['3-PointShots'].percentage + '%' },
             { label: 'FT', home: home.shootingBreakdown.freeThrows.made + '/' + home.shootingBreakdown.freeThrows.attempted, away: away.shootingBreakdown.freeThrows.made + '/' + away.shootingBreakdown.freeThrows.attempted },
-            { label: 'REB', home: home.rebounds.total, away: away.rebounds.total },
+            { label: 'FT%', home: home.shootingBreakdown.freeThrows.percentage + '%', away: away.shootingBreakdown.freeThrows.percentage + '%' },
+            { label: 'TRB', home: home.rebounds.total, away: away.rebounds.total },
+            { label: 'DRB', home: home.rebounds.defensive, away: away.rebounds.defensive },
+            { label: 'ORB', home: home.rebounds.offensive, away: away.rebounds.offensive },
             { label: 'AST', home: home.assists, away: away.assists },
             { label: 'STL', home: home.defense.steals, away: away.defense.steals },
             { label: 'BLK', home: home.defense.blocks, away: away.defense.blocks },
@@ -207,18 +217,18 @@
             { label: 'FOULS', home: home.fouls.total, away: away.fouls.total }
         ];
 
-        var html = '<div class="live-stats-title">TEAM STATS</div>';
-        html += '<div class="live-stats-grid">';
+        var html = '';
         for (var i = 0; i < rows.length; i++) {
-            html += '<div class="live-stat-row">';
-            html += '<span class="stat-home">' + rows[i].home + '</span>';
-            html += '<span class="stat-label">' + rows[i].label + '</span>';
-            html += '<span class="stat-away">' + rows[i].away + '</span>';
+            html += '<div class="ets-row">';
+            html += '<span class="ets-val home">' + rows[i].home + '</span>';
+            html += '<span class="ets-label">' + rows[i].label + '</span>';
+            html += '<span class="ets-val away">' + rows[i].away + '</span>';
             html += '</div>';
         }
-        html += '</div>';
         els.teamStats.innerHTML = html;
     }
+
+    // ── PLAYER STATS (matching endgame-player-table) ──
 
     function renderPlayerStats(bs) {
         var html = '';
@@ -231,15 +241,16 @@
                 .filter(function (p) { return p.playerID !== null; })
                 .sort(function (a, b) { return b.stats.offense.points - a.stats.offense.points; });
 
-            html += '<div class="live-player-section">';
-            html += '<div class="live-player-title">' + team.name + '</div>';
+            html += '<div class="live-section">';
+            html += '<div class="live-section-title">' + team.name + ' \u2014 BOX SCORE</div>';
             html += '<div class="live-player-table-wrap">';
             html += '<table class="live-player-table">';
             html += '<thead><tr>';
-            html += '<th class="col-num">#</th>';
-            html += '<th class="col-name">PLAYER</th>';
-            html += '<th>PTS</th><th>FG</th><th>3PT</th><th>FT</th>';
-            html += '<th>REB</th><th>AST</th><th>STL</th><th>BLK</th>';
+            html += '<th class="ept-num">#</th>';
+            html += '<th class="ept-name">PLAYER</th>';
+            html += '<th>PTS</th><th>FG</th><th>FG%</th>';
+            html += '<th>3PT</th><th>FT</th>';
+            html += '<th>TRB</th><th>AST</th><th>STL</th><th>BLK</th>';
             html += '<th>TO</th><th>PF</th>';
             html += '</tr></thead>';
             html += '<tbody>';
@@ -249,10 +260,11 @@
                 var fg = p.stats.offense.shootingBreakdown.fieldGoals;
                 var ft = p.stats.offense.shootingBreakdown.freeThrows;
                 html += '<tr>';
-                html += '<td class="col-num">' + (p.number || '?') + '</td>';
-                html += '<td class="col-name">' + p.name + '</td>';
+                html += '<td class="ept-num">' + (p.number || '?') + '</td>';
+                html += '<td class="ept-name">' + p.name + '</td>';
                 html += '<td>' + p.stats.offense.points + '</td>';
                 html += '<td>' + fg.totalMade + '/' + fg.totalAttempted + '</td>';
+                html += '<td>' + fg.totalPercentage + '%</td>';
                 html += '<td>' + fg['3-PointShots'].made + '/' + fg['3-PointShots'].attempted + '</td>';
                 html += '<td>' + ft.made + '/' + ft.attempted + '</td>';
                 html += '<td>' + p.stats.rebounds.total + '</td>';
@@ -277,13 +289,15 @@
         els = {
             noGame: document.getElementById('no-game'),
             liveGame: document.getElementById('live-game'),
+            header: document.getElementById('live-header'),
+            headerLabel: document.getElementById('live-header-label'),
+            headerSub: document.getElementById('live-header-sub'),
             homeName: document.getElementById('home-name'),
             awayName: document.getElementById('away-name'),
             homeScore: document.getElementById('home-score'),
             awayScore: document.getElementById('away-score'),
             quarter: document.getElementById('live-quarter'),
             clock: document.getElementById('live-clock'),
-            status: document.getElementById('live-status'),
             quarterScores: document.getElementById('quarter-scores'),
             teamStats: document.getElementById('team-stats'),
             playerStats: document.getElementById('player-stats'),

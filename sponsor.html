@@ -147,7 +147,7 @@
 
     <!-- FOOTER -->
     <footer>
-        &copy; 2026 Del Rio Men's Basketball League
+        <span id="footer-copy">&copy;</span> 2026 Del Rio Men's Basketball League
     </footer>
 
     <script>
@@ -199,9 +199,9 @@
         list.innerHTML = html;
     })();
 
-    // ── SECRET: Long-press footer → stat tracker ──
+    // ── SECRET: Long-press © → stat tracker ──
     (function () {
-        var footer = document.querySelector('footer');
+        var footer = document.getElementById('footer-copy');
         if (!footer) return;
         var timer = null;
         var HOLD_MS = 3000;
