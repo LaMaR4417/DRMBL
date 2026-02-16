@@ -146,6 +146,7 @@ export function buildBoxScore(gameState) {
   return {
     id: `${homeName} vs. ${awayName} - ${timestamp}`,
     gameId: `${slugify(homeName)}-vs-${slugify(awayName)}`,
+    league: gameState.selectedSeason?.league || null,
     gameInfo: {
       general: {
         timestamp,

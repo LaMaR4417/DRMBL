@@ -565,6 +565,51 @@ body {
   border-radius: 3px;
 }
 
+/* ── Season / League Selector ── */
+.season-selector {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-season {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.btn-season:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-season.active {
+  border-color: var(--court-wood);
+  background: rgba(193, 154, 107, 0.1);
+  color: #fff;
+}
+
+.season-btn-abbr {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 3px;
+}
+
+.season-btn-name {
+  font-size: 11px;
+  letter-spacing: 1px;
+  opacity: 0.5;
+}
+
 .team-slot {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
@@ -2315,4 +2360,183 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* ===== RESPONSIVE — iPad & Tablet ===== */
+
+/* ---------- iPad Pro 12.9" landscape and below (≤1366px) ---------- */
+@media (max-width: 1366px) {
+  /* Scoreboard: allow badge/info wrapping */
+  .scoreboard-team {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+  .scoreboard-team-name { font-size: 17px; letter-spacing: 1.5px; }
+  .scoreboard-score { font-size: 42px; min-width: 52px; }
+  .scoreboard-badge { font-size: 13px; padding: 2px 6px; }
+  .scoreboard-fouls { font-size: 15px; letter-spacing: 1.5px; }
+  .scoreboard-timeouts { font-size: 13px; padding: 2px 6px; }
+  .scoreboard-poss { font-size: 13px; padding: 2px 6px; letter-spacing: 1.5px; }
+  .scoreboard-clock { padding: 0 16px; }
+  .scoreboard-time { font-size: 32px; }
+
+  /* Divider */
+  .game-divider { width: 72px; margin: 0 4px; gap: 10px; }
+  .btn-divider,
+  .btn-clock { font-size: 14px; letter-spacing: 2px; padding: 12px 6px; }
+
+  /* Halves */
+  .game-half { gap: 6px; padding: 6px; }
+  .game-section { padding: 8px 6px; }
+  .section-label { font-size: 10px; margin-bottom: 6px; }
+
+  /* Action buttons */
+  .btn-action { font-size: 13px; letter-spacing: 0.5px; }
+
+  /* Player cards */
+  .player-card-number { font-size: 22px; }
+  .player-card-name { font-size: 13px; }
+  .player-card-stats { font-size: 11px; }
+}
+
+/* ---------- iPad Air / Pro 11" landscape & Pro 12.9" portrait (≤1194px) ---------- */
+@media (max-width: 1194px) {
+  .game-scoreboard { padding: 8px 10px; }
+  .scoreboard-team-name { font-size: 15px; letter-spacing: 1px; }
+  .scoreboard-score { font-size: 38px; min-width: 48px; }
+  .scoreboard-badge { font-size: 11px; padding: 1px 4px; letter-spacing: 0.5px; }
+  .scoreboard-fouls { font-size: 14px; letter-spacing: 1px; }
+  .scoreboard-timeouts { font-size: 11px; padding: 1px 4px; }
+  .scoreboard-poss { font-size: 11px; padding: 1px 4px; letter-spacing: 1px; }
+  .scoreboard-time { font-size: 30px; }
+
+  .game-divider { width: 64px; }
+  .btn-divider,
+  .btn-clock { font-size: 13px; letter-spacing: 1.5px; padding: 10px 4px; }
+
+  .btn-action { font-size: 12px; }
+
+  /* Player cards: 5 per row */
+  .player-card { width: calc((100% - 24px) / 5); }
+  .player-card-number { font-size: 20px; }
+  .player-card-name { font-size: 12px; }
+  .player-card-stats { font-size: 10px; }
+
+  /* Sub-menu */
+  .btn-sub-choice { font-size: 18px; padding: 16px 10px; }
+  .sub-menu-choices { gap: 8px; padding: 20px 8px; }
+}
+
+/* ---------- Standard iPad landscape / iPad portrait (≤1024px) ---------- */
+@media (max-width: 1024px) {
+  .scoreboard-team { row-gap: 2px; gap: 4px; }
+  .scoreboard-team-name { font-size: 14px; }
+  .scoreboard-score { font-size: 34px; min-width: 44px; }
+  .scoreboard-badge { font-size: 10px; }
+  .scoreboard-fouls { font-size: 13px; }
+  .scoreboard-timeouts { font-size: 10px; }
+  .scoreboard-poss { font-size: 10px; }
+  .scoreboard-clock { padding: 0 10px; }
+  .scoreboard-time { font-size: 28px; }
+  .scoreboard-quarter { font-size: 12px; letter-spacing: 2px; }
+
+  .game-divider { width: 58px; margin: 0 2px; gap: 8px; }
+  .btn-divider,
+  .btn-clock { font-size: 12px; letter-spacing: 1px; padding: 8px 4px; }
+  .btn-clock.next-period { font-size: 11px; letter-spacing: 1px; }
+
+  .game-half { gap: 4px; padding: 4px; }
+  .game-section { padding: 6px 4px; }
+  .section-label { font-size: 9px; letter-spacing: 2px; margin-bottom: 4px; }
+  .action-row { gap: 4px; }
+
+  /* Scoring/stat buttons: 3 per row */
+  .btn-action {
+    width: calc((100% - 8px) / 3);
+    aspect-ratio: auto;
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  /* Player cards: 3 per row */
+  .player-card { width: calc((100% - 12px) / 3); }
+  .player-card-number { font-size: 18px; }
+  .player-card-name { font-size: 11px; }
+  .player-card-stats { font-size: 9px; }
+  .stat-row { padding: 0 2px; }
+
+  .selection-banner { padding: 6px 8px; }
+  .selection-banner-text { font-size: 12px; letter-spacing: 1.5px; }
+
+  .btn-sub-choice { font-size: 16px; padding: 12px 8px; letter-spacing: 1px; }
+  .sub-menu-choices { gap: 6px; padding: 16px 6px; }
+
+  .game-status-banner { font-size: 14px; letter-spacing: 3px; padding: 4px 0; }
+
+  /* Late add */
+  .late-add-name { font-size: 15px; }
+  .late-add-number { width: 42px; font-size: 16px; }
+
+  /* Endgame: stack left/right */
+  .endgame-body { flex-direction: column; }
+  .endgame-left { width: 100%; }
+  .endgame-score-row { padding: 10px 12px; gap: 12px; }
+  .endgame-team-name { font-size: 20px; }
+  .endgame-team-score { font-size: 44px; }
+}
+
+/* ---------- iPad Mini portrait / small tablets (≤768px) ---------- */
+@media (max-width: 768px) {
+  .game-scoreboard { padding: 6px 4px; }
+  .scoreboard-team-name { font-size: 12px; letter-spacing: 0.5px; }
+  .scoreboard-score { font-size: 30px; min-width: 38px; }
+  .scoreboard-badge { font-size: 9px; padding: 1px 3px; }
+  .scoreboard-fouls { font-size: 11px; letter-spacing: 0.5px; }
+  .scoreboard-timeouts { font-size: 9px; padding: 1px 3px; }
+  .scoreboard-poss { font-size: 9px; padding: 1px 3px; }
+  .scoreboard-clock { padding: 0 6px; }
+  .scoreboard-time { font-size: 24px; }
+  .scoreboard-quarter { font-size: 11px; }
+
+  .game-divider { width: 50px; gap: 6px; }
+  .btn-divider,
+  .btn-clock { font-size: 10px; letter-spacing: 0.5px; padding: 6px 2px; }
+
+  .btn-action { font-size: 10px; padding: 6px 2px; }
+
+  .player-card-stats { font-size: 8px; letter-spacing: 0; }
+
+  /* Endgame */
+  .endgame-team-name { font-size: 16px; }
+  .endgame-team-score { font-size: 36px; }
+  .endgame-label { font-size: 22px; letter-spacing: 4px; }
+  .endgame-footer { flex-wrap: wrap; gap: 10px; padding: 10px 12px; }
+}
+
+/* ---------- Phone (≤480px) ---------- */
+@media (max-width: 480px) {
+  /* Stack the game court vertically */
+  .game-court { flex-direction: column; }
+  .game-divider {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 6px 0;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+  }
+  .btn-divider,
+  .btn-clock { width: auto; padding: 8px 12px; flex-direction: row; gap: 4px; }
+
+  .game-half { overflow-y: visible; }
+
+  .scoreboard-team-name { font-size: 11px; }
+  .scoreboard-score { font-size: 26px; min-width: 34px; }
+
+  /* Player cards: 2 per row on phone */
+  .player-card { width: calc((100% - 6px) / 2); }
 }

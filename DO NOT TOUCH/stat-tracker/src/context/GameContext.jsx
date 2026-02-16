@@ -11,6 +11,9 @@ const initialState = {
   // Game settings (loaded from API at step 1, null until then)
   settings: null,
 
+  // Selected season/league: { id, league: { fullName, abbreviation } }
+  selectedSeason: null,
+
   // Team selections — set during team pick, roster loaded async from API
   // { teamID, name, slot, roster: [...] | null }
   homeTeam: null,
@@ -68,6 +71,22 @@ function gameReducer(state, action) {
 
     case 'SET_SETTINGS':
       return { ...state, settings: action.settings };
+
+    case 'SET_SEASON':
+      return {
+        ...state,
+        selectedSeason: { id: action.id, league: action.league },
+        homeTeam: null,
+        awayTeam: null,
+        homeAttendance: new Set(),
+        awayAttendance: new Set(),
+        homeNumberOverrides: {},
+        awayNumberOverrides: {},
+        homeStarters: new Set(),
+        awayStarters: new Set(),
+        homeCaptain: null,
+        awayCaptain: null,
+      };
 
     case 'UPDATE_SETTING': {
       const newSettings = structuredClone(state.settings);

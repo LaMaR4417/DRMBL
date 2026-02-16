@@ -158,8 +158,12 @@
 
             var statusClass = isFinal ? 'final' : (isActive ? 'live' : 'stopped');
 
+            var league = bs.league;
             html += '<button class="game-card' + (isSelected ? ' selected' : '') + '" data-game-id="' + g.gameId + '">';
             html += '<span class="game-card-status ' + statusClass + '">' + (isFinal ? 'FINAL' : (isActive ? 'LIVE' : 'STOPPED')) + '</span>';
+            if (league && league.abbreviation) {
+                html += '<span class="game-card-league">' + league.abbreviation + '</span>';
+            }
             html += '<span class="game-card-teams">' + home.name + ' vs ' + away.name + '</span>';
             html += '<span class="game-card-score">' + home.score.current + ' - ' + away.score.current + '</span>';
             html += '</button>';
@@ -229,6 +233,15 @@
             els.header.className = 'live-header clock-stopped';
             els.headerLabel.textContent = 'CLOCK STOPPED';
             els.headerSub.textContent = formatQuarter(state.currentQuarter);
+        }
+
+        // League badge
+        var league = bs.league;
+        if (league && league.abbreviation) {
+            els.leagueBadge.textContent = league.abbreviation;
+            els.leagueBadge.classList.remove('hidden');
+        } else {
+            els.leagueBadge.classList.add('hidden');
         }
 
         // Score row
@@ -410,6 +423,7 @@
             header: document.getElementById('live-header'),
             headerLabel: document.getElementById('live-header-label'),
             headerSub: document.getElementById('live-header-sub'),
+            leagueBadge: document.getElementById('live-league-badge'),
             homeName: document.getElementById('home-name'),
             awayName: document.getElementById('away-name'),
             homeScore: document.getElementById('home-score'),

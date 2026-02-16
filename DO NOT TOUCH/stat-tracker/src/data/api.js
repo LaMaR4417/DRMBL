@@ -1,11 +1,24 @@
 // API helper for fetching season and team data from the DRMBL backend
 
-export async function fetchSeasonTeams() {
-  const res = await fetch('/api/season');
+export async function fetchSeasons() {
+  const res = await fetch('/api/seasons');
+  if (!res.ok) throw new Error('Failed to load seasons');
+  const data = await res.json();
+  return data.seasons || [];
+}
+
+export async function fetchSeasonTeams(seasonId) {
+  const url = seasonId
+    ? `/api/season?id=${encodeURIComponent(seasonId)}`
+    : '/api/season';
+  const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to load season data');
   const data = await res.json();
-  // Filter to only registered teams (non-empty teamID)
-  return data.teams.filter((t) => t.teamID);
+  return {
+    id: data.id,
+    league: data.league || null,
+    teams: (data.teams || []).filter((t) => t.teamID),
+  };
 }
 
 export async function fetchTeamRoster(teamID) {

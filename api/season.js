@@ -9,7 +9,7 @@ var seasonsContainer = client
     .database("DRMBL Database")
     .container("Seasons");
 
-var SEASON_ID = "Spring - Mens - 2026";
+var DEFAULT_SEASON_ID = "Spring - Mens - 2026";
 
 module.exports = async function (req, res) {
     if (req.method !== "GET") {
@@ -17,15 +17,19 @@ module.exports = async function (req, res) {
     }
 
     try {
-        var response = await seasonsContainer.item(SEASON_ID, SEASON_ID).read();
+        var seasonId = req.query.id || DEFAULT_SEASON_ID;
+        var response = await seasonsContainer.item(seasonId, seasonId).read();
         var seasonDoc = response.resource;
 
         if (!seasonDoc) {
             return res.status(404).json({ error: "Season not found." });
         }
 
-        // Return only the teams array — that's all the frontend needs
-        return res.status(200).json({ teams: seasonDoc.teams });
+        return res.status(200).json({
+            id: seasonDoc.id,
+            league: seasonDoc.league || null,
+            teams: seasonDoc.teams
+        });
 
     } catch (err) {
         console.error("Season fetch error:", err.message);
