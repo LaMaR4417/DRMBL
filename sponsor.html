@@ -199,29 +199,13 @@
         list.innerHTML = html;
     })();
 
-    // ── SECRET: Long-press © → stat tracker ──
+    // ── SECRET: Tap © → stat tracker ──
     (function () {
-        var footer = document.getElementById('footer-copy');
-        if (!footer) return;
-        var timer = null;
-        var HOLD_MS = 3000;
-
-        function start(e) {
-            timer = setTimeout(function () {
-                timer = null;
-                window.location.href = '/tracker/';
-            }, HOLD_MS);
-        }
-        function cancel() {
-            if (timer) { clearTimeout(timer); timer = null; }
-        }
-
-        footer.addEventListener('touchstart', start, { passive: true });
-        footer.addEventListener('touchend', cancel);
-        footer.addEventListener('touchcancel', cancel);
-        footer.addEventListener('mousedown', start);
-        footer.addEventListener('mouseup', cancel);
-        footer.addEventListener('mouseleave', cancel);
+        var el = document.getElementById('footer-copy');
+        if (!el) return;
+        el.addEventListener('click', function () {
+            window.location.href = '/tracker/';
+        });
     })();
     </script>
 </body>
