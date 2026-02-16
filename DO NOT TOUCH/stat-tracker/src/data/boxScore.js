@@ -1,6 +1,6 @@
 // Builds an initialized Box Score JSON from pre-game setup data
 
-function buildEmptyPlayerStats() {
+export function buildEmptyPlayerStats() {
   return {
     offense: {
       points: 0,
@@ -33,8 +33,8 @@ function buildEmptyPlayerStats() {
 }
 
 function buildTeamStats(settings) {
-  const fullTO = settings.timeouts?.fullTimeouts ?? 3;
-  const shortTO = settings.timeouts?.shortTimeouts ?? 2;
+  const fullTO = settings.timeouts?.regulation?.full ?? 3;
+  const shortTO = settings.timeouts?.regulation?.short ?? 2;
 
   return {
     shootingBreakdown: {
@@ -80,15 +80,19 @@ function buildTeamSide(team, attendance, numberOverrides, starters, captainID, s
   }));
 
   // In-game roster (only players who checked in, up to 12)
+  const minutesPerPeriod = settings.periods?.minutesPerPeriod ?? 10;
+  const initialTimeLeft = minutesPerPeriod * 60;
   const attendees = team.roster.filter((p) => attendance.has(p.playerID));
   const inGame = attendees.map((p) => ({
     playerID: p.playerID,
     name: p.name,
     number: numberOverrides[p.playerID] ?? null,
     starter: starters.has(p.playerID),
+    onCourt: starters.has(p.playerID),
     captain: p.playerID === captainID,
     position: null,
     stats: buildEmptyPlayerStats(),
+    _clockTimeAtEntry: starters.has(p.playerID) ? initialTimeLeft : null,
   }));
 
   // Pad to 12 slots if needed
@@ -98,12 +102,13 @@ function buildTeamSide(team, attendance, numberOverrides, starters, captainID, s
       name: '',
       number: null,
       starter: false,
+      onCourt: false,
       position: null,
       stats: buildEmptyPlayerStats(),
+      _clockTimeAtEntry: null,
     });
   }
 
-  const minutesPerPeriod = settings.periods?.minutesPerPeriod ?? 10;
   const minutesPerOT = settings.periods?.minutesPerOvertime ?? 5;
 
   return {

@@ -1,0 +1,423 @@
+/* ── LIVE GAME PAGE ── */
+
+.hidden {
+    display: none;
+}
+
+/* No-game state */
+.live-no-game {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 200px;
+}
+
+.live-no-game-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.live-no-game-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.live-no-game-content p {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 8px;
+}
+
+.live-no-game-sub {
+    font-size: 15px !important;
+    color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Live game container */
+.live-game-section {
+    padding-top: 180px;
+    padding-bottom: 40px;
+}
+
+/* ── SCOREBOARD ── */
+.live-scoreboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    max-width: 800px;
+    margin: 0 auto 30px;
+    padding: 24px 20px;
+    background: linear-gradient(135deg, rgba(200, 164, 92, 0.08), rgba(0, 0, 0, 0.4));
+    border: 1px solid rgba(200, 164, 92, 0.2);
+    border-radius: 12px;
+}
+
+.live-team {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.live-team-home {
+    justify-content: flex-end;
+}
+
+.live-team-away {
+    justify-content: flex-start;
+}
+
+.live-team-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 4vw, 28px);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+}
+
+.live-team-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 10vw, 72px);
+    letter-spacing: 2px;
+    color: var(--white);
+    line-height: 1;
+}
+
+.live-clock-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 24px;
+    min-width: 100px;
+}
+
+.live-quarter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+}
+
+.live-clock {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(28px, 6vw, 40px);
+    letter-spacing: 2px;
+    color: var(--white);
+}
+
+.live-clock.stopped {
+    color: var(--accent);
+}
+
+.live-status {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    min-height: 18px;
+}
+
+.live-status.stopped {
+    color: var(--accent);
+}
+
+.live-status.final {
+    color: var(--court-wood);
+    font-size: 16px;
+    letter-spacing: 3px;
+}
+
+/* ── QUARTER SCORES TABLE ── */
+.live-quarter-scores {
+    max-width: 700px;
+    margin: 0 auto 30px;
+    padding: 0 20px;
+    overflow-x: auto;
+
+}
+
+.live-quarter-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.live-quarter-table thead th {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.live-quarter-table thead th:first-child {
+    text-align: left;
+}
+
+.live-quarter-table thead th.total {
+    color: var(--court-wood);
+}
+
+.live-quarter-table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.live-quarter-table tbody td {
+    padding: 10px 12px;
+    font-size: 15px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.live-quarter-table tbody td.team-col {
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.live-quarter-table tbody td.total {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--white);
+    letter-spacing: 1px;
+}
+
+/* ── TEAM STATS ── */
+.live-team-stats {
+    max-width: 500px;
+    margin: 0 auto 30px;
+    padding: 0 20px;
+}
+
+.live-stats-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 12px;
+}
+
+.live-stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.live-stat-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.live-stat-row .stat-home,
+.live-stat-row .stat-away {
+    flex: 1;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.live-stat-row .stat-home {
+    text-align: right;
+    padding-right: 16px;
+}
+
+.live-stat-row .stat-away {
+    text-align: left;
+    padding-left: 16px;
+}
+
+.live-stat-row .stat-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: center;
+    min-width: 60px;
+}
+
+/* ── PLAYER STATS ── */
+.live-player-stats {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.live-player-section {
+    width: 100%;
+}
+
+.live-player-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.live-player-table-wrap {
+    overflow-x: auto;
+
+}
+
+.live-player-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.live-player-table thead th {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.live-player-table thead th.col-num {
+    width: 40px;
+    text-align: center;
+}
+
+.live-player-table thead th.col-name {
+    text-align: left;
+    min-width: 120px;
+}
+
+.live-player-table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.15s ease;
+}
+
+.live-player-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.live-player-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.live-player-table tbody td {
+    padding: 8px 6px;
+    font-size: 14px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.live-player-table tbody td.col-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: var(--court-wood);
+    text-align: center;
+}
+
+.live-player-table tbody td.col-name {
+    text-align: left;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ── LAST UPDATED ── */
+.live-last-updated {
+    text-align: center;
+    padding: 12px 20px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 1px;
+}
+
+.live-last-updated.live-indicator {
+    color: #4caf50;
+}
+
+/* ── FOOTER ── */
+.live-game-section + .live-last-updated + footer,
+.live-no-game + footer {
+    text-align: center;
+    padding: 30px 20px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .live-no-game {
+        padding-top: 180px;
+    }
+
+    .live-game-section {
+        padding-top: 160px;
+    }
+
+    .live-scoreboard {
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px 12px;
+    }
+
+    .live-team {
+        justify-content: center;
+    }
+
+    .live-team-home,
+    .live-team-away {
+        justify-content: center;
+    }
+
+    .live-clock-area {
+        padding: 8px 0;
+        min-width: unset;
+    }
+
+    .live-team-stats {
+        padding: 0 12px;
+    }
+
+    .live-player-stats {
+        padding: 0 8px;
+    }
+
+    .live-quarter-scores {
+        padding: 0 8px;
+    }
+
+    .live-player-table thead th,
+    .live-player-table tbody td {
+        padding: 6px 4px;
+        font-size: 12px;
+    }
+
+    .live-player-table thead th.col-num,
+    .live-player-table tbody td.col-num {
+        width: 30px;
+    }
+
+    .live-quarter-table thead th,
+    .live-quarter-table tbody td {
+        padding: 8px 6px;
+        font-size: 13px;
+    }
+}

@@ -10,6 +10,8 @@ export default function GameSettingsScreen() {
   const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [customName, setCustomName] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +38,34 @@ export default function GameSettingsScreen() {
 
   function selectPreset(preset) {
     dispatch({ type: 'SET_SETTINGS', settings: structuredClone(preset) });
+  }
+
+  const isCustom = !presets.some(p => p.presetName === settings?.presetName);
+
+  async function handleSave() {
+    if (!customName.trim() || saving) return;
+    setSaving(true);
+    try {
+      const payload = structuredClone(settings);
+      payload.presetName = customName.trim();
+      const res = await fetch('/api/game-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      // Update local state: add to presets list and select it
+      setPresets((prev) => {
+        const filtered = prev.filter(p => p.presetName !== payload.presetName);
+        return [...filtered, payload];
+      });
+      dispatch({ type: 'SET_SETTINGS', settings: payload });
+      setCustomName('');
+    } catch (err) {
+      setError('Failed to save preset. ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   function updateSetting(path, value) {
@@ -108,22 +138,43 @@ export default function GameSettingsScreen() {
         {/* Preset Selector */}
         <div className="settings-presets">
           <label className="settings-label">Preset</label>
-          <div className="preset-buttons">
-            {presets.map((preset) => (
+          <div className="preset-row">
+            <div className="preset-buttons">
+              {presets.map((preset) => (
+                <button
+                  key={preset.presetName}
+                  className={`btn btn-preset ${settings.presetName === preset.presetName ? 'active' : ''}`}
+                  onClick={() => selectPreset(preset)}
+                >
+                  {preset.presetName}
+                </button>
+              ))}
               <button
-                key={preset.presetName}
-                className={`btn btn-preset ${settings.presetName === preset.presetName ? 'active' : ''}`}
-                onClick={() => selectPreset(preset)}
+                className={`btn btn-preset ${isCustom ? 'active' : ''}`}
+                onClick={() => updateSetting('presetName', 'Custom')}
               >
-                {preset.presetName}
+                Custom
               </button>
-            ))}
-            <button
-              className={`btn btn-preset ${!presets.some(p => p.presetName === settings.presetName) ? 'active' : ''}`}
-              onClick={() => updateSetting('presetName', 'Custom')}
-            >
-              Custom
-            </button>
+            </div>
+            {isCustom && (
+              <>
+                <input
+                  type="text"
+                  className="custom-name-input"
+                  placeholder="Preset name..."
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
+                />
+                <button
+                  className="btn btn-save-preset"
+                  disabled={!customName.trim() || saving}
+                  onClick={handleSave}
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </>
+            )}
           </div>
         </div>
 

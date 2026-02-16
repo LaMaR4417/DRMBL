@@ -8,20 +8,56 @@
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="stylesheet" href="css/skeleton.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/placeholder.css">
+    <link rel="stylesheet" href="css/live-game.css">
     <script src="js/skeleton.js"></script>
 </head>
 <body>
 
-    <section class="placeholder-page">
-        <div class="placeholder-content">
-            <div class="placeholder-icon">&#127936;</div>
-            <h1>Live Game</h1>
-            <p>This page is under construction.</p>
-            <p class="placeholder-sub">Check back when the season tips off.</p>
-            <a href="index.html" class="hero-cta">Back to Home</a>
+    <!-- No-game state (shown by default, hidden when game is active) -->
+    <section id="no-game" class="live-no-game">
+        <div class="live-no-game-content">
+            <h1 class="live-no-game-title">Live Game</h1>
+            <p>No game is currently in progress.</p>
+            <p class="live-no-game-sub">This page automatically updates when a game starts.</p>
         </div>
     </section>
 
+    <!-- Live game content (hidden by default, shown when game data arrives) -->
+    <section id="live-game" class="live-game-section hidden">
+        <!-- Scoreboard -->
+        <div class="live-scoreboard">
+            <div class="live-team live-team-home">
+                <span class="live-team-name" id="home-name">HOME</span>
+                <span class="live-team-score" id="home-score">0</span>
+            </div>
+            <div class="live-clock-area">
+                <span class="live-quarter" id="live-quarter">Q1</span>
+                <span class="live-clock" id="live-clock">10:00</span>
+                <span class="live-status" id="live-status"></span>
+            </div>
+            <div class="live-team live-team-away">
+                <span class="live-team-score" id="away-score">0</span>
+                <span class="live-team-name" id="away-name">AWAY</span>
+            </div>
+        </div>
+
+        <!-- Quarter-by-quarter scoring -->
+        <div id="quarter-scores" class="live-quarter-scores"></div>
+
+        <!-- Team stats comparison -->
+        <div id="team-stats" class="live-team-stats"></div>
+
+        <!-- Player stats tables -->
+        <div id="player-stats" class="live-player-stats"></div>
+    </section>
+
+    <!-- Last updated indicator -->
+    <div id="last-updated" class="live-last-updated hidden"></div>
+
+    <footer>
+        &copy; 2026 Del Rio Men's Basketball League
+    </footer>
+
+    <script src="js/live-game.js"></script>
 </body>
 </html>

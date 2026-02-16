@@ -32,11 +32,14 @@ export default function AttendanceScreen() {
   const homeStarters = game.homeStarters;
   const awayStarters = game.awayStarters;
 
+  const homeStartersNeeded = Math.min(5, homePresent);
+  const awayStartersNeeded = Math.min(5, awayPresent);
+
   const canProceed =
-    homePresent >= 5 && awayPresent >= 5 &&
+    homePresent >= 1 && awayPresent >= 1 &&
     allNumbersAssigned('home') && allNumbersAssigned('away') &&
     game.homeCaptain !== null && game.awayCaptain !== null &&
-    homeStarters.size === 5 && awayStarters.size === 5;
+    homeStarters.size === homeStartersNeeded && awayStarters.size === awayStartersNeeded;
 
   function togglePlayer(side, playerID) {
     const attendance = side === 'home' ? game.homeAttendance : game.awayAttendance;
@@ -44,17 +47,17 @@ export default function AttendanceScreen() {
     const isCheckedIn = attendance.has(playerID);
 
     if (isCheckedIn) {
-      // Unchecking: clear captain and starter if needed
+      // Unchecking: clear captain if needed
       if (captain === playerID) {
         dispatch({ type: 'CLEAR_CAPTAIN', side });
       }
       dispatch({ type: 'TOGGLE_ATTENDANCE', side, playerID });
-      // After removing, if exactly 5 remain, auto-select them as starters
       const remaining = [...attendance].filter((id) => id !== playerID);
-      if (remaining.length === 5) {
+      if (remaining.length <= 5) {
+        // 5 or fewer remain: auto-select all as starters
         dispatch({ type: 'SET_STARTERS', side, playerIDs: remaining });
       } else {
-        // Remove this player from starters if they were one
+        // More than 5 remain: just remove this player from starters if they were one
         const starters = side === 'home' ? game.homeStarters : game.awayStarters;
         if (starters.has(playerID)) {
           dispatch({ type: 'TOGGLE_STARTER', side, playerID });
@@ -64,8 +67,8 @@ export default function AttendanceScreen() {
       // Checking in
       dispatch({ type: 'TOGGLE_ATTENDANCE', side, playerID });
       const newCount = attendance.size + 1;
-      if (newCount === 5) {
-        // Exactly 5: auto-select all as starters
+      if (newCount <= 5) {
+        // 5 or fewer: auto-select all as starters
         dispatch({ type: 'SET_STARTERS', side, playerIDs: [...attendance, playerID] });
       } else if (newCount === 6) {
         // 6th player added: clear auto-selected starters
@@ -77,7 +80,7 @@ export default function AttendanceScreen() {
   function selectAll(side) {
     const team = side === 'home' ? game.homeTeam : game.awayTeam;
     dispatch({ type: 'SELECT_ALL_ATTENDANCE', side });
-    if (team && team.roster && team.roster.length === 5) {
+    if (team && team.roster && team.roster.length <= 5) {
       dispatch({ type: 'SET_STARTERS', side, playerIDs: team.roster.map((p) => p.playerID) });
     } else {
       dispatch({ type: 'SET_STARTERS', side, playerIDs: [] });
@@ -144,7 +147,7 @@ export default function AttendanceScreen() {
             const isCaptain = captain === player.playerID;
             const canSetCaptain = present && (captain === null || isCaptain);
             const isStarter = starters.has(player.playerID);
-            const canSetStarter = present && (starters.size < 5 || isStarter);
+            const canSetStarter = present && attendance.size > 5 && (starters.size < 5 || isStarter);
             return (
               <div key={player.playerID} className={`attendance-row ${present ? 'checked' : ''}`}>
                 <button
@@ -189,16 +192,13 @@ export default function AttendanceScreen() {
         {attendance.size > 12 && (
           <p className="attendance-warning">Max 12 players per game. Currently: {attendance.size}</p>
         )}
-        {attendance.size > 0 && attendance.size < 5 && (
-          <p className="attendance-warning">Need at least 5 players. Currently: {attendance.size}</p>
-        )}
       </div>
     );
   }
 
   function getFooterHint() {
-    if (homePresent < 5 || awayPresent < 5) {
-      return 'Each team needs at least 5 players checked in';
+    if (homePresent < 1 || awayPresent < 1) {
+      return 'Each team needs at least 1 player checked in';
     }
     if (!allNumbersAssigned('home') || !allNumbersAssigned('away')) {
       return 'Every checked-in player needs a number assigned';
@@ -206,7 +206,7 @@ export default function AttendanceScreen() {
     if (game.homeCaptain === null || game.awayCaptain === null) {
       return 'Each team needs a captain selected';
     }
-    if (homeStarters.size < 5 || awayStarters.size < 5) {
+    if (homeStarters.size < homeStartersNeeded || awayStarters.size < awayStartersNeeded) {
       return `Pick 5 starters per team (Home: ${homeStarters.size}/5, Away: ${awayStarters.size}/5)`;
     }
     return null;

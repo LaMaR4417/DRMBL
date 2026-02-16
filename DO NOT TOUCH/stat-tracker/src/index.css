@@ -312,6 +312,13 @@ body {
   margin-bottom: 10px;
 }
 
+.preset-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .preset-buttons {
   display: flex;
   gap: 10px;
@@ -338,6 +345,52 @@ body {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--white);
+}
+
+.custom-name-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 7px 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 1.4px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-med);
+  color: var(--white);
+  border-radius: 4px;
+}
+
+.custom-name-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.custom-name-input:focus {
+  outline: none;
+  border-color: var(--court-wood);
+}
+
+.btn-save-preset {
+  padding: 7px 20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  background: var(--court-wood);
+  border: 1px solid var(--court-wood);
+  color: var(--bg-page);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-save-preset:hover {
+  background: #d4b06a;
+  border-color: #d4b06a;
+}
+
+.btn-save-preset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .settings-cards {
@@ -1072,7 +1125,7 @@ body {
 }
 
 .scoreboard-timeouts {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
   font-family: 'Bebas Neue', sans-serif;
@@ -1081,6 +1134,7 @@ body {
   padding: 2px 8px;
   border: 1px solid var(--border);
   color: var(--text-muted);
+  line-height: 1;
 }
 
 .to-label {
@@ -1100,6 +1154,33 @@ body {
 
 .to-count.depleted {
   color: var(--accent);
+}
+
+.to-timer {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--court-wood);
+  line-height: 1;
+  margin-top: 2px;
+  animation: to-timer-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes to-timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.btn-action.mgmt {
+  flex-direction: column;
+}
+
+.btn-action.mgmt:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: var(--border-med);
+  color: var(--text-muted);
 }
 
 .scoreboard-poss {
@@ -1186,6 +1267,36 @@ body {
 @keyframes stopped-banner-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
+}
+
+.game-status-banner.period-end {
+  background: var(--court-wood);
+  color: var(--bg-page);
+}
+
+.game-status-banner.period-end.final {
+  background: var(--accent);
+  color: var(--white);
+}
+
+.btn-next-quarter.period-break-label {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.btn-end-game {
+  margin-top: 4px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.game-court.period-over .game-half {
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 /* Court area */
@@ -1535,6 +1646,33 @@ body {
   color: var(--court-wood);
 }
 
+.btn-clock.next-period {
+  background: var(--court-wood);
+  color: var(--bg-page);
+  border-color: var(--court-wood);
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+.btn-clock.next-period:hover {
+  background: #d4b06a;
+  border-color: #d4b06a;
+  color: var(--bg-page);
+}
+
+.btn-clock:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: none;
+  border-color: var(--border-med);
+  color: var(--text-muted);
+}
+
+.btn-clock:disabled:hover {
+  border-color: var(--border-med);
+  color: var(--text-muted);
+}
+
 .btn-divider {
   display: flex;
   flex-direction: column;
@@ -1577,6 +1715,440 @@ body {
 .btn-divider.indicator:hover {
   color: inherit;
   border-color: inherit;
+}
+
+/* Substitution section labels */
+.sub-section-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--court-wood);
+  margin: 8px 0 4px;
+  text-align: center;
+}
+
+.player-card.highlighted {
+  border-color: var(--accent);
+  background: rgba(201, 48, 44, 0.15);
+  box-shadow: 0 0 8px var(--red-glow);
+}
+
+.player-card.dimmed {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.sub-empty-bench {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 16px 0;
+  font-style: italic;
+}
+
+/* ===== LATE ADD ===== */
+.late-add-full {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 16px 0;
+  font-style: italic;
+}
+
+.late-add-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.late-add-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-med);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.late-add-name {
+  flex: 1;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+}
+
+.late-add-number {
+  width: 48px;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  background: var(--bg-page);
+  border: 1px solid var(--border-med);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.late-add-number:focus {
+  border-color: var(--green);
+  outline: none;
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.3);
+}
+
+.btn-late-add-confirm {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.btn-late-add-confirm:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ===== LATE ADD PLACEHOLDER CARD ===== */
+.player-card-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--bg-card);
+  border: 2px dashed var(--court-wood);
+  border-radius: 6px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.player-card-placeholder:hover {
+  border-color: var(--green);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+}
+
+.player-card-placeholder .placeholder-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--court-wood);
+  line-height: 1.1;
+}
+
+/* ===== END GAME SCREEN ===== */
+.endgame-screen {
+  background: var(--bg-page);
+  overflow: hidden;
+}
+
+.endgame-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.endgame-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--white);
+}
+
+.endgame-ot {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.endgame-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.endgame-team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.5;
+}
+
+.endgame-team.winner {
+  opacity: 1;
+}
+
+.endgame-team-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--white);
+}
+
+.endgame-team-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px;
+  letter-spacing: 2px;
+  color: var(--white);
+  line-height: 1;
+}
+
+.endgame-team.winner .endgame-team-score {
+  color: var(--court-wood);
+}
+
+.endgame-dash {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: var(--text-muted);
+}
+
+.endgame-body {
+  flex: 1;
+  overflow: hidden;
+  padding: 10px 16px;
+  display: flex;
+  gap: 16px;
+}
+
+.endgame-left {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.endgame-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.endgame-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 12px;
+}
+
+.endgame-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--court-wood);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Quarter-by-quarter table */
+.endgame-quarter-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.eq-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.eq-row:last-child {
+  border-bottom: none;
+}
+
+.eq-row.eq-header {
+  color: var(--text-muted);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.eq-row.eq-winner {
+  color: var(--court-wood);
+}
+
+.eq-team-col {
+  flex: 1;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eq-cell {
+  width: 40px;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.eq-cell.eq-total {
+  font-size: 18px;
+  color: var(--white);
+  border-left: 1px solid var(--border-med);
+  padding-left: 8px;
+  margin-left: 4px;
+}
+
+.eq-row.eq-winner .eq-cell.eq-total {
+  color: var(--court-wood);
+}
+
+/* Team stats comparison */
+.endgame-team-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ets-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.ets-row:last-child {
+  border-bottom: none;
+}
+
+.ets-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 0 16px;
+}
+
+.ets-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--text-primary);
+}
+
+.ets-val.home {
+  text-align: right;
+}
+
+.ets-val.away {
+  text-align: left;
+}
+
+/* Player stats table */
+.endgame-player-table-wrap {
+  overflow-x: auto;
+}
+
+.endgame-player-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.endgame-player-table th {
+  padding: 6px 8px;
+  text-align: center;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 2px;
+  border-bottom: 1px solid var(--border-med);
+}
+
+.endgame-player-table td {
+  padding: 8px 8px;
+  text-align: center;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.endgame-player-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ept-num {
+  text-align: center !important;
+  color: var(--court-wood) !important;
+  width: 36px;
+}
+
+.ept-name {
+  text-align: left !important;
+  min-width: 100px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sortable table headers */
+.ept-sortable {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: color var(--transition);
+}
+
+.ept-sortable:hover {
+  color: var(--court-wood);
+}
+
+.ept-sorted {
+  color: var(--court-wood) !important;
+}
+
+.ept-sort-arrow {
+  font-size: 9px;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+
+.endgame-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--bg-header);
+  border-top: 1px solid var(--border-light);
+  flex-shrink: 0;
 }
 
 /* ===== SCROLLBAR ===== */

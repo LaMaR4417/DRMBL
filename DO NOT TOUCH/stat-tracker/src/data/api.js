@@ -20,3 +20,11 @@ export async function fetchGameSettings() {
   const data = await res.json();
   return data.presets;
 }
+
+export function syncLiveGame(boxScore) {
+  fetch('/api/live-game', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ boxScore }),
+  }).catch(() => {});
+}

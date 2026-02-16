@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGame, useGameDispatch } from '../context/GameContext';
+import { syncLiveGame } from '../data/api';
 
 function formatClock(totalSeconds) {
   const m = Math.floor(totalSeconds / 60);
@@ -32,6 +33,7 @@ function pendingLabel(pending) {
     'foul-flagrant': 'FLAGRANT FOUL',
     'foul-offensive': 'OFFENSIVE FOUL',
     substitution: 'SUBSTITUTION',
+    'late-add-sub-in': 'LATE ADD SUB IN',
   };
   return LABELS[pending.action] || pending.action?.toUpperCase() || '';
 }
@@ -46,11 +48,49 @@ export default function GameScreen() {
   const [suggestTurnover, setSuggestTurnover] = useState(null); // 'home' | 'away' | null
   const [suggestSteal, setSuggestSteal] = useState(null); // 'home' | 'away' | null
   const [suggestStopClock, setSuggestStopClock] = useState(false);
+  const [timeoutCountdown, setTimeoutCountdown] = useState(null); // { side, type, timeLeft }
+  const [breakCountdown, setBreakCountdown] = useState(null); // seconds remaining in period break
+  const [lateAddNumbers, setLateAddNumbers] = useState({}); // { playerID: 'number' }
+  const [sortCol, setSortCol] = useState({ home: 'PTS', away: 'PTS' });
+  const [sortDir, setSortDir] = useState({ home: 'desc', away: 'desc' });
 
   const bs = game.boxScore;
+
+  // --- Live game sync (fire-and-forget POST to Cosmos) ---
+  const shouldSync = useRef(false);
+  const initialSynced = useRef(false);
+
+  // One-time sync when GameScreen first mounts with a box score
+  useEffect(() => {
+    if (!bs || initialSynced.current) return;
+    initialSynced.current = true;
+    syncLiveGame(bs);
+  }, [bs]);
+
+  // Sync after meaningful actions (flag-based)
+  useEffect(() => {
+    if (!bs || !shouldSync.current) return;
+    shouldSync.current = false;
+    syncLiveGame(bs);
+  }, [bs]);
+
   const isActive = bs.gameInfo.state.active;
   const timeLeft = bs.gameInfo.state.clock.timeLeft;
   const quarter = bs.gameInfo.state.currentQuarter;
+  const periodOver = timeLeft <= 0 && !isActive;
+  const isFinal = bs.gameInfo.general.status === 'final';
+
+  // Period-end label + game-over detection
+  const periodEndLabel = (() => {
+    if (!periodOver) return '';
+    const homeScore = bs.teamInfo.home.score.current;
+    const awayScore = bs.teamInfo.away.score.current;
+    const isTied = homeScore === awayScore;
+    if (quarter >= 4 && !isTied) return 'FINAL';
+    if (quarter === 2) return '1ST HALF';
+    return `END ${formatQuarter(quarter)}`;
+  })();
+  const isGameOver = periodOver && periodEndLabel === 'FINAL';
 
   // Derived: is auto-stop currently active based on game settings + current period/time?
   const isAutoStopActive = (() => {
@@ -83,6 +123,7 @@ export default function GameScreen() {
     if (!entry) return;
     if (entry.always || isAutoStopActive) {
       dispatch({ type: 'TOGGLE_CLOCK' });
+      shouldSync.current = true;
     } else {
       setSuggestStopClock(true);
     }
@@ -101,12 +142,73 @@ export default function GameScreen() {
       if (t <= 0) {
         clearInterval(id);
         dispatch({ type: 'TOGGLE_CLOCK' });
+        shouldSync.current = true;
         return;
       }
       dispatch({ type: 'SET_CLOCK_TIME', timeLeft: t - 1 });
     }, 1000);
     return () => clearInterval(id);
   }, [isActive, dispatch]);
+
+  // --- Timeout countdown timer ---
+  const toCountdownRef = useRef(null);
+  useEffect(() => {
+    if (toCountdownRef.current) toCountdownRef.current = timeoutCountdown;
+  }, [timeoutCountdown]);
+
+  useEffect(() => {
+    if (!timeoutCountdown) return;
+    toCountdownRef.current = timeoutCountdown;
+    const id = setInterval(() => {
+      const cur = toCountdownRef.current;
+      if (!cur || cur.timeLeft <= 1) {
+        clearInterval(id);
+        setTimeoutCountdown(null);
+        return;
+      }
+      setTimeoutCountdown({ ...cur, timeLeft: cur.timeLeft - 1 });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [timeoutCountdown?.side, timeoutCountdown?.type]); // restart only when a new timeout starts
+
+  // --- Break countdown timer (between periods) ---
+  const breakRef = useRef(null);
+  useEffect(() => {
+    if (!periodOver) {
+      setBreakCountdown(null);
+      breakRef.current = null;
+      return;
+    }
+    if (isGameOver) return;
+    let breakMin = 0;
+    if (quarter === 1 || quarter === 3) {
+      breakMin = game.settings.breaks?.betweenQuarters ?? 1;
+    } else if (quarter === 2) {
+      breakMin = game.settings.breaks?.halftime ?? 3;
+    } else if (quarter >= 4) {
+      breakMin = game.settings.breaks?.beforeOvertime ?? 1;
+    }
+    const breakSec = breakMin * 60;
+    if (breakSec <= 0) {
+      setBreakCountdown(null);
+      breakRef.current = null;
+      return;
+    }
+    breakRef.current = breakSec;
+    setBreakCountdown(breakSec);
+    const id = setInterval(() => {
+      const cur = breakRef.current;
+      if (cur == null || cur <= 1) {
+        clearInterval(id);
+        breakRef.current = 0;
+        setBreakCountdown(0);
+        return;
+      }
+      breakRef.current = cur - 1;
+      setBreakCountdown(cur - 1);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [periodOver, quarter]);
 
   // --- Scoring button handler ---
   function handleShotTap(side, points, made) {
@@ -169,6 +271,23 @@ export default function GameScreen() {
     setPendingAction({ type: 'stat', side, action });
   }
 
+  // --- Substitution handlers (two-step: pick OUT then pick IN) ---
+  function handleSubOut(side, playerIndex) {
+    setPendingAction({ ...pendingAction, outIndex: playerIndex });
+  }
+
+  function handleSubIn(side, playerIndex) {
+    setSuggestRebound(false);
+    setSuggestAssist(null);
+    setSuggestShot(null);
+    setSuggestTurnover(null);
+    setSuggestSteal(null);
+    setSuggestStopClock(false);
+    dispatch({ type: 'RECORD_SUBSTITUTION', side, outIndex: pendingAction.outIndex, inIndex: playerIndex });
+    shouldSync.current = true;
+    setPendingAction(null);
+  }
+
   // --- Timeout handler (fires immediately, no player selection) ---
   function handleTimeoutTap(side, timeoutType) {
     setSuggestRebound(false);
@@ -178,8 +297,11 @@ export default function GameScreen() {
     setSuggestSteal(null);
     setSuggestStopClock(false);
     dispatch({ type: 'RECORD_TIMEOUT', side, timeoutType });
+    shouldSync.current = true;
     setPendingAction(null);
     maybeAutoStop('Timeout');
+    const duration = game.settings.timeouts?.duration?.[timeoutType] || (timeoutType === 'full' ? 60 : 30);
+    setTimeoutCountdown({ side, type: timeoutType, timeLeft: duration });
   }
 
   // --- Player selection handler ---
@@ -242,6 +364,7 @@ export default function GameScreen() {
       }
     }
 
+    shouldSync.current = true;
     setPendingAction(null);
   }
 
@@ -321,9 +444,8 @@ export default function GameScreen() {
   }
 
   function renderMgmtSection(side) {
-    const showTimeoutSub = pendingAction?.type === 'stat' && pendingAction?.side === side && pendingAction?.action === 'timeout';
-    const remaining = bs.teamInfo[side].stats.timeouts.remaining;
-
+    const toActive = timeoutCountdown?.side === side;
+    const toBlocked = timeoutCountdown != null && timeoutCountdown.side !== side;
     return (
       <div className="game-section">
         <div className="section-label">GAME</div>
@@ -331,34 +453,28 @@ export default function GameScreen() {
           <button
             className={`btn-action mgmt ${isStatActive(side, 'timeout') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'timeout')}
+            disabled={toBlocked}
           >
             TIMEOUT
+            {toActive && (
+              <span className="to-timer">
+                {timeoutCountdown.type === 'full' ? 'FULL' : 'SHORT'} {formatClock(timeoutCountdown.timeLeft)}
+              </span>
+            )}
           </button>
           <button
             className={`btn-action mgmt ${isStatActive(side, 'substitution') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'substitution')}
           >
-            SUB
+            SUBSTITUTION
+          </button>
+          <button
+            className={`btn-action mgmt ${isStatActive(side, 'late-add') ? 'active' : ''}`}
+            onClick={() => { setLateAddNumbers({}); handleStatTap(side, 'late-add'); }}
+          >
+            LATE ADD
           </button>
         </div>
-        {showTimeoutSub && (
-          <div className="action-row action-row-sub">
-            <button
-              className={`btn-action sub`}
-              onClick={() => handleTimeoutTap(side, 'full')}
-              disabled={remaining.full <= 0}
-            >
-              FULL ({remaining.full})
-            </button>
-            <button
-              className={`btn-action sub`}
-              onClick={() => handleTimeoutTap(side, 'short')}
-              disabled={remaining.short <= 0}
-            >
-              SHORT ({remaining.short})
-            </button>
-          </div>
-        )}
       </div>
     );
   }
@@ -378,14 +494,195 @@ export default function GameScreen() {
       { action: 'turnover-steal', label: 'STOLEN' },
       { action: 'turnover-error', label: 'ERROR' },
     ],
+    timeout: [
+      { action: 'timeout-full', label: 'FULL', timeoutType: 'full' },
+      { action: 'timeout-short', label: 'SHORT', timeoutType: 'short' },
+    ],
   };
+
+  function renderPlayerCard(player, team, opts = {}) {
+    const { selectable, onClick, highlighted, dimmed } = opts;
+    return (
+      <div
+        key={player.playerID}
+        className={`player-card ${selectable ? 'selectable' : ''} ${highlighted ? 'highlighted' : ''} ${dimmed ? 'dimmed' : ''}`}
+        onClick={selectable ? onClick : undefined}
+      >
+        <span className="player-card-number">#{player.number || '?'}</span>
+        <span className="player-card-name">{player.name}</span>
+        <div className="player-card-stats">
+          <div className="stats-col">
+            <div className="stat-row"><span className="stat-label">PTS</span><span className="stat-value">{player.stats.offense.points}</span></div>
+            <div className="stat-row"><span className="stat-label">FG%</span><span className="stat-value">{player.stats.offense.shootingBreakdown.fieldGoals.totalPercentage}%</span></div>
+            <div className="stat-row"><span className="stat-label">REB</span><span className="stat-value">{player.stats.rebounds.total}</span></div>
+            <div className="stat-row"><span className="stat-label">AST</span><span className="stat-value">{player.stats.offense.assists}</span></div>
+          </div>
+          <div className="stats-divider" />
+          <div className="stats-col">
+            <div className="stat-row"><span className="stat-label">STL</span><span className="stat-value">{player.stats.defense.steals}</span></div>
+            <div className="stat-row"><span className="stat-label">BLK</span><span className="stat-value">{player.stats.defense.blocks}</span></div>
+            <div className="stat-row"><span className="stat-label">TO</span><span className="stat-value">{player.stats.general.turnovers}</span></div>
+            <div className="stat-row"><span className="stat-label">PF</span><span className="stat-value">{player.stats.general.fouls.personal.total}</span></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function handleLateAddSubIn(side, playerIndex) {
+    dispatch({ type: 'SUB_IN_PLAYER', side, playerIndex });
+    shouldSync.current = true;
+    setPendingAction(null);
+  }
+
+  function handleLateAdd(side, player) {
+    const num = lateAddNumbers[player.playerID] || '';
+    if (!num) return;
+    dispatch({ type: 'LATE_ADD_PLAYER', side, playerID: player.playerID, name: player.name, number: num });
+    shouldSync.current = true;
+    setLateAddNumbers({});
+    setPendingAction(null);
+  }
 
   function renderPlayerSection(side) {
     const team = bs.teamInfo[side];
-    const players = team.roster.inGame.filter((p) => p.playerID !== null);
+    const courtPlayers = team.roster.inGame.filter((p) => p.playerID !== null && p.onCourt);
+    const benchPlayers = team.roster.inGame.filter((p) => p.playerID !== null && !p.onCourt);
     const isSelecting = pendingAction !== null && pendingAction.side === side;
     const subChoices = isSelecting && SUB_MENU_CHOICES[pendingAction.action];
-    const isPlayerSelectable = isSelecting && !subChoices;
+    const isSub = isSelecting && pendingAction.action === 'substitution';
+    const isLateAdd = isSelecting && pendingAction.action === 'late-add';
+    const isLateAddSubIn = isSelecting && pendingAction.action === 'late-add-sub-in';
+    const subStep = isSub ? (pendingAction.outIndex != null ? 2 : 1) : 0;
+    const isPlayerSelectable = isSelecting && !subChoices && !isSub && !isLateAdd && !isLateAddSubIn;
+
+    // Late Add mode: show available players from full roster
+    if (isLateAdd) {
+      const inGameIDs = new Set(team.roster.inGame.filter((p) => p.playerID !== null).map((p) => p.playerID));
+      const available = team.roster.full.filter((p) => !inGameIDs.has(p.playerID));
+      const hasEmptySlot = team.roster.inGame.some((p) => p.playerID === null);
+
+      return (
+        <div className="game-section game-section-players">
+          <div className="selection-banner">
+            <span className="selection-banner-text">LATE ADD: SELECT PLAYER</span>
+            <button className="btn btn-small" onClick={() => { setLateAddNumbers({}); setPendingAction(null); }}>
+              Cancel
+            </button>
+          </div>
+          {!hasEmptySlot ? (
+            <div className="late-add-full">Roster is full (12 players)</div>
+          ) : available.length === 0 ? (
+            <div className="late-add-full">All roster players are already in the game</div>
+          ) : (
+            <div className="late-add-list">
+              {available.map((player) => {
+                const num = lateAddNumbers[player.playerID] || '';
+                return (
+                  <div key={player.playerID} className="late-add-row">
+                    <span className="late-add-name">{player.name}</span>
+                    <input
+                      className="late-add-number"
+                      type="number"
+                      min="0"
+                      max="99"
+                      placeholder="#"
+                      value={num}
+                      onChange={(e) => setLateAddNumbers({ ...lateAddNumbers, [player.playerID]: e.target.value })}
+                    />
+                    <button
+                      className="btn btn-small btn-late-add-confirm"
+                      disabled={!num}
+                      onClick={() => handleLateAdd(side, player)}
+                    >
+                      ADD
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Late Add Sub In mode: pick a bench player to put on court
+    if (isLateAddSubIn) {
+      return (
+        <div className="game-section game-section-players">
+          <div className="selection-banner">
+            <span className="selection-banner-text">LATE ADD SUB IN: SELECT PLAYER</span>
+            <button className="btn btn-small" onClick={() => setPendingAction(null)}>
+              Cancel
+            </button>
+          </div>
+          <div className="player-grid">
+            {benchPlayers.length > 0 ? benchPlayers.map((player) => {
+              const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
+              return renderPlayerCard(player, team, {
+                selectable: true,
+                onClick: () => handleLateAddSubIn(side, actualIndex),
+              });
+            }) : (
+              <div className="sub-empty-bench">No bench players available</div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Substitution mode: two-step court/bench selection
+    if (isSub) {
+      const outPlayer = subStep === 2 ? team.roster.inGame[pendingAction.outIndex] : null;
+      return (
+        <div className="game-section game-section-players">
+          <div className="selection-banner">
+            <span className="selection-banner-text">
+              {subStep === 1
+                ? 'SELECT: PLAYER OUT'
+                : `#${outPlayer?.number || '?'} ${outPlayer?.name} OUT → SELECT: PLAYER IN`}
+            </span>
+            <button className="btn btn-small" onClick={() => {
+              if (subStep === 2) {
+                setPendingAction({ ...pendingAction, outIndex: undefined });
+              } else {
+                setPendingAction(null);
+              }
+            }}>
+              {subStep === 2 ? 'Back' : 'Cancel'}
+            </button>
+          </div>
+
+          <div className="sub-section-label">ON COURT</div>
+          <div className="player-grid">
+            {courtPlayers.map((player) => {
+              const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
+              const isOut = subStep === 2 && actualIndex === pendingAction.outIndex;
+              return renderPlayerCard(player, team, {
+                selectable: subStep === 1,
+                onClick: () => handleSubOut(side, actualIndex),
+                highlighted: isOut,
+                dimmed: subStep === 2 && !isOut,
+              });
+            })}
+          </div>
+
+          <div className="sub-section-label">ON BENCH</div>
+          <div className="player-grid">
+            {benchPlayers.length > 0 ? benchPlayers.map((player) => {
+              const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
+              return renderPlayerCard(player, team, {
+                selectable: subStep === 2,
+                onClick: () => handleSubIn(side, actualIndex),
+                dimmed: subStep === 1,
+              });
+            }) : (
+              <div className="sub-empty-bench">No bench players</div>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="game-section game-section-players">
@@ -402,48 +699,47 @@ export default function GameScreen() {
         )}
         {subChoices ? (
           <div className="sub-menu-choices">
-            {subChoices.map((choice) => (
-              <button
-                key={choice.action}
-                className="btn btn-sub-choice"
-                onClick={() => setPendingAction({ ...pendingAction, action: choice.action })}
-              >
-                {choice.label}
-              </button>
-            ))}
+            {subChoices.map((choice) => {
+              const isTimeout = choice.timeoutType != null;
+              const remaining = isTimeout ? bs.teamInfo[side].stats.timeouts.remaining[choice.timeoutType] : null;
+              return (
+                <button
+                  key={choice.action}
+                  className="btn btn-sub-choice"
+                  disabled={isTimeout && remaining <= 0}
+                  onClick={() => {
+                    if (isTimeout) {
+                      handleTimeoutTap(side, choice.timeoutType);
+                    } else {
+                      setPendingAction({ ...pendingAction, action: choice.action });
+                    }
+                  }}
+                >
+                  {choice.label}{isTimeout ? ` (${remaining})` : ''}
+                </button>
+              );
+            })}
           </div>
         ) : (
         <div className="player-grid">
-          {players.map((player) => {
+          {courtPlayers.map((player) => {
             const actualIndex = team.roster.inGame.findIndex(
               (p) => p.playerID === player.playerID,
             );
-            return (
-              <div
-                key={player.playerID}
-                className={`player-card ${isPlayerSelectable ? 'selectable' : ''}`}
-                onClick={isPlayerSelectable ? () => handlePlayerSelect(side, actualIndex) : undefined}
-              >
-                <span className="player-card-number">#{player.number || '?'}</span>
-                <span className="player-card-name">{player.name}</span>
-                <div className="player-card-stats">
-                  <div className="stats-col">
-                    <div className="stat-row"><span className="stat-label">PTS</span><span className="stat-value">{player.stats.offense.points}</span></div>
-                    <div className="stat-row"><span className="stat-label">FG%</span><span className="stat-value">{player.stats.offense.shootingBreakdown.fieldGoals.totalPercentage}%</span></div>
-                    <div className="stat-row"><span className="stat-label">REB</span><span className="stat-value">{player.stats.rebounds.total}</span></div>
-                    <div className="stat-row"><span className="stat-label">AST</span><span className="stat-value">{player.stats.offense.assists}</span></div>
-                  </div>
-                  <div className="stats-divider" />
-                  <div className="stats-col">
-                    <div className="stat-row"><span className="stat-label">STL</span><span className="stat-value">{player.stats.defense.steals}</span></div>
-                    <div className="stat-row"><span className="stat-label">BLK</span><span className="stat-value">{player.stats.defense.blocks}</span></div>
-                    <div className="stat-row"><span className="stat-label">TO</span><span className="stat-value">{player.stats.general.turnovers}</span></div>
-                    <div className="stat-row"><span className="stat-label">PF</span><span className="stat-value">{player.stats.general.fouls.personal.total}</span></div>
-                  </div>
-                </div>
-              </div>
-            );
+            return renderPlayerCard(player, team, {
+              selectable: isPlayerSelectable,
+              onClick: () => handlePlayerSelect(side, actualIndex),
+            });
           })}
+          {courtPlayers.length < 5 && benchPlayers.length > 0 && (
+            <div
+              className="player-card player-card-placeholder selectable"
+              onClick={() => setPendingAction({ type: 'stat', side, action: 'late-add-sub-in' })}
+            >
+              <span className="placeholder-label">LATE ADD</span>
+              <span className="placeholder-label">SUB IN</span>
+            </div>
+          )}
         </div>
         )}
       </div>
@@ -451,7 +747,7 @@ export default function GameScreen() {
   }
 
   // --- Render team half ---
-  const PARENT_ACTIONS = ['timeout'];
+  const PARENT_ACTIONS = [];
 
   function renderHalf(side) {
     const isParent = pendingAction?.type === 'stat' && PARENT_ACTIONS.includes(pendingAction?.action);
@@ -471,21 +767,238 @@ export default function GameScreen() {
     );
   }
 
-  const periodOver = timeLeft <= 0 && !isActive;
+  // --- End-game view ---
+  if (isFinal) {
+    const winner = bs.gameInfo.state.winner;
+    const homeScore = bs.teamInfo.home.score.current;
+    const awayScore = bs.teamInfo.away.score.current;
+    const pq = { home: bs.teamInfo.home.score.perQuarter, away: bs.teamInfo.away.score.perQuarter };
+    const periods = ['first', 'second', 'third', 'fourth'];
+    const otCount = bs.gameInfo.state.overtimes || 0;
+    for (let i = 1; i <= otCount; i++) periods.push(`OT${i}`);
+
+    const periodLabels = periods.map((p) => {
+      if (p === 'first') return 'Q1';
+      if (p === 'second') return 'Q2';
+      if (p === 'third') return 'Q3';
+      if (p === 'fourth') return 'Q4';
+      return p;
+    });
+
+    function getQuarterScore(side, period) {
+      if (['first', 'second', 'third', 'fourth'].includes(period)) {
+        return pq[side][period] || 0;
+      }
+      const otKey = period; // "OT1", "OT2", etc.
+      return pq[side].overtime?.[otKey] || 0;
+    }
+
+    const PLAYER_COLUMNS = [
+      { key: '#', label: '#', className: 'ept-num', get: (p) => Number(p.number) || 0, display: (p) => p.number || '?' },
+      { key: 'PLAYER', label: 'PLAYER', className: 'ept-name', get: (p) => p.name, display: (p) => p.name },
+      { key: 'MIN', label: 'MIN', get: (p) => p.stats.general.minutesPlayed },
+      { key: 'PTS', label: 'PTS', get: (p) => p.stats.offense.points },
+      { key: 'FG', label: 'FG', get: (p) => p.stats.offense.shootingBreakdown.fieldGoals.totalMade, display: (p) => `${p.stats.offense.shootingBreakdown.fieldGoals.totalMade}/${p.stats.offense.shootingBreakdown.fieldGoals.totalAttempted}` },
+      { key: 'FG%', label: 'FG%', get: (p) => p.stats.offense.shootingBreakdown.fieldGoals.totalPercentage, display: (p) => `${p.stats.offense.shootingBreakdown.fieldGoals.totalPercentage}%` },
+      { key: '2PT', label: '2PT', get: (p) => p.stats.offense.shootingBreakdown.fieldGoals['2-PointShots'].made, display: (p) => `${p.stats.offense.shootingBreakdown.fieldGoals['2-PointShots'].made}/${p.stats.offense.shootingBreakdown.fieldGoals['2-PointShots'].attempted}` },
+      { key: '2P%', label: '2P%', get: (p) => p.stats.offense.shootingBreakdown.fieldGoals['2-PointShots'].percentage, display: (p) => `${p.stats.offense.shootingBreakdown.fieldGoals['2-PointShots'].percentage}%` },
+      { key: '3PT', label: '3PT', get: (p) => p.stats.offense.shootingBreakdown.fieldGoals['3-PointShots'].made, display: (p) => `${p.stats.offense.shootingBreakdown.fieldGoals['3-PointShots'].made}/${p.stats.offense.shootingBreakdown.fieldGoals['3-PointShots'].attempted}` },
+      { key: '3P%', label: '3P%', get: (p) => p.stats.offense.shootingBreakdown.fieldGoals['3-PointShots'].percentage, display: (p) => `${p.stats.offense.shootingBreakdown.fieldGoals['3-PointShots'].percentage}%` },
+      { key: 'FT', label: 'FT', get: (p) => p.stats.offense.shootingBreakdown.freeThrows.made, display: (p) => `${p.stats.offense.shootingBreakdown.freeThrows.made}/${p.stats.offense.shootingBreakdown.freeThrows.attempted}` },
+      { key: 'FT%', label: 'FT%', get: (p) => p.stats.offense.shootingBreakdown.freeThrows.percentage, display: (p) => `${p.stats.offense.shootingBreakdown.freeThrows.percentage}%` },
+      { key: 'TRB', label: 'TRB', get: (p) => p.stats.rebounds.total },
+      { key: 'DRB', label: 'DRB', get: (p) => p.stats.rebounds.defensive },
+      { key: 'ORB', label: 'ORB', get: (p) => p.stats.rebounds.offensive },
+      { key: 'AST', label: 'AST', get: (p) => p.stats.offense.assists },
+      { key: 'STL', label: 'STL', get: (p) => p.stats.defense.steals },
+      { key: 'BLK', label: 'BLK', get: (p) => p.stats.defense.blocks },
+      { key: 'TO', label: 'TO', get: (p) => p.stats.general.turnovers },
+      { key: 'PF', label: 'PF', get: (p) => p.stats.general.fouls.personal.total },
+      { key: '+/-', label: '+/-', get: (p) => p.stats.general.plusMinus, display: (p) => `${p.stats.general.plusMinus >= 0 ? '+' : ''}${p.stats.general.plusMinus}` },
+      { key: 'EFF', label: 'EFF', get: (p) => { const fg = p.stats.offense.shootingBreakdown.fieldGoals; const ft = p.stats.offense.shootingBreakdown.freeThrows; return p.stats.offense.points + p.stats.rebounds.total + p.stats.offense.assists + p.stats.defense.steals + p.stats.defense.blocks - p.stats.general.turnovers - (fg.totalAttempted - fg.totalMade) - (ft.attempted - ft.made); } },
+    ];
+
+    function handleSort(side, key) {
+      const col = sortCol[side];
+      const dir = sortDir[side];
+      if (col === key) {
+        setSortDir({ ...sortDir, [side]: dir === 'desc' ? 'asc' : 'desc' });
+      } else {
+        setSortCol({ ...sortCol, [side]: key });
+        setSortDir({ ...sortDir, [side]: 'desc' });
+      }
+    }
+
+    function getPlayerStats(side) {
+      const col = PLAYER_COLUMNS.find((c) => c.key === sortCol[side]);
+      const dir = sortDir[side];
+      return bs.teamInfo[side].roster.inGame
+        .filter((p) => p.playerID !== null)
+        .sort((a, b) => {
+          const av = col ? col.get(a) : 0;
+          const bv = col ? col.get(b) : 0;
+          if (typeof av === 'string' && typeof bv === 'string') {
+            return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+          }
+          return dir === 'asc' ? av - bv : bv - av;
+        });
+    }
+
+    function exportBoxScore() {
+      const json = JSON.stringify(bs, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${bs.teamInfo.home.name}-vs-${bs.teamInfo.away.name}-boxscore.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    return (
+      <div className="screen endgame-screen">
+        <div className="endgame-header">
+          <span className="endgame-label">FINAL</span>
+          {otCount > 0 && <span className="endgame-ot">({otCount > 1 ? `${otCount}OT` : 'OT'})</span>}
+        </div>
+
+        <div className="endgame-score-row">
+          <div className={`endgame-team ${winner === 'home' ? 'winner' : ''}`}>
+            <span className="endgame-team-name">{bs.teamInfo.home.name}</span>
+            <span className="endgame-team-score">{homeScore}</span>
+          </div>
+          <span className="endgame-dash">&ndash;</span>
+          <div className={`endgame-team ${winner === 'away' ? 'winner' : ''}`}>
+            <span className="endgame-team-score">{awayScore}</span>
+            <span className="endgame-team-name">{bs.teamInfo.away.name}</span>
+          </div>
+        </div>
+
+        <div className="endgame-body">
+          {/* Left half: Scoring by Period + Team Stats */}
+          <div className="endgame-left">
+            <div className="endgame-section">
+              <div className="endgame-section-title">SCORING BY PERIOD</div>
+              <div className="endgame-quarter-table">
+                <div className="eq-row eq-header">
+                  <span className="eq-team-col"></span>
+                  {periodLabels.map((l) => <span key={l} className="eq-cell">{l}</span>)}
+                  <span className="eq-cell eq-total">T</span>
+                </div>
+                {['home', 'away'].map((side) => (
+                  <div key={side} className={`eq-row ${winner === side ? 'eq-winner' : ''}`}>
+                    <span className="eq-team-col">{bs.teamInfo[side].name}</span>
+                    {periods.map((p) => <span key={p} className="eq-cell">{getQuarterScore(side, p)}</span>)}
+                    <span className="eq-cell eq-total">{bs.teamInfo[side].score.current}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="endgame-section">
+              <div className="endgame-section-title">TEAM STATS</div>
+              <div className="endgame-team-stats">
+                {(() => {
+                  const stats = [
+                    { label: 'FG', home: `${bs.teamInfo.home.stats.shootingBreakdown.fieldGoals.totalMade}/${bs.teamInfo.home.stats.shootingBreakdown.fieldGoals.totalAttempted}`, away: `${bs.teamInfo.away.stats.shootingBreakdown.fieldGoals.totalMade}/${bs.teamInfo.away.stats.shootingBreakdown.fieldGoals.totalAttempted}` },
+                    { label: 'FG%', home: bs.teamInfo.home.stats.shootingBreakdown.fieldGoals.totalPercentage, away: bs.teamInfo.away.stats.shootingBreakdown.fieldGoals.totalPercentage, suffix: '%' },
+                    { label: '2PT', home: `${bs.teamInfo.home.stats.shootingBreakdown.fieldGoals['2-PointShots'].made}/${bs.teamInfo.home.stats.shootingBreakdown.fieldGoals['2-PointShots'].attempted}`, away: `${bs.teamInfo.away.stats.shootingBreakdown.fieldGoals['2-PointShots'].made}/${bs.teamInfo.away.stats.shootingBreakdown.fieldGoals['2-PointShots'].attempted}` },
+                    { label: '2P%', home: bs.teamInfo.home.stats.shootingBreakdown.fieldGoals['2-PointShots'].percentage, away: bs.teamInfo.away.stats.shootingBreakdown.fieldGoals['2-PointShots'].percentage, suffix: '%' },
+                    { label: '3PT', home: `${bs.teamInfo.home.stats.shootingBreakdown.fieldGoals['3-PointShots'].made}/${bs.teamInfo.home.stats.shootingBreakdown.fieldGoals['3-PointShots'].attempted}`, away: `${bs.teamInfo.away.stats.shootingBreakdown.fieldGoals['3-PointShots'].made}/${bs.teamInfo.away.stats.shootingBreakdown.fieldGoals['3-PointShots'].attempted}` },
+                    { label: '3P%', home: bs.teamInfo.home.stats.shootingBreakdown.fieldGoals['3-PointShots'].percentage, away: bs.teamInfo.away.stats.shootingBreakdown.fieldGoals['3-PointShots'].percentage, suffix: '%' },
+                    { label: 'FT', home: `${bs.teamInfo.home.stats.shootingBreakdown.freeThrows.made}/${bs.teamInfo.home.stats.shootingBreakdown.freeThrows.attempted}`, away: `${bs.teamInfo.away.stats.shootingBreakdown.freeThrows.made}/${bs.teamInfo.away.stats.shootingBreakdown.freeThrows.attempted}` },
+                    { label: 'FT%', home: bs.teamInfo.home.stats.shootingBreakdown.freeThrows.percentage, away: bs.teamInfo.away.stats.shootingBreakdown.freeThrows.percentage, suffix: '%' },
+                    { label: 'TRB', home: bs.teamInfo.home.stats.rebounds.total, away: bs.teamInfo.away.stats.rebounds.total },
+                    { label: 'DRB', home: bs.teamInfo.home.stats.rebounds.defensive, away: bs.teamInfo.away.stats.rebounds.defensive },
+                    { label: 'ORB', home: bs.teamInfo.home.stats.rebounds.offensive, away: bs.teamInfo.away.stats.rebounds.offensive },
+                    { label: 'AST', home: bs.teamInfo.home.stats.assists, away: bs.teamInfo.away.stats.assists },
+                    { label: 'STL', home: bs.teamInfo.home.stats.defense.steals, away: bs.teamInfo.away.stats.defense.steals },
+                    { label: 'BLK', home: bs.teamInfo.home.stats.defense.blocks, away: bs.teamInfo.away.stats.defense.blocks },
+                    { label: 'TO', home: bs.teamInfo.home.stats.turnovers, away: bs.teamInfo.away.stats.turnovers },
+                    { label: 'FOULS', home: bs.teamInfo.home.stats.fouls.total, away: bs.teamInfo.away.stats.fouls.total },
+                  ];
+                  return stats.map((s) => (
+                    <div key={s.label} className="ets-row">
+                      <span className="ets-val home">{s.suffix ? `${s.home}${s.suffix}` : s.home}</span>
+                      <span className="ets-label">{s.label}</span>
+                      <span className="ets-val away">{s.suffix ? `${s.away}${s.suffix}` : s.away}</span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {/* Right half: Player Box Scores */}
+          <div className="endgame-right">
+            {['home', 'away'].map((side) => (
+              <div key={side} className="endgame-section">
+                <div className="endgame-section-title">{bs.teamInfo[side].name} — BOX SCORE</div>
+                <div className="endgame-player-table-wrap">
+                  <table className="endgame-player-table">
+                    <thead>
+                      <tr>
+                        {PLAYER_COLUMNS.map((col) => (
+                          <th
+                            key={col.key}
+                            className={`${col.className || ''} ept-sortable ${sortCol[side] === col.key ? 'ept-sorted' : ''}`}
+                            onClick={() => handleSort(side, col.key)}
+                          >
+                            {col.label}
+                            {sortCol[side] === col.key && (
+                              <span className="ept-sort-arrow">{sortDir[side] === 'desc' ? '\u25BC' : '\u25B2'}</span>
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getPlayerStats(side).map((p) => (
+                        <tr key={p.playerID}>
+                          {PLAYER_COLUMNS.map((col) => (
+                            <td key={col.key} className={col.className || ''}>
+                              {col.display ? col.display(p) : col.get(p)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="endgame-footer">
+          <button className="btn" onClick={exportBoxScore}>EXPORT BOX SCORE</button>
+          <button className="btn btn-primary btn-large" onClick={() => dispatch({ type: 'RESET_GAME' })}>NEW GAME</button>
+        </div>
+      </div>
+    );
+  }
 
   // Scoreboard info: fouls, bonus, possession
   const QUARTER_KEYS_SB = { 1: 'first', 2: 'second', 3: 'third', 4: 'fourth' };
-  const qKey = QUARTER_KEYS_SB[quarter] || 'fourth';
+  const qKey = quarter <= 4 ? QUARTER_KEYS_SB[quarter] : `OT${quarter - 4}`;
+  const isOTQuarter = quarter > 4;
   const arrow = bs.gameInfo.state.possessionArrow;
+
+  function getQuarterFouls(side, key) {
+    if (key.startsWith('OT')) {
+      return bs.teamInfo[side].stats.fouls.perQuarter.overtime[key]?.committed || 0;
+    }
+    return bs.teamInfo[side].stats.fouls.perQuarter[key]?.committed || 0;
+  }
 
   function getSideInfo(side) {
     const oppSide = side === 'home' ? 'away' : 'home';
-    const oppFouls = bs.teamInfo[oppSide].stats.fouls.perQuarter[qKey]?.committed || 0;
+    const oppFouls = getQuarterFouls(oppSide, qKey);
     const oneAndOne = game.settings.fouls.bonus.oneAndOne;
     const dblBonus = game.settings.fouls.bonus.doubleBonus;
     const inBonus = oneAndOne != null && oppFouls >= oneAndOne;
     const inDoubleBonus = dblBonus != null && oppFouls >= dblBonus;
-    const teamFouls = bs.teamInfo[side].stats.fouls.perQuarter[qKey]?.committed || 0;
+    const teamFouls = getQuarterFouls(side, qKey);
     const timeouts = bs.teamInfo[side].stats.timeouts.remaining;
     return { teamFouls, inBonus, inDoubleBonus, timeouts };
   }
@@ -514,14 +1027,21 @@ export default function GameScreen() {
         <div className="scoreboard-clock">
           <span className="scoreboard-quarter">{formatQuarter(quarter)}</span>
           <span className={`scoreboard-time ${!isActive ? 'stopped' : ''}`}>
-            {formatClock(timeLeft)}
+            {periodOver && breakCountdown != null && breakCountdown > 0
+              ? formatClock(breakCountdown)
+              : formatClock(timeLeft)}
           </span>
-          {periodOver && quarter < 4 && (
+          {periodOver && !isGameOver && !isFinal && (
+            <span className="btn btn-small btn-next-quarter period-break-label">
+              NEXT: {formatQuarter(quarter + 1)}
+            </span>
+          )}
+          {isGameOver && !isFinal && (
             <button
-              className="btn btn-small btn-next-quarter"
-              onClick={() => dispatch({ type: 'ADVANCE_QUARTER' })}
+              className="btn btn-small btn-end-game"
+              onClick={() => { dispatch({ type: 'END_GAME' }); shouldSync.current = true; }}
             >
-              Next: {formatQuarter(quarter + 1)}
+              END GAME
             </button>
           )}
         </div>
@@ -542,14 +1062,18 @@ export default function GameScreen() {
       </div>
 
       {/* Clock status banner */}
-      {!periodOver && (
+      {!periodOver ? (
         <div className={`game-status-banner ${isActive ? 'running' : 'stopped'}`}>
           {isActive ? 'CLOCK RUNNING' : 'CLOCK STOPPED'}
+        </div>
+      ) : (
+        <div className={`game-status-banner period-end ${isGameOver || isFinal ? 'final' : ''}`}>
+          {isFinal ? 'FINAL' : periodEndLabel}
         </div>
       )}
 
       {/* Court area */}
-      <div className="game-court">
+      <div className={`game-court ${periodOver ? 'period-over' : ''}`}>
         {renderHalf('home')}
 
         <div className="game-divider">
@@ -558,20 +1082,33 @@ export default function GameScreen() {
             <span>STOP</span>
           </button>
 
-          <button
-            className={`btn-clock ${isActive ? 'running' : 'stopped'} ${suggestStopClock && isActive ? 'suggest' : ''}`}
-            onClick={() => { dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); }}
-          >
-            <span>{isActive ? 'STOP' : 'RUN'}</span>
-            <span>CLOCK</span>
-          </button>
+          {periodOver && !isGameOver && !isFinal ? (
+            <button
+              className="btn-clock next-period"
+              onClick={() => { dispatch({ type: 'ADVANCE_QUARTER' }); dispatch({ type: 'TOGGLE_CLOCK' }); shouldSync.current = true; }}
+              disabled={breakCountdown != null && breakCountdown > 0}
+            >
+              <span>START</span>
+              <span>NEXT</span>
+              <span>PERIOD</span>
+            </button>
+          ) : (
+            <button
+              className={`btn-clock ${isActive ? 'running' : 'stopped'} ${suggestStopClock && isActive ? 'suggest' : ''}`}
+              onClick={() => { dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true; }}
+              disabled={(periodOver && (isGameOver || isFinal)) || (!isActive && timeoutCountdown != null)}
+            >
+              <span>{isActive ? 'STOP' : 'RUN'}</span>
+              <span>CLOCK</span>
+            </button>
+          )}
 
-          <button className="btn-divider" onClick={() => maybeAutoStop('Referee Timeout')}>
+          <button className="btn-divider" onClick={() => { maybeAutoStop('Referee Timeout'); shouldSync.current = true; }}>
             <span>REF</span>
             <span>T.O.</span>
           </button>
 
-          <button className="btn-divider" onClick={() => { dispatch({ type: 'JUMP_BALL' }); maybeAutoStop('Jump Ball'); }}>
+          <button className="btn-divider" onClick={() => { dispatch({ type: 'JUMP_BALL' }); maybeAutoStop('Jump Ball'); shouldSync.current = true; }}>
             <span>JUMP</span>
             <span>BALL</span>
           </button>

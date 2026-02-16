@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer } from 'react';
-import { buildBoxScore } from '../data/boxScore';
+import { buildBoxScore, buildEmptyPlayerStats } from '../data/boxScore';
 
 const GameContext = createContext(null);
 const GameDispatchContext = createContext(null);
@@ -49,7 +49,16 @@ function calcPercentage(made, attempted) {
 
 const QUARTER_KEYS = { 1: 'first', 2: 'second', 3: 'third', 4: 'fourth' };
 function getQuarterKey(q) {
-  return QUARTER_KEYS[q] || 'fourth';
+  if (q <= 4) return QUARTER_KEYS[q];
+  return `OT${q - 4}`;
+}
+function isOTKey(qKey) {
+  return qKey.startsWith('OT');
+}
+
+function finalizeTime(clockTimeAtEntry, timeLeftNow) {
+  if (clockTimeAtEntry == null) return 0;
+  return Math.max(0, clockTimeAtEntry - timeLeftNow);
 }
 
 function gameReducer(state, action) {
@@ -222,8 +231,22 @@ function gameReducer(state, action) {
       }
 
       bs.teamInfo[side].score.current += points;
-      bs.teamInfo[side].score.perQuarter[qKey] =
-        (bs.teamInfo[side].score.perQuarter[qKey] || 0) + points;
+      if (isOTKey(qKey)) {
+        bs.teamInfo[side].score.perQuarter.overtime[qKey] =
+          (bs.teamInfo[side].score.perQuarter.overtime[qKey] || 0) + points;
+      } else {
+        bs.teamInfo[side].score.perQuarter[qKey] =
+          (bs.teamInfo[side].score.perQuarter[qKey] || 0) + points;
+      }
+
+      // Plus/minus: update all on-court players
+      const oppSide = side === 'home' ? 'away' : 'home';
+      for (const p of bs.teamInfo[side].roster.inGame) {
+        if (p.playerID && p.onCourt) p.stats.general.plusMinus += points;
+      }
+      for (const p of bs.teamInfo[oppSide].roster.inGame) {
+        if (p.playerID && p.onCourt) p.stats.general.plusMinus -= points;
+      }
 
       return { ...state, boxScore: bs };
     }
@@ -280,27 +303,50 @@ function gameReducer(state, action) {
       };
 
     case 'TOGGLE_CLOCK': {
-      const wasActive = state.boxScore.gameInfo.state.active;
-      return {
-        ...state,
-        boxScore: {
-          ...state.boxScore,
-          gameInfo: {
-            ...state.boxScore.gameInfo,
-            general: { ...state.boxScore.gameInfo.general, status: 'in-progress' },
-            state: {
-              ...state.boxScore.gameInfo.state,
-              active: !wasActive,
-            },
-          },
-        },
-      };
+      const bs = structuredClone(state.boxScore);
+      const wasActive = bs.gameInfo.state.active;
+      const timeLeftNow = bs.gameInfo.state.clock.timeLeft;
+
+      bs.gameInfo.general.status = 'in-progress';
+      bs.gameInfo.state.active = !wasActive;
+
+      for (const side of ['home', 'away']) {
+        for (const p of bs.teamInfo[side].roster.inGame) {
+          if (!p.playerID || !p.onCourt) continue;
+          if (wasActive) {
+            // Clock stopping: finalize accumulated time
+            p.stats.general.minutesPlayed += finalizeTime(p._clockTimeAtEntry, timeLeftNow);
+            p._clockTimeAtEntry = null;
+          } else {
+            // Clock starting: begin tracking
+            p._clockTimeAtEntry = timeLeftNow;
+          }
+        }
+      }
+
+      return { ...state, boxScore: bs };
     }
 
     case 'ADVANCE_QUARTER': {
       const bs = structuredClone(state.boxScore);
-      bs.gameInfo.state.currentQuarter += 1;
-      bs.gameInfo.state.clock.timeLeft = bs.gameInfo.state.clock.perQuarter * 60;
+      const nextQ = bs.gameInfo.state.currentQuarter + 1;
+      bs.gameInfo.state.currentQuarter = nextQ;
+      const isOT = nextQ > 4;
+      bs.gameInfo.state.clock.timeLeft = isOT
+        ? bs.gameInfo.state.clock.perOT * 60
+        : bs.gameInfo.state.clock.perQuarter * 60;
+      bs.gameInfo.state.active = false;
+      if (isOT) bs.gameInfo.state.overtimes += 1;
+      return { ...state, boxScore: bs };
+    }
+
+    case 'END_GAME': {
+      const bs = structuredClone(state.boxScore);
+      bs.gameInfo.general.status = 'final';
+      const homeScore = bs.teamInfo.home.score.current;
+      const awayScore = bs.teamInfo.away.score.current;
+      bs.gameInfo.state.winner = homeScore >= awayScore ? 'home' : 'away';
+      bs.gameInfo.state.loser = homeScore >= awayScore ? 'away' : 'home';
       bs.gameInfo.state.active = false;
       return { ...state, boxScore: bs };
     }
@@ -382,10 +428,17 @@ function gameReducer(state, action) {
       }
 
       teamStats.fouls.total += 1;
-      if (!teamStats.fouls.perQuarter[qKey]) {
-        teamStats.fouls.perQuarter[qKey] = { committed: 0, opponentInBonus: false };
+      if (isOTKey(qKey)) {
+        if (!teamStats.fouls.perQuarter.overtime[qKey]) {
+          teamStats.fouls.perQuarter.overtime[qKey] = { committed: 0, opponentInBonus: false };
+        }
+        teamStats.fouls.perQuarter.overtime[qKey].committed += 1;
+      } else {
+        if (!teamStats.fouls.perQuarter[qKey]) {
+          teamStats.fouls.perQuarter[qKey] = { committed: 0, opponentInBonus: false };
+        }
+        teamStats.fouls.perQuarter[qKey].committed += 1;
       }
-      teamStats.fouls.perQuarter[qKey].committed += 1;
 
       return { ...state, boxScore: bs };
     }
@@ -420,6 +473,39 @@ function gameReducer(state, action) {
       return { ...state, boxScore: bs };
     }
 
+    case 'RECORD_SUBSTITUTION': {
+      const bs = structuredClone(state.boxScore);
+      const { side, outIndex, inIndex } = action;
+      bs.teamInfo[side].roster.inGame[outIndex].onCourt = false;
+      bs.teamInfo[side].roster.inGame[inIndex].onCourt = true;
+      return { ...state, boxScore: bs };
+    }
+
+    case 'LATE_ADD_PLAYER': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerID, name, number } = action;
+      const emptyIndex = bs.teamInfo[side].roster.inGame.findIndex((p) => p.playerID === null);
+      if (emptyIndex === -1) return state;
+      bs.teamInfo[side].roster.inGame[emptyIndex] = {
+        playerID,
+        name,
+        number,
+        starter: false,
+        onCourt: false,
+        captain: false,
+        position: null,
+        stats: buildEmptyPlayerStats(),
+      };
+      return { ...state, boxScore: bs };
+    }
+
+    case 'SUB_IN_PLAYER': {
+      const bs = structuredClone(state.boxScore);
+      const { side, playerIndex } = action;
+      bs.teamInfo[side].roster.inGame[playerIndex].onCourt = true;
+      return { ...state, boxScore: bs };
+    }
+
     case 'JUMP_BALL': {
       const bs = structuredClone(state.boxScore);
       const arrow = bs.gameInfo.state.possessionArrow;
@@ -427,6 +513,9 @@ function gameReducer(state, action) {
       bs.gameInfo.state.possessionArrow = arrow === 'home' ? 'away' : 'home';
       return { ...state, boxScore: bs };
     }
+
+    case 'RESET_GAME':
+      return { ...initialState };
 
     default:
       return state;
