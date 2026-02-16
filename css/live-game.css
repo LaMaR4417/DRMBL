@@ -11,7 +11,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 200px;
+    padding-top: 141px;
 }
 
 .live-no-game-content {
@@ -40,7 +40,7 @@
 
 /* ── LIVE GAME CONTAINER ── */
 .live-game-section {
-    padding-top: 180px;
+    padding-top: 141px;
     padding-bottom: 40px;
     background: #0d0d0d;
 }
@@ -371,11 +371,11 @@
 
 @media (max-width: 600px) {
     .live-no-game {
-        padding-top: 180px;
+        padding-top: 141px;
     }
 
     .live-game-section {
-        padding-top: 160px;
+        padding-top: 141px;
     }
 
     .live-score-row {
