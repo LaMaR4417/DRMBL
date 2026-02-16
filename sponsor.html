@@ -198,6 +198,31 @@
         html += '</div>';
         list.innerHTML = html;
     })();
+
+    // ── SECRET: Long-press footer → stat tracker ──
+    (function () {
+        var footer = document.querySelector('footer');
+        if (!footer) return;
+        var timer = null;
+        var HOLD_MS = 3000;
+
+        function start(e) {
+            timer = setTimeout(function () {
+                timer = null;
+                window.location.href = '/tracker/';
+            }, HOLD_MS);
+        }
+        function cancel() {
+            if (timer) { clearTimeout(timer); timer = null; }
+        }
+
+        footer.addEventListener('touchstart', start, { passive: true });
+        footer.addEventListener('touchend', cancel);
+        footer.addEventListener('touchcancel', cancel);
+        footer.addEventListener('mousedown', start);
+        footer.addEventListener('mouseup', cancel);
+        footer.addEventListener('mouseleave', cancel);
+    })();
     </script>
 </body>
 </html>

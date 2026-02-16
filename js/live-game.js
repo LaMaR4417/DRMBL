@@ -6,6 +6,7 @@
     var clockTimer = null;
     var localTimeLeft = 0;
     var clockIsActive = false;
+    var lastUpdatedAt = null;
 
     var els = {};
 
@@ -100,8 +101,12 @@
         els.awayScore.textContent = away.score.current;
         els.quarter.textContent = formatQuarter(state.currentQuarter);
 
-        // Clock
-        localTimeLeft = state.clock.timeLeft;
+        // Clock: only correct from server when new data arrives
+        var isNewData = updatedAt !== lastUpdatedAt;
+        if (isNewData) {
+            localTimeLeft = state.clock.timeLeft;
+            lastUpdatedAt = updatedAt;
+        }
         clockIsActive = state.active;
         els.clock.textContent = formatClock(localTimeLeft);
 

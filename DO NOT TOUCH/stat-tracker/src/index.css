@@ -705,6 +705,15 @@ body {
   cursor: not-allowed;
 }
 
+.btn-starter.active:disabled {
+  opacity: 1;
+  color: var(--court-wood);
+  background: rgba(200, 164, 92, 0.15);
+  border-color: var(--court-wood);
+  box-shadow: 0 0 8px rgba(200, 164, 92, 0.3);
+  cursor: default;
+}
+
 .btn-starter:hover:not(:disabled) {
   color: var(--court-wood);
   border-color: var(--court-wood);
@@ -1584,6 +1593,7 @@ body {
 
 .stats-divider {
   background: rgba(255, 255, 255, 0.15);
+  align-self: stretch;
 }
 
 /* Center divider */
