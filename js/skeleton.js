@@ -73,6 +73,22 @@ document.addEventListener('DOMContentLoaded', function() {
         menu.classList.toggle('open');
     });
 
+    // ── SECRET: Shift + "track" opens stat tracker ──
+    var _sk = '';
+    var _skTimer = null;
+    document.addEventListener('keydown', function(e) {
+        if (!e.shiftKey) { _sk = ''; return; }
+        var k = e.key.toLowerCase();
+        if (k === 'shift') return;
+        _sk += k;
+        clearTimeout(_skTimer);
+        _skTimer = setTimeout(function() { _sk = ''; }, 2000);
+        if (_sk === 'track') {
+            _sk = '';
+            window.location.href = '/tracker/';
+        }
+    });
+
     // ── SPONSOR CAROUSEL ──
     // Skip carousel on sponsor bio and sponsor form pages
     if (window.location.pathname.indexOf('sponsor-bio') !== -1) { document.body.classList.add('no-carousel'); return; }

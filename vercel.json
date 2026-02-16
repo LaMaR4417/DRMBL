@@ -1,3 +1,7 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "buildCommand": "cd \"DO NOT TOUCH/stat-tracker\" && npm install && npm run build",
+  "rewrites": [
+    { "source": "/tracker/(.*)", "destination": "/tracker/index.html" }
+  ]
 }
