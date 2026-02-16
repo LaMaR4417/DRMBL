@@ -2366,7 +2366,12 @@ body {
 
 /* ---------- iPad Pro 12.9" landscape and below (≤1366px) ---------- */
 @media (max-width: 1366px) {
-  /* Scoreboard: allow badge/info wrapping */
+  /* -- Shared -- */
+  .screen-header { padding: 12px 16px; }
+  .screen-header h2 { font-size: 22px; }
+  .screen-footer { padding: 12px 16px; }
+
+  /* -- Game Screen: Scoreboard -- */
   .scoreboard-team {
     flex-wrap: wrap;
     row-gap: 4px;
@@ -2380,27 +2385,45 @@ body {
   .scoreboard-clock { padding: 0 16px; }
   .scoreboard-time { font-size: 32px; }
 
-  /* Divider */
+  /* -- Game Screen: Divider -- */
   .game-divider { width: 72px; margin: 0 4px; gap: 10px; }
   .btn-divider,
   .btn-clock { font-size: 14px; letter-spacing: 2px; padding: 12px 6px; }
 
-  /* Halves */
+  /* -- Game Screen: Halves -- */
   .game-half { gap: 6px; padding: 6px; }
   .game-section { padding: 8px 6px; }
   .section-label { font-size: 10px; margin-bottom: 6px; }
 
-  /* Action buttons */
+  /* -- Game Screen: Action buttons -- */
   .btn-action { font-size: 13px; letter-spacing: 0.5px; }
 
-  /* Player cards */
+  /* -- Game Screen: Player cards -- */
   .player-card-number { font-size: 22px; }
   .player-card-name { font-size: 13px; }
   .player-card-stats { font-size: 11px; }
+
+  /* -- Settings Screen -- */
+  .settings-cards { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .settings-card { padding: 18px; }
+
+  /* -- Attendance Screen -- */
+  .attendance-half { padding: 12px 14px; }
+  .attendance-team-header h3 { font-size: 20px; }
+  .btn-player { padding: 10px 10px; gap: 10px; }
+  .btn-starter { font-size: 16px; padding: 0 8px; }
+  .btn-captain { font-size: 16px; padding: 0 8px; }
+  .number-input { width: 48px; font-size: 20px; }
+
+  /* -- TipOff Screen -- */
+  .tipoff-prompt { font-size: 24px; }
+  .tipoff-team-name { font-size: 22px; }
+  .btn-tipoff { padding: 28px 16px; }
 }
 
 /* ---------- iPad Air / Pro 11" landscape & Pro 12.9" portrait (≤1194px) ---------- */
 @media (max-width: 1194px) {
+  /* -- Game Screen -- */
   .game-scoreboard { padding: 8px 10px; }
   .scoreboard-team-name { font-size: 15px; letter-spacing: 1px; }
   .scoreboard-score { font-size: 38px; min-width: 48px; }
@@ -2425,10 +2448,48 @@ body {
   /* Sub-menu */
   .btn-sub-choice { font-size: 18px; padding: 16px 10px; }
   .sub-menu-choices { gap: 8px; padding: 20px 8px; }
+
+  /* -- Settings Screen -- */
+  .settings-cards { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .settings-card { padding: 16px; }
+  .card-title { font-size: 18px; margin-bottom: 14px; padding-bottom: 8px; }
+  .setting-row label { font-size: 13px; }
+  .setting-row input[type='number'] { width: 60px; font-size: 14px; }
+  .btn-toggle { padding: 6px 14px; font-size: 12px; }
+
+  /* -- Team Select Screen -- */
+  .team-select-half { padding: 16px; }
+  .btn-team { padding: 12px 14px; }
+  .team-name { font-size: 14px; }
+  .matchup-bar-team { font-size: 17px; }
+
+  /* -- Attendance Screen -- */
+  .attendance-half { padding: 10px 12px; }
+  .attendance-team-header h3 { font-size: 18px; }
+  .btn-player { padding: 8px 8px; gap: 8px; }
+  .player-name { font-size: 13px; }
+  .btn-starter { font-size: 14px; letter-spacing: 1px; padding: 0 6px; }
+  .btn-captain { font-size: 14px; padding: 0 6px; }
+  .number-input { width: 46px; font-size: 18px; }
+  .player-check { width: 20px; height: 20px; font-size: 12px; }
+
+  /* -- TipOff Screen -- */
+  .tipoff-content { padding: 32px 16px; gap: 24px; }
+  .tipoff-prompt { font-size: 22px; letter-spacing: 3px; }
+  .tipoff-team-name { font-size: 20px; }
+  .btn-tipoff { padding: 24px 14px; }
 }
 
 /* ---------- Standard iPad landscape / iPad portrait (≤1024px) ---------- */
 @media (max-width: 1024px) {
+  /* -- Shared -- */
+  .screen-header { padding: 10px 12px; }
+  .screen-header h2 { font-size: 20px; letter-spacing: 2px; }
+  .screen-footer { padding: 10px 12px; }
+  .btn-large { padding: 12px 32px; min-width: 180px; font-size: 20px; }
+  .footer-hint { font-size: 12px; }
+
+  /* -- Game Screen: Scoreboard -- */
   .scoreboard-team { row-gap: 2px; gap: 4px; }
   .scoreboard-team-name { font-size: 14px; }
   .scoreboard-score { font-size: 34px; min-width: 44px; }
@@ -2483,10 +2544,65 @@ body {
   .endgame-score-row { padding: 10px 12px; gap: 12px; }
   .endgame-team-name { font-size: 20px; }
   .endgame-team-score { font-size: 44px; }
+
+  /* -- Settings Screen -- */
+  .settings-content { padding: 12px; }
+  .settings-cards { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+  .settings-card { padding: 14px; }
+  .card-title { font-size: 17px; letter-spacing: 2px; margin-bottom: 12px; }
+  .setting-row { padding: 5px 0; gap: 10px; }
+  .setting-row label { font-size: 12px; }
+  .setting-row input[type='number'] { width: 56px; padding: 6px 8px; font-size: 13px; }
+  .btn-toggle { padding: 6px 12px; font-size: 11px; }
+  .subsection-title { font-size: 13px; margin-top: 12px; }
+  .setting-hint { font-size: 11px; }
+  .btn-preset { padding: 5px 12px; font-size: 12px; }
+
+  /* -- Team Select Screen -- */
+  .team-select-half { padding: 12px; }
+  .team-select-label { font-size: 14px; margin-bottom: 12px; }
+  .btn-team { padding: 10px 12px; }
+  .team-name { font-size: 13px; }
+  .team-slot { font-size: 18px; }
+  .matchup-bar-team { font-size: 15px; letter-spacing: 1px; }
+  .matchup-bar-vs { font-size: 14px; }
+  .season-selector { padding: 8px 12px; gap: 6px; }
+  .btn-season { padding: 6px 14px; }
+  .season-btn-abbr { font-size: 17px; }
+  .season-btn-name { font-size: 10px; }
+
+  /* -- Attendance Screen -- */
+  .attendance-half { padding: 8px 10px; }
+  .attendance-team-header h3 { font-size: 17px; letter-spacing: 2px; }
+  .attendance-actions { gap: 8px; }
+  .attendance-actions .btn-small { padding: 4px 8px; font-size: 11px; }
+  .attendance-count { font-size: 11px; }
+  .btn-player { padding: 8px 6px; gap: 6px; }
+  .player-name { font-size: 12px; }
+  .player-number { font-size: 16px; min-width: 30px; }
+  .player-check { width: 18px; height: 18px; font-size: 11px; }
+  .btn-starter { font-size: 13px; letter-spacing: 1px; padding: 0 5px; }
+  .btn-captain { font-size: 13px; padding: 0 5px; }
+  .number-input { width: 42px; font-size: 16px; padding: 6px 4px; }
+
+  /* -- TipOff Screen -- */
+  .tipoff-content { padding: 24px 12px; gap: 20px; }
+  .tipoff-prompt { font-size: 20px; letter-spacing: 3px; }
+  .tipoff-team-name { font-size: 18px; letter-spacing: 2px; }
+  .tipoff-label { font-size: 11px; }
+  .btn-tipoff { padding: 20px 12px; }
+  .tipoff-choices { gap: 16px; }
+  .tipoff-hint { font-size: 13px; }
 }
 
 /* ---------- iPad Mini portrait / small tablets (≤768px) ---------- */
 @media (max-width: 768px) {
+  /* -- Shared -- */
+  .screen-header { padding: 8px 10px; }
+  .screen-header h2 { font-size: 18px; letter-spacing: 2px; }
+  .btn-large { padding: 10px 24px; min-width: 160px; font-size: 18px; }
+
+  /* -- Game Screen -- */
   .game-scoreboard { padding: 6px 4px; }
   .scoreboard-team-name { font-size: 12px; letter-spacing: 0.5px; }
   .scoreboard-score { font-size: 30px; min-width: 38px; }
@@ -2511,11 +2627,53 @@ body {
   .endgame-team-score { font-size: 36px; }
   .endgame-label { font-size: 22px; letter-spacing: 4px; }
   .endgame-footer { flex-wrap: wrap; gap: 10px; padding: 10px 12px; }
+
+  /* -- Settings Screen -- */
+  .settings-content { padding: 8px; }
+  .settings-cards { grid-template-columns: 1fr; gap: 8px; }
+  .settings-card { padding: 12px; }
+  .card-title { font-size: 16px; }
+  .setting-row label { font-size: 11px; }
+  .setting-row input[type='number'] { width: 52px; padding: 5px 6px; font-size: 13px; }
+  .btn-toggle { padding: 5px 10px; font-size: 11px; }
+
+  /* -- Team Select Screen: stack halves -- */
+  .team-select-content { flex-direction: column; }
+  .team-select-half { padding: 10px; }
+  .team-select-label { font-size: 13px; margin-bottom: 8px; }
+  .btn-team { padding: 8px 10px; }
+  .team-name { font-size: 12px; }
+  .team-slot { font-size: 16px; }
+  .matchup-bar-team { font-size: 14px; }
+
+  /* -- Attendance Screen: stack halves -- */
+  .attendance-content { flex-direction: column; }
+  .attendance-divider { width: 100%; height: 1px; }
+  .attendance-half { padding: 8px; }
+  .attendance-team-header h3 { font-size: 16px; letter-spacing: 2px; }
+  .btn-player { padding: 6px 6px; gap: 6px; }
+  .player-name { font-size: 12px; }
+  .btn-starter { font-size: 12px; padding: 0 4px; }
+  .btn-captain { font-size: 12px; padding: 0 4px; }
+  .number-input { width: 40px; font-size: 15px; }
+
+  /* -- TipOff Screen -- */
+  .tipoff-content { padding: 20px 10px; gap: 16px; }
+  .tipoff-prompt { font-size: 18px; letter-spacing: 2px; }
+  .tipoff-team-name { font-size: 16px; }
+  .btn-tipoff { padding: 16px 10px; }
+  .tipoff-choices { gap: 12px; max-width: 400px; }
 }
 
 /* ---------- Phone (≤480px) ---------- */
 @media (max-width: 480px) {
-  /* Stack the game court vertically */
+  /* -- Shared -- */
+  .screen-header { padding: 6px 8px; }
+  .screen-header h2 { font-size: 16px; letter-spacing: 1.5px; }
+  .btn-large { padding: 10px 20px; min-width: 140px; font-size: 16px; }
+  .btn-small { padding: 4px 8px; font-size: 11px; }
+
+  /* -- Game Screen: Stack court vertically -- */
   .game-court { flex-direction: column; }
   .game-divider {
     width: 100%;
@@ -2539,4 +2697,33 @@ body {
 
   /* Player cards: 2 per row on phone */
   .player-card { width: calc((100% - 6px) / 2); }
+
+  /* -- Settings Screen -- */
+  .settings-cards { grid-template-columns: 1fr; }
+  .settings-card { padding: 10px; }
+  .setting-row { flex-wrap: wrap; gap: 6px; }
+  .toggle-group { width: 100%; }
+  .btn-toggle { flex: 1; text-align: center; }
+
+  /* -- Team Select Screen -- */
+  .team-select-half { padding: 8px; }
+  .btn-team { padding: 8px; }
+  .matchup-bar-team { font-size: 12px; letter-spacing: 0.5px; }
+  .matchup-bar-vs { font-size: 12px; }
+
+  /* -- Attendance Screen -- */
+  .attendance-half { padding: 6px; }
+  .attendance-team-header { flex-wrap: wrap; gap: 6px; }
+  .btn-player { padding: 6px 4px; gap: 4px; }
+  .player-name { font-size: 11px; }
+  .btn-starter { font-size: 11px; letter-spacing: 0; padding: 0 3px; }
+  .btn-captain { font-size: 11px; padding: 0 3px; }
+  .number-input { width: 36px; font-size: 14px; }
+  .player-check { width: 16px; height: 16px; font-size: 10px; }
+
+  /* -- TipOff Screen -- */
+  .tipoff-choices { flex-direction: column; max-width: 300px; }
+  .btn-tipoff { padding: 16px; }
+  .tipoff-prompt { font-size: 16px; letter-spacing: 2px; }
+  .tipoff-team-name { font-size: 16px; }
 }

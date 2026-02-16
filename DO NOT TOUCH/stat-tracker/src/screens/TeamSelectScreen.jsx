@@ -104,8 +104,8 @@ export default function TeamSelectScreen() {
     try {
       // Fetch both rosters in parallel
       const [homeData, awayData] = await Promise.all([
-        fetchTeamRoster(game.homeTeam.teamID),
-        fetchTeamRoster(game.awayTeam.teamID),
+        fetchTeamRoster(game.homeTeam.teamID, game.selectedSeason.id),
+        fetchTeamRoster(game.awayTeam.teamID, game.selectedSeason.id),
       ]);
 
       dispatch({ type: 'SET_TEAM_ROSTER', side: 'home', roster: homeData.roster });

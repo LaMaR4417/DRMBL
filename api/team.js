@@ -9,16 +9,15 @@ var teamsContainer = client
     .database("DRMBL Database")
     .container("Teams");
 
-var SEASON_ID = "Spring - Mens - 2026";
-
 module.exports = async function (req, res) {
     if (req.method !== "GET") {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
     var teamID = req.query.id;
-    if (!teamID) {
-        return res.status(400).json({ error: "Missing team id parameter." });
+    var seasonID = req.query.season;
+    if (!teamID || !seasonID) {
+        return res.status(400).json({ error: "Missing team id or season parameter." });
     }
 
     try {
@@ -32,7 +31,7 @@ module.exports = async function (req, res) {
         // Find the current season entry
         var seasonEntry = null;
         for (var i = 0; i < teamDoc.seasons.length; i++) {
-            if (teamDoc.seasons[i].id === SEASON_ID) {
+            if (teamDoc.seasons[i].id === seasonID) {
                 seasonEntry = teamDoc.seasons[i];
                 break;
             }
