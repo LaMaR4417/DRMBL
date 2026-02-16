@@ -130,6 +130,10 @@ function buildTeamSide(team, attendance, numberOverrides, starters, captainID, s
   };
 }
 
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 export function buildBoxScore(gameState) {
   const now = new Date();
   const timestamp = now.toISOString();
@@ -141,6 +145,7 @@ export function buildBoxScore(gameState) {
 
   return {
     id: `${homeName} vs. ${awayName} - ${timestamp}`,
+    gameId: `${slugify(homeName)}-vs-${slugify(awayName)}`,
     gameInfo: {
       general: {
         timestamp,

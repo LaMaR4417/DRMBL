@@ -1304,8 +1304,6 @@ body {
 }
 
 .game-court.period-over .game-half {
-  opacity: 0.3;
-  pointer-events: none;
 }
 
 /* Court area */
@@ -2160,6 +2158,16 @@ body {
   border-top: 1px solid var(--border-light);
   flex-shrink: 0;
 }
+.save-indicator {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+}
+.save-indicator.saving { color: var(--court-wood); }
+.save-indicator.saved { color: #4caf50; }
+.save-indicator.error { color: #f44336; }
+.save-indicator.error .btn { margin-left: 0.5rem; }
 
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar {

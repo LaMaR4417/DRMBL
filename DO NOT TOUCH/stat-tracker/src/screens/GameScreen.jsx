@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGame, useGameDispatch } from '../context/GameContext';
-import { syncLiveGame } from '../data/api';
+import { syncLiveGame, saveEndGame } from '../data/api';
 
 function formatClock(totalSeconds) {
   const m = Math.floor(totalSeconds / 60);
@@ -53,6 +53,8 @@ export default function GameScreen() {
   const [lateAddNumbers, setLateAddNumbers] = useState({}); // { playerID: 'number' }
   const [sortCol, setSortCol] = useState({ home: 'PTS', away: 'PTS' });
   const [sortDir, setSortDir] = useState({ home: 'desc', away: 'desc' });
+  const [saveStatus, setSaveStatus] = useState(null); // null | 'pending' | 'saving' | 'saved' | 'error'
+  const [saveError, setSaveError] = useState(null);
 
   const bs = game.boxScore;
 
@@ -209,6 +211,17 @@ export default function GameScreen() {
     }, 1000);
     return () => clearInterval(id);
   }, [periodOver, quarter]);
+
+  // --- End game save (fires once when END_GAME dispatch settles) ---
+  useEffect(() => {
+    if (saveStatus !== 'pending') return;
+    if (!bs || bs.gameInfo.general.status !== 'final') return;
+    setSaveStatus('saving');
+
+    saveEndGame(bs, game.homeTeam.teamID, game.awayTeam.teamID, game.homeTeam.slot, game.awayTeam.slot)
+      .then(() => setSaveStatus('saved'))
+      .catch((err) => { setSaveStatus('error'); setSaveError(err.message); });
+  }, [saveStatus, bs?.gameInfo?.general?.status]);
 
   // --- Scoring button handler ---
   function handleShotTap(side, points, made) {
@@ -453,7 +466,7 @@ export default function GameScreen() {
           <button
             className={`btn-action mgmt ${isStatActive(side, 'timeout') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'timeout')}
-            disabled={toBlocked}
+            disabled={toBlocked || periodOver}
           >
             TIMEOUT
             {toActive && (
@@ -973,6 +986,14 @@ export default function GameScreen() {
         </div>
 
         <div className="endgame-footer">
+          {saveStatus === 'saving' && <span className="save-indicator saving">Saving game...</span>}
+          {saveStatus === 'saved' && <span className="save-indicator saved">Game saved!</span>}
+          {saveStatus === 'error' && (
+            <span className="save-indicator error">
+              Save failed{saveError ? `: ${saveError}` : ''}
+              <button className="btn btn-small" onClick={() => setSaveStatus('pending')}>RETRY</button>
+            </span>
+          )}
           <button className="btn" onClick={exportBoxScore}>EXPORT BOX SCORE</button>
           <button className="btn btn-primary btn-large" onClick={() => dispatch({ type: 'RESET_GAME' })}>NEW GAME</button>
         </div>
@@ -1041,7 +1062,7 @@ export default function GameScreen() {
           {isGameOver && !isFinal && (
             <button
               className="btn btn-small btn-end-game"
-              onClick={() => { dispatch({ type: 'END_GAME' }); shouldSync.current = true; }}
+              onClick={() => { dispatch({ type: 'END_GAME' }); shouldSync.current = true; setSaveStatus('pending'); }}
             >
               END GAME
             </button>
@@ -1105,7 +1126,7 @@ export default function GameScreen() {
             </button>
           )}
 
-          <button className="btn-divider" onClick={() => { maybeAutoStop('Referee Timeout'); shouldSync.current = true; }}>
+          <button className="btn-divider" onClick={() => { maybeAutoStop('Referee Timeout'); shouldSync.current = true; }} disabled={periodOver}>
             <span>REF</span>
             <span>T.O.</span>
           </button>

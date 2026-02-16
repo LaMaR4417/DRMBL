@@ -1,12 +1,14 @@
 (function () {
     var POLL_INTERVAL = 3000;
-    var STALE_THRESHOLD = 2 * 60 * 60 * 1000; // 2 hours
 
     var pollTimer = null;
     var clockTimer = null;
-    var localTimeLeft = 0;
-    var clockIsActive = false;
-    var lastUpdatedAt = null;
+
+    // All active games from the latest poll
+    var allGames = [];
+
+    // Per-game local clock state, keyed by gameId
+    var gameClocks = {};
 
     var els = {};
 
@@ -28,21 +30,42 @@
         fetch('/api/live-game')
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (!data || data.active === false || !data.boxScore) {
-                    showNoGame();
+                if (!data || !data.games || data.games.length === 0) {
+                    allGames = [];
+                    renderAllGames();
                     return;
                 }
 
-                var bs = data.boxScore;
-                if (bs.gameInfo.general.status === 'final' && data.updatedAt) {
-                    var age = Date.now() - new Date(data.updatedAt).getTime();
-                    if (age > STALE_THRESHOLD) {
-                        showNoGame();
-                        return;
+                allGames = data.games;
+
+                // Update per-game clock state
+                var activeIds = {};
+                for (var i = 0; i < allGames.length; i++) {
+                    var game = allGames[i];
+                    var id = game.gameId;
+                    activeIds[id] = true;
+
+                    if (!gameClocks[id]) {
+                        gameClocks[id] = { localTimeLeft: 0, clockIsActive: false, lastUpdatedAt: null };
                     }
+
+                    var gc = gameClocks[id];
+                    var bs = game.boxScore;
+                    var isNewData = game.updatedAt !== gc.lastUpdatedAt;
+
+                    if (isNewData) {
+                        gc.localTimeLeft = bs.gameInfo.state.clock.timeLeft;
+                        gc.lastUpdatedAt = game.updatedAt;
+                    }
+                    gc.clockIsActive = bs.gameInfo.state.active && bs.gameInfo.general.status !== 'final';
                 }
 
-                renderGame(bs, data.updatedAt);
+                // Clean up clocks for games no longer in the response
+                for (var key in gameClocks) {
+                    if (!activeIds[key]) delete gameClocks[key];
+                }
+
+                renderAllGames();
             })
             .catch(function () {});
     }
@@ -57,9 +80,19 @@
     function startLocalClock() {
         stopLocalClock();
         clockTimer = setInterval(function () {
-            if (!clockIsActive || localTimeLeft <= 0) return;
-            localTimeLeft -= 1;
-            els.clock.textContent = formatClock(localTimeLeft);
+            for (var id in gameClocks) {
+                var gc = gameClocks[id];
+                if (gc.clockIsActive && gc.localTimeLeft > 0) {
+                    gc.localTimeLeft -= 1;
+                }
+            }
+            // Update the displayed clock for the first game
+            if (allGames.length > 0) {
+                var gc = gameClocks[allGames[0].gameId];
+                if (gc && els.clock) {
+                    els.clock.textContent = formatClock(gc.localTimeLeft);
+                }
+            }
         }, 1000);
     }
 
@@ -81,7 +114,21 @@
 
     // ── RENDER ──
 
-    function renderGame(bs, updatedAt) {
+    function renderAllGames() {
+        if (allGames.length === 0) {
+            showNoGame();
+            stopLocalClock();
+            return;
+        }
+
+        // Render the first game using existing single-game layout.
+        // UI agent can extend this to render multiple game cards.
+        var game = allGames[0];
+        var gc = gameClocks[game.gameId] || { localTimeLeft: 0, clockIsActive: false };
+        renderGame(game.boxScore, game.updatedAt, gc);
+    }
+
+    function renderGame(bs, updatedAt, gc) {
         els.noGame.classList.add('hidden');
         els.liveGame.classList.remove('hidden');
         els.lastUpdated.classList.remove('hidden');
@@ -115,19 +162,13 @@
         els.awayScore.textContent = away.score.current;
         els.quarter.textContent = formatQuarter(state.currentQuarter);
 
-        // Clock: only correct from server when new data arrives
-        var isNewData = updatedAt !== lastUpdatedAt;
-        if (isNewData) {
-            localTimeLeft = state.clock.timeLeft;
-            lastUpdatedAt = updatedAt;
-        }
-        clockIsActive = state.active;
-        els.clock.textContent = formatClock(localTimeLeft);
+        // Clock: use per-game clock state
+        els.clock.textContent = formatClock(gc.localTimeLeft);
 
         if (isFinal) {
             els.clock.classList.add('stopped');
             stopLocalClock();
-        } else if (clockIsActive) {
+        } else if (gc.clockIsActive) {
             els.clock.classList.remove('stopped');
             startLocalClock();
         } else {

@@ -25,6 +25,19 @@ export function syncLiveGame(boxScore) {
   fetch('/api/live-game', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ boxScore }),
+    body: JSON.stringify({ gameId: boxScore.gameId, boxScore }),
   }).catch(() => {});
+}
+
+export async function saveEndGame(boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot) {
+  const res = await fetch('/api/end-game', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to save game');
+  }
+  return res.json();
 }
