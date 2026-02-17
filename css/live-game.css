@@ -254,14 +254,27 @@
     50% { opacity: 0.4; }
 }
 
-/* ── BODY (2×2 quadrant grid) ── */
+/* ── BODY (two independent columns) ── */
 .live-body {
     max-width: 1800px;
     margin: 0 auto;
     padding: 10px 16px;
-    display: grid;
-    grid-template-columns: 1fr 2fr;
+    display: flex;
     gap: 16px;
+}
+
+.live-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.live-col-left {
+    flex: 1;
+}
+
+.live-col-right {
+    flex: 2;
 }
 
 /* ── SECTIONS (card style) ── */
@@ -454,7 +467,7 @@
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
     .live-body {
-        grid-template-columns: 1fr;
+        flex-direction: column;
     }
 }
 

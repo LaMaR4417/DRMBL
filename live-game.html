@@ -53,18 +53,22 @@
             </div>
         </div>
 
-        <!-- Body: 2×2 grid (left: period scores + team stats, right: away + home box scores) -->
+        <!-- Body: two independent columns (left: period scores + team stats, right: away + home box scores) -->
         <div class="live-body">
-            <div class="live-section">
-                <div class="live-section-title">SCORING BY PERIOD</div>
-                <div id="quarter-scores"></div>
+            <div class="live-col live-col-left">
+                <div class="live-section">
+                    <div class="live-section-title">SCORING BY PERIOD</div>
+                    <div id="quarter-scores"></div>
+                </div>
+                <div class="live-section">
+                    <div class="live-section-title">TEAM STATS</div>
+                    <div id="team-stats"></div>
+                </div>
             </div>
-            <div class="live-section" id="away-player-stats"></div>
-            <div class="live-section">
-                <div class="live-section-title">TEAM STATS</div>
-                <div id="team-stats"></div>
+            <div class="live-col live-col-right">
+                <div class="live-section" id="away-player-stats"></div>
+                <div class="live-section" id="home-player-stats"></div>
             </div>
-            <div class="live-section" id="home-player-stats"></div>
         </div>
     </section>
 
