@@ -28,9 +28,11 @@ export default function HomeScreen() {
     fetchLiveGames()
       .then((list) => {
         if (cancelled) return;
-        // Filter out final games — only show resumable ones
+        // Only show games that are not final AND have settings stored
         const resumable = list.filter(
-          (g) => g.boxScore && g.boxScore.gameInfo.general.status !== 'final',
+          (g) => g.boxScore
+            && g.boxScore.gameInfo.general.status !== 'final'
+            && g.settings,
         );
         setGames(resumable);
         setLoading(false);
