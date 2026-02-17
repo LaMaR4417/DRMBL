@@ -370,6 +370,30 @@ function gameReducer(state, action) {
       return { ...state, boxScore: bs };
     }
 
+    case 'REVERT_QUARTER': {
+      const bs = structuredClone(state.boxScore);
+      const curQ = bs.gameInfo.state.currentQuarter;
+      if (curQ <= 1) return state;
+      bs.gameInfo.state.currentQuarter = curQ - 1;
+      bs.gameInfo.state.clock.timeLeft = 0;
+      bs.gameInfo.state.active = false;
+      if (curQ > 4) bs.gameInfo.state.overtimes = Math.max(0, bs.gameInfo.state.overtimes - 1);
+      for (const side of ['home', 'away']) {
+        for (const p of bs.teamInfo[side].roster.inGame) {
+          p._clockTimeAtEntry = null;
+        }
+      }
+      return { ...state, boxScore: bs };
+    }
+
+    case 'UNDO_END_GAME': {
+      const bs = structuredClone(state.boxScore);
+      bs.gameInfo.general.status = 'in-progress';
+      bs.gameInfo.state.winner = null;
+      bs.gameInfo.state.loser = null;
+      return { ...state, boxScore: bs };
+    }
+
     case 'END_GAME': {
       const bs = structuredClone(state.boxScore);
       bs.gameInfo.general.status = 'final';

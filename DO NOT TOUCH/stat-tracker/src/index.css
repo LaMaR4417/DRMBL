@@ -2344,6 +2344,13 @@ body {
 .save-indicator.saved { color: #4caf50; }
 .save-indicator.error { color: #f44336; }
 .save-indicator.error .btn { margin-left: 0.5rem; }
+.btn-back-to-game {
+  background: #ff6f00;
+  color: var(--bg-page);
+  border-color: #ff6f00;
+  font-weight: 700;
+}
+.btn-back-to-game:hover { background: #e66500; border-color: #e66500; }
 
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar {

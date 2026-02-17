@@ -327,7 +327,10 @@ export default function GameScreen() {
       const duration = game.settings.timeouts?.duration?.[timeoutType] || (timeoutType === 'full' ? 60 : 30);
       setTimeoutCountdown({ side, type: timeoutType, timeLeft: duration });
     }
-    if (isCorrection) setCorrectionMode(false);
+    if (isCorrection) {
+      setCorrectionMode(false);
+      setTimeoutCountdown(null);
+    }
   }
 
   // --- Player selection handler ---
@@ -478,7 +481,6 @@ export default function GameScreen() {
 
   function renderMgmtSection(side) {
     const toActive = timeoutCountdown?.side === side;
-    const toBlocked = timeoutCountdown != null && timeoutCountdown.side !== side;
     return (
       <div className="game-section">
         <div className="section-label">GAME</div>
@@ -486,7 +488,6 @@ export default function GameScreen() {
           <button
             className={`btn-action mgmt ${isStatActive(side, 'timeout') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'timeout')}
-            disabled={toBlocked || periodOver}
           >
             TIMEOUT
             {toActive && (
@@ -741,7 +742,6 @@ export default function GameScreen() {
                 <button
                   key={choice.action}
                   className="btn btn-sub-choice"
-                  disabled={isTimeout && remaining <= 0}
                   onClick={() => {
                     if (isTimeout) {
                       handleTimeoutTap(side, choice.timeoutType);
@@ -1014,6 +1014,7 @@ export default function GameScreen() {
               <button className="btn btn-small" onClick={() => setSaveStatus('pending')}>RETRY</button>
             </span>
           )}
+          <button className="btn btn-back-to-game" onClick={() => { dispatch({ type: 'UNDO_END_GAME' }); shouldSync.current = true; }}>BACK TO GAME</button>
           <button className="btn" onClick={exportBoxScore}>EXPORT BOX SCORE</button>
           <button className="btn btn-primary btn-large" onClick={() => dispatch({ type: 'RESET_GAME' })}>NEW GAME</button>
         </div>
@@ -1156,7 +1157,7 @@ export default function GameScreen() {
       )}
 
       {/* Court area */}
-      <div className={`game-court ${periodOver ? 'period-over' : ''}`}>
+      <div className="game-court">
         {renderHalf('home')}
 
         <div className="game-divider">
@@ -1169,7 +1170,6 @@ export default function GameScreen() {
             <button
               className="btn-clock next-period"
               onClick={() => { dispatch({ type: 'ADVANCE_QUARTER' }); dispatch({ type: 'TOGGLE_CLOCK' }); shouldSync.current = true; }}
-              disabled={breakCountdown != null && breakCountdown > 0}
             >
               <span>START</span>
               <span>NEXT</span>
@@ -1178,15 +1178,14 @@ export default function GameScreen() {
           ) : (
             <button
               className={`btn-clock ${isActive ? 'running' : 'stopped'} ${suggestStopClock && isActive ? 'suggest' : ''}`}
-              onClick={() => { dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true; }}
-              disabled={(periodOver && (isGameOver || isFinal)) || (!isActive && timeoutCountdown != null)}
+              onClick={() => { if (!isActive && timeoutCountdown) setTimeoutCountdown(null); dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true; }}
             >
               <span>{isActive ? 'STOP' : 'RUN'}</span>
               <span>CLOCK</span>
             </button>
           )}
 
-          <button className="btn-divider" onClick={() => { maybeAutoStop('Referee Timeout'); shouldSync.current = true; }} disabled={periodOver}>
+          <button className="btn-divider" onClick={() => { maybeAutoStop('Referee Timeout'); shouldSync.current = true; }}>
             <span>REF</span>
             <span>T.O.</span>
           </button>
@@ -1207,6 +1206,20 @@ export default function GameScreen() {
             <span>CORR</span>
             <span>ECT</span>
           </button>
+
+          {correctionMode && quarter > 1 && (
+            <button
+              className="btn-divider correction-active"
+              onClick={() => {
+                dispatch({ type: 'REVERT_QUARTER' });
+                shouldSync.current = true;
+                setCorrectionMode(false);
+              }}
+            >
+              <span>PREV</span>
+              <span>PERIOD</span>
+            </button>
+          )}
         </div>
 
         {renderHalf('away')}
