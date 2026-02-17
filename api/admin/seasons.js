@@ -14,7 +14,7 @@ module.exports = async function (req, res) {
     }
 
     try {
-        var query = "SELECT c.id, c.name, c.division, c.timeline, c.teams FROM c";
+        var query = "SELECT c.id, c.name, c.division, c.timeline, c.teams, c.maxRoster FROM c";
         var { resources } = await seasonsContainer.items.query(query).fetchAll();
 
         return res.status(200).json({ success: true, seasons: resources });

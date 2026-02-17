@@ -55,6 +55,10 @@
                                 <input type="number" id="season-team-count" min="2" max="26" value="12">
                             </div>
                             <div class="form-group">
+                                <label for="season-max-roster">Max Players per Team <span class="req">*</span></label>
+                                <input type="number" id="season-max-roster" min="1" max="30" value="12">
+                            </div>
+                            <div class="form-group">
                                 <label for="season-weeks">Regular Season Weeks <span class="req">*</span></label>
                                 <input type="number" id="season-weeks" min="1" max="50" value="10">
                             </div>
@@ -168,23 +172,24 @@
                 <!-- Slot Overview (shown after season selected) -->
                 <div id="slot-overview" class="hidden">
                     <p class="form-note form-note-highlight" id="slot-overview-label">Team Slots</p>
+                    <p class="form-note">Click an open slot to add a new team, or click a filled slot to edit.</p>
                     <div id="slot-grid" class="slot-grid"></div>
                 </div>
             </fieldset>
 
+            <!-- ═══════ MODE BANNER ═══════ -->
+            <div id="mode-banner" class="mode-banner hidden">
+                <span id="mode-banner-text"></span>
+                <button type="button" id="mode-banner-cancel" class="mode-banner-cancel">&times; Cancel</button>
+            </div>
+
             <!-- ═══════ SECTION 2: TEAM INFO ═══════ -->
             <fieldset class="form-section hidden" id="team-section">
-                <legend>Team Info</legend>
+                <legend id="team-section-legend">Team Info</legend>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="team-slot">Slot</label>
-                        <select id="team-slot"></select>
-                    </div>
-                    <div class="form-group" style="flex: 3;">
-                        <label for="team-name">Team Name <span class="req">*</span></label>
-                        <input type="text" id="team-name">
-                    </div>
+                <div class="form-group">
+                    <label for="team-name">Team Name <span class="req">*</span></label>
+                    <input type="text" id="team-name">
                 </div>
 
                 <div class="form-row">
@@ -207,7 +212,7 @@
             <!-- ═══════ SECTION 3: ROSTER ═══════ -->
             <fieldset class="form-section hidden" id="roster-section">
                 <legend>Roster</legend>
-                <p class="form-note">Add players to the team. Only name is required. Up to 12 players.</p>
+                <p class="form-note" id="roster-note">Add players to the team. Only name is required.</p>
 
                 <div id="roster-list"></div>
 

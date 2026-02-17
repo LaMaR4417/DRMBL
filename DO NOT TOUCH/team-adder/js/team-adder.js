@@ -4,10 +4,12 @@
     var state = {
         seasons: [],
         selectedSeason: null,
-        playerCount: 0
+        playerCount: 0,
+        maxPlayers: 12,
+        mode: null,         // 'add' or 'edit'
+        selectedSlot: null, // slot letter
+        editingTeamId: null // team ID when editing
     };
-
-    var MAX_PLAYERS = 12;
 
     // ── DOM References ──
     var seasonSelect = document.getElementById('season-select');
@@ -19,7 +21,11 @@
     var btnAddPlayoffRound = document.getElementById('btn-add-playoff-round');
     var slotOverview = document.getElementById('slot-overview');
     var slotGrid = document.getElementById('slot-grid');
+    var modeBanner = document.getElementById('mode-banner');
+    var modeBannerText = document.getElementById('mode-banner-text');
+    var modeBannerCancel = document.getElementById('mode-banner-cancel');
     var teamSection = document.getElementById('team-section');
+    var teamSectionLegend = document.getElementById('team-section-legend');
     var rosterSection = document.getElementById('roster-section');
     var submitSection = document.getElementById('submit-section');
     var btnAddPlayer = document.getElementById('btn-add-player');
@@ -87,17 +93,15 @@
 
     seasonSelect.addEventListener('change', function () {
         hideStatus();
+        exitMode();
+
         var seasonId = seasonSelect.value;
         if (!seasonId) {
             state.selectedSeason = null;
             hide(slotOverview);
-            hide(teamSection);
-            hide(rosterSection);
-            hide(submitSection);
             return;
         }
 
-        // Find the season in cached data
         for (var i = 0; i < state.seasons.length; i++) {
             if (state.seasons[i].id === seasonId) {
                 state.selectedSeason = state.seasons[i];
@@ -105,15 +109,10 @@
             }
         }
 
-        renderSlotOverview();
-        renderTeamSection();
-        show(slotOverview);
-        show(teamSection);
-        show(rosterSection);
-        show(submitSection);
+        state.maxPlayers = (state.selectedSeason && state.selectedSeason.maxRoster) || 12;
 
-        // Init roster with 1 player if empty
-        if (state.playerCount === 0) addPlayerRow();
+        renderSlotOverview();
+        show(slotOverview);
     });
 
     // ── Slot Overview ──
@@ -131,6 +130,9 @@
             var card = document.createElement('div');
             var isOccupied = !!slot.teamID;
             card.className = 'slot-card ' + (isOccupied ? 'occupied' : 'open');
+            if (state.selectedSlot === slot.slot) card.className += ' selected';
+            card.setAttribute('data-slot', slot.slot);
+            if (isOccupied) card.setAttribute('data-team-id', slot.teamID);
             card.innerHTML =
                 '<span class="slot-letter">' + slot.slot + '</span>' +
                 '<span class="slot-team-name">' + (isOccupied ? slot.name : 'OPEN') + '</span>';
@@ -138,30 +140,174 @@
         }
     }
 
-    // ── Team Section ──
+    // ── Slot Click Handler ──
 
-    function renderTeamSection() {
-        var season = state.selectedSeason;
-        if (!season || !season.teams) return;
+    slotGrid.addEventListener('click', function (e) {
+        var card = e.target.closest('.slot-card');
+        if (!card) return;
 
-        var teamSlot = document.getElementById('team-slot');
-        teamSlot.innerHTML = '';
+        hideStatus();
+        var slotLetter = card.getAttribute('data-slot');
+        var teamId = card.getAttribute('data-team-id');
 
-        // Auto option
-        var autoOpt = document.createElement('option');
-        autoOpt.value = '';
-        autoOpt.textContent = 'Auto (first open)';
-        teamSlot.appendChild(autoOpt);
-
-        for (var i = 0; i < season.teams.length; i++) {
-            var slot = season.teams[i];
-            if (!slot.teamID) {
-                var opt = document.createElement('option');
-                opt.value = slot.slot;
-                opt.textContent = 'Slot ' + slot.slot;
-                teamSlot.appendChild(opt);
-            }
+        if (teamId) {
+            // Occupied slot → edit mode
+            enterEditMode(slotLetter, teamId);
+        } else {
+            // Open slot → add mode
+            enterAddMode(slotLetter);
         }
+    });
+
+    // ── Mode Management ──
+
+    function enterAddMode(slotLetter) {
+        exitMode();
+        state.mode = 'add';
+        state.selectedSlot = slotLetter;
+        state.editingTeamId = null;
+
+        // Update slot highlight
+        renderSlotOverview();
+
+        // Show banner
+        modeBanner.className = 'mode-banner mode-add';
+        modeBannerText.textContent = 'Adding new team to Slot ' + slotLetter;
+        show(modeBanner);
+
+        // Update form sections
+        teamSectionLegend.textContent = 'New Team — Slot ' + slotLetter;
+        btnSubmitTeam.textContent = 'Add Team to Season';
+        document.getElementById('roster-note').textContent =
+            'Add players to the team. Only name is required. Up to ' + state.maxPlayers + ' players.';
+
+        clearTeamForm();
+        show(teamSection);
+        show(rosterSection);
+        show(submitSection);
+
+        teamSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function enterEditMode(slotLetter, teamId) {
+        exitMode();
+        state.mode = 'edit';
+        state.selectedSlot = slotLetter;
+        state.editingTeamId = teamId;
+
+        // Update slot highlight
+        renderSlotOverview();
+
+        // Show banner
+        modeBanner.className = 'mode-banner mode-edit';
+        modeBannerText.textContent = 'Loading team from Slot ' + slotLetter + '...';
+        show(modeBanner);
+
+        // Show sections but disable submit while loading
+        teamSectionLegend.textContent = 'Edit Team — Slot ' + slotLetter;
+        btnSubmitTeam.textContent = 'Save Changes';
+        document.getElementById('roster-note').textContent =
+            'Edit players on the team. Only name is required. Up to ' + state.maxPlayers + ' players.';
+
+        clearTeamForm();
+        show(teamSection);
+        show(rosterSection);
+        show(submitSection);
+        btnSubmitTeam.disabled = true;
+
+        // Fetch team data
+        var url = '/api/admin/team?id=' + encodeURIComponent(teamId) + '&season=' + encodeURIComponent(state.selectedSeason.id);
+        fetch(url)
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (!data.success || !data.team) {
+                    showStatus('Error: ' + (data.error || 'Failed to load team'), 'error');
+                    exitMode();
+                    return;
+                }
+                populateTeamForm(data.team);
+                modeBannerText.textContent = 'Editing: ' + data.team.name + ' (Slot ' + slotLetter + ')';
+                btnSubmitTeam.disabled = false;
+                teamSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            })
+            .catch(function () {
+                showStatus('Network error loading team.', 'error');
+                exitMode();
+            });
+    }
+
+    function exitMode() {
+        state.mode = null;
+        state.selectedSlot = null;
+        state.editingTeamId = null;
+
+        hide(modeBanner);
+        hide(teamSection);
+        hide(rosterSection);
+        hide(submitSection);
+
+        // Remove selected highlight
+        var cards = slotGrid.querySelectorAll('.slot-card');
+        for (var i = 0; i < cards.length; i++) {
+            cards[i].classList.remove('selected');
+        }
+    }
+
+    modeBannerCancel.addEventListener('click', function () {
+        hideStatus();
+        exitMode();
+    });
+
+    // ── Populate Form for Edit Mode ──
+
+    function populateTeamForm(team) {
+        document.getElementById('team-name').value = team.name || '';
+        document.getElementById('owner-name').value = (team.owner && team.owner.name) || '';
+        document.getElementById('owner-phone').value = (team.owner && team.owner.phone) || '';
+        document.getElementById('owner-email').value = (team.owner && team.owner.email) || '';
+
+        // Clear and rebuild roster
+        rosterList.innerHTML = '';
+        state.playerCount = 0;
+        btnAddPlayer.style.display = '';
+
+        var roster = (team.season && team.season.roster) || [];
+
+        // Only add rows for players with names (skip empty slots)
+        var addedCount = 0;
+        for (var i = 0; i < roster.length; i++) {
+            var p = roster[i];
+            if (!p.name || !p.name.trim()) continue;
+
+            addPlayerRow();
+            addedCount++;
+            var row = rosterList.lastElementChild;
+            var n = row.getAttribute('data-player');
+
+            // Fill name
+            row.querySelector('.admin-roster-name-input').value = p.name;
+
+            // Fill DOB
+            if (p.dob) {
+                var mm = row.querySelector('[name="p' + n + '-mm"]');
+                var dd = row.querySelector('[name="p' + n + '-dd"]');
+                var yyyy = row.querySelector('[name="p' + n + '-yyyy"]');
+                if (mm && p.dob.month) mm.value = String(p.dob.month).padStart(2, '0');
+                if (dd && p.dob.date) dd.value = String(p.dob.date).padStart(2, '0');
+                if (yyyy && p.dob.year) yyyy.value = String(p.dob.year);
+            }
+
+            // Fill phone
+            var phoneInput = row.querySelector('[name="p' + n + '-phone"]');
+            if (phoneInput && p.phone) phoneInput.value = p.phone;
+
+            // Fill waiver
+            var waiverInput = row.querySelector('[name="p' + n + '-waiver"]');
+            if (waiverInput && p.insuranceWaiver && p.insuranceWaiver.signed) waiverInput.checked = true;
+        }
+
+        // If no players found, add one empty row
+        if (addedCount === 0) addPlayerRow();
     }
 
     // ── New Season Toggle ──
@@ -199,7 +345,6 @@
         document.getElementById('playoff-rounds-list').appendChild(row);
     });
 
-    // Remove playoff round
     document.getElementById('playoff-rounds-list').addEventListener('click', function (e) {
         if (e.target.classList.contains('playoff-remove')) {
             e.target.closest('.playoff-round-row').remove();
@@ -263,7 +408,6 @@
             breakWeeks: breakWeeks
         };
 
-        // Playoffs
         if (playoffsEnabled.checked) {
             var rounds = [];
             var rows = document.querySelectorAll('#playoff-rounds-list .playoff-round-row');
@@ -286,16 +430,18 @@
             }
 
             playoffObj.gameIntervalMinutes = parseInt(document.getElementById('playoff-game-interval').value) || 90;
-
             schedule.playoffs = playoffObj;
         } else {
             schedule.playoffs = { enabled: false };
         }
 
+        var maxRoster = parseInt(document.getElementById('season-max-roster').value) || 12;
+
         var payload = {
             name: name,
             division: division,
             teamCount: teamCount,
+            maxRoster: maxRoster,
             timeline: timeline,
             schedule: schedule
         };
@@ -331,7 +477,7 @@
     // ── Roster: Add Player Row ──
 
     function addPlayerRow() {
-        if (state.playerCount >= MAX_PLAYERS) return;
+        if (state.playerCount >= state.maxPlayers) return;
         state.playerCount++;
         var n = state.playerCount;
 
@@ -414,7 +560,7 @@
 
         rosterList.appendChild(row);
 
-        if (state.playerCount >= MAX_PLAYERS) {
+        if (state.playerCount >= state.maxPlayers) {
             btnAddPlayer.style.display = 'none';
         }
     }
@@ -424,7 +570,6 @@
     // ── Roster: Toggle Details / Remove ──
 
     rosterList.addEventListener('click', function (e) {
-        // Toggle details
         if (e.target.classList.contains('admin-roster-toggle')) {
             var details = e.target.nextElementSibling;
             if (details.classList.contains('expanded')) {
@@ -436,38 +581,33 @@
             }
         }
 
-        // Remove player
         if (e.target.classList.contains('admin-roster-remove')) {
             e.target.closest('.admin-roster-row').remove();
             state.playerCount--;
-            // Re-number
             var rows = rosterList.querySelectorAll('.admin-roster-row');
             for (var i = 0; i < rows.length; i++) {
                 rows[i].querySelector('.admin-roster-num').textContent = i + 1;
             }
-            if (state.playerCount < MAX_PLAYERS) {
+            if (state.playerCount < state.maxPlayers) {
                 btnAddPlayer.style.display = '';
             }
         }
     });
 
-    // ── Phone formatting in roster ──
+    // ── Phone formatting ──
 
     rosterList.addEventListener('input', function (e) {
         if (e.target.type === 'tel') formatPhone(e.target);
-        // Numeric only for DOB fields
         if (e.target.name && (e.target.name.indexOf('-mm') !== -1 || e.target.name.indexOf('-dd') !== -1 || e.target.name.indexOf('-yyyy') !== -1)) {
             e.target.value = e.target.value.replace(/\D/g, '');
         }
     });
 
-    // ── Phone formatting for owner ──
-
     document.getElementById('owner-phone').addEventListener('input', function () {
         formatPhone(this);
     });
 
-    // ── DOB auto-advance for season date fields ──
+    // ── DOB auto-advance ──
 
     document.querySelectorAll('.dob-group input').forEach(function (input) {
         input.addEventListener('input', function () {
@@ -486,13 +626,49 @@
         });
     });
 
-    // ── Submit Team ──
+    // ── Collect Players from Form ──
+
+    function collectPlayers() {
+        var players = [];
+        var rows = rosterList.querySelectorAll('.admin-roster-row');
+        for (var i = 0; i < rows.length; i++) {
+            var nameInput = rows[i].querySelector('.admin-roster-name-input');
+            var name = nameInput ? nameInput.value.trim() : '';
+            if (!name) continue;
+
+            var n = rows[i].getAttribute('data-player');
+
+            var mm = (rows[i].querySelector('[name="p' + n + '-mm"]') || {}).value || '';
+            var dd = (rows[i].querySelector('[name="p' + n + '-dd"]') || {}).value || '';
+            var yyyy = (rows[i].querySelector('[name="p' + n + '-yyyy"]') || {}).value || '';
+
+            players.push({
+                name: name,
+                dob: {
+                    month: mm ? parseInt(mm) : null,
+                    date: dd ? parseInt(dd) : null,
+                    year: yyyy ? parseInt(yyyy) : null
+                },
+                phone: (rows[i].querySelector('[name="p' + n + '-phone"]') || {}).value || '',
+                position: (rows[i].querySelector('[name="p' + n + '-position"]') || {}).value || '',
+                secondaryPositions: (rows[i].querySelector('[name="p' + n + '-secondary"]') || {}).value || '',
+                heightFt: (rows[i].querySelector('[name="p' + n + '-height-ft"]') || {}).value || '',
+                heightIn: (rows[i].querySelector('[name="p' + n + '-height-in"]') || {}).value || '',
+                weight: (rows[i].querySelector('[name="p' + n + '-weight"]') || {}).value || '',
+                handedness: (rows[i].querySelector('[name="p' + n + '-hand"]') || {}).value || '',
+                waiverSigned: (rows[i].querySelector('[name="p' + n + '-waiver"]') || {}).checked || false
+            });
+        }
+        return players;
+    }
+
+    // ── Submit (Add or Edit) ──
 
     btnSubmitTeam.addEventListener('click', function () {
         hideStatus();
 
-        if (!state.selectedSeason) {
-            showStatus('Please select a season first.', 'error');
+        if (!state.selectedSeason || !state.mode) {
+            showStatus('Please select a slot first.', 'error');
             return;
         }
 
@@ -511,42 +687,16 @@
             return;
         }
 
-        // Collect players
-        var players = [];
-        var rows = rosterList.querySelectorAll('.admin-roster-row');
-        for (var i = 0; i < rows.length; i++) {
-            var nameInput = rows[i].querySelector('.admin-roster-name-input');
-            var name = nameInput ? nameInput.value.trim() : '';
-            if (!name) continue;
+        var players = collectPlayers();
 
-            var n = rows[i].getAttribute('data-player');
-
-            var mm = (rows[i].querySelector('[name="p' + n + '-mm"]') || {}).value || '';
-            var dd = (rows[i].querySelector('[name="p' + n + '-dd"]') || {}).value || '';
-            var yyyy = (rows[i].querySelector('[name="p' + n + '-yyyy"]') || {}).value || '';
-
-            var player = {
-                name: name,
-                dob: {
-                    month: mm ? parseInt(mm) : null,
-                    date: dd ? parseInt(dd) : null,
-                    year: yyyy ? parseInt(yyyy) : null
-                },
-                phone: (rows[i].querySelector('[name="p' + n + '-phone"]') || {}).value || '',
-                position: (rows[i].querySelector('[name="p' + n + '-position"]') || {}).value || '',
-                secondaryPositions: (rows[i].querySelector('[name="p' + n + '-secondary"]') || {}).value || '',
-                heightFt: (rows[i].querySelector('[name="p' + n + '-height-ft"]') || {}).value || '',
-                heightIn: (rows[i].querySelector('[name="p' + n + '-height-in"]') || {}).value || '',
-                weight: (rows[i].querySelector('[name="p' + n + '-weight"]') || {}).value || '',
-                handedness: (rows[i].querySelector('[name="p' + n + '-hand"]') || {}).value || '',
-                waiverSigned: (rows[i].querySelector('[name="p' + n + '-waiver"]') || {}).checked || false
-            };
-
-            players.push(player);
+        if (state.mode === 'add') {
+            submitAddTeam(teamName, ownerName, players);
+        } else if (state.mode === 'edit') {
+            submitEditTeam(teamName, ownerName, players);
         }
+    });
 
-        var slot = document.getElementById('team-slot').value || undefined;
-
+    function submitAddTeam(teamName, ownerName, players) {
         var payload = {
             seasonId: state.selectedSeason.id,
             teamName: teamName,
@@ -556,7 +706,7 @@
                 email: document.getElementById('owner-email').value.trim()
             },
             players: players,
-            slot: slot
+            slot: state.selectedSlot
         };
 
         btnSubmitTeam.disabled = true;
@@ -571,14 +721,7 @@
         .then(function (result) {
             if (result.ok && result.data.success) {
                 showStatus('Team added! ' + teamName + ' assigned to slot ' + result.data.slot + ' (ID: ' + result.data.teamID + ')', 'success');
-                clearTeamForm();
-                // Refresh seasons to update slot overview
-                loadSeasons();
-                // Re-select the season after refresh
-                setTimeout(function () {
-                    seasonSelect.value = state.selectedSeason.id;
-                    seasonSelect.dispatchEvent(new Event('change'));
-                }, 500);
+                refreshAfterChange();
             } else {
                 showStatus('Error: ' + (result.data.error || 'Failed to add team'), 'error');
             }
@@ -590,7 +733,58 @@
             btnSubmitTeam.disabled = false;
             btnSubmitTeam.textContent = 'Add Team to Season';
         });
-    });
+    }
+
+    function submitEditTeam(teamName, ownerName, players) {
+        var payload = {
+            teamId: state.editingTeamId,
+            seasonId: state.selectedSeason.id,
+            teamName: teamName,
+            owner: {
+                name: ownerName,
+                phone: document.getElementById('owner-phone').value.trim(),
+                email: document.getElementById('owner-email').value.trim()
+            },
+            players: players
+        };
+
+        btnSubmitTeam.disabled = true;
+        btnSubmitTeam.textContent = 'SAVING...';
+
+        fetch('/api/admin/edit-team', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+        .then(function (result) {
+            if (result.ok && result.data.success) {
+                showStatus('Team updated! ' + teamName, 'success');
+                refreshAfterChange();
+            } else {
+                showStatus('Error: ' + (result.data.error || 'Failed to update team'), 'error');
+            }
+        })
+        .catch(function () {
+            showStatus('Network error. Please try again.', 'error');
+        })
+        .finally(function () {
+            btnSubmitTeam.disabled = false;
+            btnSubmitTeam.textContent = 'Save Changes';
+        });
+    }
+
+    function refreshAfterChange() {
+        var seasonId = state.selectedSeason ? state.selectedSeason.id : null;
+        exitMode();
+        loadSeasons();
+        if (seasonId) {
+            setTimeout(function () {
+                seasonSelect.value = seasonId;
+                seasonSelect.dispatchEvent(new Event('change'));
+            }, 500);
+        }
+    }
 
     function clearTeamForm() {
         document.getElementById('team-name').value = '';
@@ -600,7 +794,6 @@
         rosterList.innerHTML = '';
         state.playerCount = 0;
         btnAddPlayer.style.display = '';
-        addPlayerRow();
     }
 
     // ── Cheat code: SHIFT + AUTO ──
@@ -618,7 +811,6 @@
                 document.getElementById('owner-phone').value = '(830) 555-1234';
                 document.getElementById('owner-email').value = 'owner@test.com';
 
-                // Fill first player
                 var firstRow = rosterList.querySelector('.admin-roster-row');
                 if (firstRow) {
                     firstRow.querySelector('.admin-roster-name-input').value = 'Mike Johnson';

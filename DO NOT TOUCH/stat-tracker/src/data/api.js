@@ -45,7 +45,16 @@ export function syncLiveGame(boxScore, meta) {
   fetch('/api/live-game', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ gameId: boxScore.gameId, boxScore, ...(meta || {}) }),
+    body: JSON.stringify({
+      gameId: boxScore.gameId,
+      boxScore,
+      trackerState: meta ? {
+        settings: meta.settings,
+        selectedSeason: meta.selectedSeason,
+        homeTeam: meta.homeTeam,
+        awayTeam: meta.awayTeam,
+      } : null,
+    }),
   }).catch(() => {});
 }
 

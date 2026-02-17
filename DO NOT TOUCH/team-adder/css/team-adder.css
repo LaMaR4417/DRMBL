@@ -91,6 +91,22 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+
+.slot-card:hover {
+    transform: translateY(-1px);
+}
+
+.slot-card.selected {
+    border-color: #c8a45c;
+    background: rgba(200, 164, 92, 0.1);
+    box-shadow: 0 0 8px rgba(200, 164, 92, 0.2);
+}
+
+.slot-card.selected .slot-letter {
+    color: #c8a45c;
 }
 
 .slot-letter {
@@ -130,6 +146,60 @@
 .slot-card.open .slot-team-name {
     color: rgba(200, 164, 92, 0.4);
     font-style: italic;
+}
+
+.slot-card.open:hover {
+    border-color: rgba(200, 164, 92, 0.5);
+    background: rgba(200, 164, 92, 0.05);
+}
+
+.slot-card.occupied:hover {
+    border-color: rgba(46, 125, 50, 0.6);
+    background: rgba(46, 125, 50, 0.1);
+}
+
+/* ── Mode Banner ── */
+.mode-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.mode-banner.hidden {
+    display: none;
+}
+
+.mode-banner.mode-add {
+    background: rgba(200, 164, 92, 0.1);
+    border: 1px solid rgba(200, 164, 92, 0.3);
+    color: #c8a45c;
+}
+
+.mode-banner.mode-edit {
+    background: rgba(66, 165, 245, 0.1);
+    border: 1px solid rgba(66, 165, 245, 0.3);
+    color: #42a5f5;
+}
+
+.mode-banner-cancel {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.mode-banner-cancel:hover {
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 /* ── Playoff Round Rows ── */

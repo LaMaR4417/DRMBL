@@ -28,11 +28,11 @@ export default function HomeScreen() {
     fetchLiveGames()
       .then((list) => {
         if (cancelled) return;
-        // Only show games that are not final AND have settings stored
+        // Only show games that are not final AND have trackerState with settings
         const resumable = list.filter(
           (g) => g.boxScore
             && g.boxScore.gameInfo.general.status !== 'final'
-            && g.settings,
+            && g.trackerState?.settings,
         );
         setGames(resumable);
         setLoading(false);
@@ -46,12 +46,13 @@ export default function HomeScreen() {
   }, []);
 
   function handleResume(game) {
+    const ts = game.trackerState;
     dispatch({
       type: 'RESTORE_GAME',
-      settings: game.settings,
-      selectedSeason: game.selectedSeason,
-      homeTeam: game.homeTeam,
-      awayTeam: game.awayTeam,
+      settings: ts.settings,
+      selectedSeason: ts.selectedSeason,
+      homeTeam: ts.homeTeam,
+      awayTeam: ts.awayTeam,
       boxScore: game.boxScore,
     });
   }

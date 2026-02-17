@@ -161,6 +161,11 @@ module.exports = async function (req, res) {
             return res.status(400).json({ error: "Team count must be between 2 and 26" });
         }
 
+        var maxRoster = parseInt(body.maxRoster) || 12;
+        if (maxRoster < 1 || maxRoster > 30) {
+            return res.status(400).json({ error: "Max roster must be between 1 and 30" });
+        }
+
         var schedule = body.schedule || {};
         var regularWeeks = parseInt(schedule.regularWeeks) || (teamCount - 1); // default: full round-robin
         var weekIntervalDays = parseInt(schedule.weekIntervalDays) || 7;
@@ -202,6 +207,7 @@ module.exports = async function (req, res) {
             id: seasonID,
             division: body.division,
             name: body.name,
+            maxRoster: maxRoster,
             timeline: timeline,
             teams: teams,
             weeklySchedule: weeklySchedule

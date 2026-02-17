@@ -41,6 +41,7 @@ module.exports = async function (req, res) {
                     return {
                         gameId: doc.id,
                         boxScore: doc.boxScore,
+                        trackerState: doc.trackerState || null,
                         updatedAt: doc.updatedAt
                     };
                 });
@@ -65,6 +66,7 @@ module.exports = async function (req, res) {
             var doc = {
                 id: body.gameId || "active-game",
                 boxScore: body.boxScore,
+                trackerState: body.trackerState || null,
                 updatedAt: new Date().toISOString()
             };
 

@@ -43,7 +43,7 @@ function buildEmptyGame() {
     };
 }
 
-function buildTeamDoc(body, teamSlot, seasonID, regularGameCount, playoffRoundCount) {
+function buildTeamDoc(body, teamSlot, seasonID, regularGameCount, playoffRoundCount, maxRoster) {
     var teamID = sanitizeForID(body.teamName) + " - " + sanitizeForID(body.owner.name);
 
     var roster = [];
@@ -64,7 +64,8 @@ function buildTeamDoc(body, teamSlot, seasonID, regularGameCount, playoffRoundCo
             });
         }
     }
-    while (roster.length < 12) {
+    var rosterSize = maxRoster || 12;
+    while (roster.length < rosterSize) {
         roster.push(buildEmptyPlayer());
     }
 
@@ -176,7 +177,8 @@ module.exports = async function (req, res) {
         }
 
         // Step 3: Build and create the Team document
-        var teamDoc = buildTeamDoc(body, targetSlot, body.seasonId, regularGameCount, playoffRoundCount);
+        var maxRoster = seasonDoc.maxRoster || 12;
+        var teamDoc = buildTeamDoc(body, targetSlot, body.seasonId, regularGameCount, playoffRoundCount, maxRoster);
         var teamID = teamDoc.id;
         await teamsContainer.items.create(teamDoc);
 
