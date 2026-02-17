@@ -378,10 +378,15 @@
             html += '<thead><tr>';
             html += '<th class="ept-num">#</th>';
             html += '<th class="ept-name">PLAYER</th>';
+            html += '<th>MIN</th>';
             html += '<th>PTS</th><th>FG</th><th>FG%</th>';
-            html += '<th>3PT</th><th>FT</th>';
-            html += '<th>TRB</th><th>AST</th><th>STL</th><th>BLK</th>';
+            html += '<th>2PT</th><th>2P%</th>';
+            html += '<th>3PT</th><th>3P%</th>';
+            html += '<th>FT</th><th>FT%</th>';
+            html += '<th>TRB</th><th>DRB</th><th>ORB</th>';
+            html += '<th>AST</th><th>STL</th><th>BLK</th>';
             html += '<th>TO</th><th>PF</th>';
+            html += '<th>+/-</th><th>EFF</th>';
             html += '</tr></thead>';
             html += '<tbody>';
 
@@ -389,20 +394,33 @@
                 var p = players[i];
                 var fg = p.stats.offense.shootingBreakdown.fieldGoals;
                 var ft = p.stats.offense.shootingBreakdown.freeThrows;
+                var pm = p.stats.general.plusMinus;
+                var eff = p.stats.offense.points + p.stats.rebounds.total + p.stats.offense.assists
+                    + p.stats.defense.steals + p.stats.defense.blocks - p.stats.general.turnovers
+                    - (fg.totalAttempted - fg.totalMade) - (ft.attempted - ft.made);
                 html += '<tr>';
                 html += '<td class="ept-num">' + (p.number || '?') + '</td>';
                 html += '<td class="ept-name">' + p.name + '</td>';
+                html += '<td>' + formatClock(p.stats.general.minutesPlayed) + '</td>';
                 html += '<td>' + p.stats.offense.points + '</td>';
                 html += '<td>' + fg.totalMade + '/' + fg.totalAttempted + '</td>';
                 html += '<td>' + fg.totalPercentage + '%</td>';
+                html += '<td>' + fg['2-PointShots'].made + '/' + fg['2-PointShots'].attempted + '</td>';
+                html += '<td>' + fg['2-PointShots'].percentage + '%</td>';
                 html += '<td>' + fg['3-PointShots'].made + '/' + fg['3-PointShots'].attempted + '</td>';
+                html += '<td>' + fg['3-PointShots'].percentage + '%</td>';
                 html += '<td>' + ft.made + '/' + ft.attempted + '</td>';
+                html += '<td>' + ft.percentage + '%</td>';
                 html += '<td>' + p.stats.rebounds.total + '</td>';
+                html += '<td>' + p.stats.rebounds.defensive + '</td>';
+                html += '<td>' + p.stats.rebounds.offensive + '</td>';
                 html += '<td>' + p.stats.offense.assists + '</td>';
                 html += '<td>' + p.stats.defense.steals + '</td>';
                 html += '<td>' + p.stats.defense.blocks + '</td>';
                 html += '<td>' + p.stats.general.turnovers + '</td>';
                 html += '<td>' + p.stats.general.fouls.personal.total + '</td>';
+                html += '<td>' + (pm >= 0 ? '+' : '') + pm + '</td>';
+                html += '<td>' + eff + '</td>';
                 html += '</tr>';
             }
 
