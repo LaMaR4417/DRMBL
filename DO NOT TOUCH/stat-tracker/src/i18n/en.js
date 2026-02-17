@@ -16,6 +16,13 @@ export const en = {
     title: 'STAT TRACKER',
     subtitle: 'Basketball Scorekeeping App',
     newGame: 'New Game',
+    resumeGame: 'Resume Game',
+    vs: 'vs',
+    loadingGames: 'Loading active games...',
+    loadFailed: 'Could not load games.',
+    activeGames: 'Active Games',
+    live: 'LIVE',
+    stopped: 'STOPPED',
   },
 
   settings: {

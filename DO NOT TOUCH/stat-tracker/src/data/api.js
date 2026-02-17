@@ -41,11 +41,11 @@ export async function fetchLiveGames() {
   return data.games || [];
 }
 
-export function syncLiveGame(boxScore) {
+export function syncLiveGame(boxScore, meta) {
   fetch('/api/live-game', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ gameId: boxScore.gameId, boxScore }),
+    body: JSON.stringify({ gameId: boxScore.gameId, boxScore, ...(meta || {}) }),
   }).catch(() => {});
 }
 

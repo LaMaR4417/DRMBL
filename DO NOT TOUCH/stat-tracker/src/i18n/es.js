@@ -16,6 +16,13 @@ export const es = {
     title: 'STAT TRACKER',
     subtitle: 'App de Estadísticas de Baloncesto',
     newGame: 'Nuevo Juego',
+    resumeGame: 'Reanudar Juego',
+    vs: 'vs',
+    loadingGames: 'Cargando juegos activos...',
+    loadFailed: 'No se pudieron cargar los juegos.',
+    activeGames: 'Juegos Activos',
+    live: 'EN VIVO',
+    stopped: 'DETENIDO',
   },
 
   settings: {

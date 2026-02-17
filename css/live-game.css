@@ -175,19 +175,18 @@
     padding: 10px 20px 14px;
 }
 
-.live-teams-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    margin-bottom: 4px;
+.live-team-side {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
 }
 
-.live-teams-row .live-team-name:first-child {
-    text-align: right;
+.live-team-side.home {
+    justify-content: flex-end;
 }
 
-.live-teams-row .live-team-name:last-child {
-    text-align: left;
+.live-team-side.away {
+    justify-content: flex-start;
 }
 
 .live-team-name {
@@ -213,14 +212,6 @@
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-}
-
-.live-score-row .live-team-score:first-child {
-    text-align: right;
-}
-
-.live-score-row .live-team-score:last-child {
-    text-align: left;
 }
 
 .live-team-score {
@@ -263,24 +254,14 @@
     50% { opacity: 0.4; }
 }
 
-/* ── BODY (stacked rows layout) ── */
+/* ── BODY (2×2 quadrant grid) ── */
 .live-body {
     max-width: 1800px;
     margin: 0 auto;
     padding: 10px 16px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
     gap: 16px;
-}
-
-.live-row {
-    display: flex;
-    gap: 16px;
-}
-
-.live-section-half {
-    flex: 1;
-    min-width: 0;
 }
 
 /* ── SECTIONS (card style) ── */
@@ -472,8 +453,8 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
-    .live-row {
-        flex-direction: column;
+    .live-body {
+        grid-template-columns: 1fr;
     }
 }
 

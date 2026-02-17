@@ -90,27 +90,32 @@ export default function GameScreen() {
   const shouldSync = useRef(false);
   const initialSynced = useRef(false);
 
+  // Build metadata to persist alongside box score for resume support
+  const syncMeta = { settings: game.settings, selectedSeason: game.selectedSeason, homeTeam: game.homeTeam, awayTeam: game.awayTeam };
+
   // One-time sync when GameScreen first mounts with a box score
   useEffect(() => {
     if (!bs || initialSynced.current) return;
     initialSynced.current = true;
-    syncLiveGame(bs);
+    syncLiveGame(bs, syncMeta);
   }, [bs]);
 
   // Sync after meaningful actions (flag-based)
   useEffect(() => {
     if (!bs || !shouldSync.current) return;
     shouldSync.current = false;
-    syncLiveGame(bs);
+    syncLiveGame(bs, syncMeta);
   }, [bs]);
 
   // Periodic sync while clock is running (keeps live page clock aligned)
   const bsRef = useRef(bs);
   useEffect(() => { bsRef.current = bs; }, [bs]);
+  const syncMetaRef = useRef(syncMeta);
+  useEffect(() => { syncMetaRef.current = syncMeta; });
   useEffect(() => {
     if (!bs.gameInfo.state.active) return;
     const id = setInterval(() => {
-      if (bsRef.current) syncLiveGame(bsRef.current);
+      if (bsRef.current) syncLiveGame(bsRef.current, syncMetaRef.current);
     }, 5000);
     return () => clearInterval(id);
   }, [bs.gameInfo.state.active]);

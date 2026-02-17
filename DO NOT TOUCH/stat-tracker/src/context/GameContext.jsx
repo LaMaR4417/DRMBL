@@ -1,5 +1,7 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, useEffect } from 'react';
 import { buildBoxScore, buildEmptyPlayerStats } from '../data/boxScore';
+
+const STORAGE_KEY = 'drmbl-tracker-active-game';
 
 const GameContext = createContext(null);
 const GameDispatchContext = createContext(null);
@@ -609,7 +611,20 @@ function gameReducer(state, action) {
       return { ...state, boxScore: bs };
     }
 
+    case 'RESTORE_GAME': {
+      return {
+        ...initialState,
+        setupStep: 7,
+        settings: action.settings,
+        selectedSeason: action.selectedSeason,
+        homeTeam: action.homeTeam,
+        awayTeam: action.awayTeam,
+        boxScore: action.boxScore,
+      };
+    }
+
     case 'RESET_GAME':
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
       return { ...initialState };
 
     default:
@@ -629,6 +644,22 @@ function setNestedValue(obj, path, value) {
 
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+
+  // Persist game state to localStorage whenever boxScore changes during active game
+  useEffect(() => {
+    if (state.setupStep !== 7 || !state.boxScore) return;
+    try {
+      const snapshot = {
+        settings: state.settings,
+        selectedSeason: state.selectedSeason,
+        homeTeam: state.homeTeam,
+        awayTeam: state.awayTeam,
+        boxScore: state.boxScore,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    } catch (e) { /* quota exceeded or private browsing — ignore */ }
+  }, [state.boxScore, state.setupStep]);
+
   return (
     <GameContext.Provider value={state}>
       <GameDispatchContext.Provider value={dispatch}>
@@ -636,6 +667,14 @@ export function GameProvider({ children }) {
       </GameDispatchContext.Provider>
     </GameContext.Provider>
   );
+}
+
+export function getSavedGame() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) { return null; }
 }
 
 export function useGame() {
