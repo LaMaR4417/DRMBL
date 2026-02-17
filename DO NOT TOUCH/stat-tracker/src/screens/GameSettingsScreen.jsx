@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useGame, useGameDispatch } from '../context/GameContext';
 import { fetchGameSettings } from '../data/api';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function GameSettingsScreen() {
   const game = useGame();
   const dispatch = useGameDispatch();
+  const { t } = useTranslation();
   const settings = game.settings;
 
   const [presets, setPresets] = useState([]);
@@ -62,7 +64,7 @@ export default function GameSettingsScreen() {
       dispatch({ type: 'SET_SETTINGS', settings: payload });
       setCustomName('');
     } catch (err) {
-      setError('Failed to save preset. ' + err.message);
+      setError(t('settings', 'failedSavePreset') + ' ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -92,12 +94,12 @@ export default function GameSettingsScreen() {
       <div className="screen settings-screen">
         <div className="screen-header">
           <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
-            Back
+            {t('common', 'back')}
           </button>
-          <h2>Game Settings</h2>
+          <h2>{t('settings', 'screenTitle')}</h2>
           <div className="header-spacer" />
         </div>
-        <div className="loading-message">Loading presets...</div>
+        <div className="loading-message">{t('settings', 'loadingPresets')}</div>
       </div>
     );
   }
@@ -107,15 +109,15 @@ export default function GameSettingsScreen() {
       <div className="screen settings-screen">
         <div className="screen-header">
           <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
-            Back
+            {t('common', 'back')}
           </button>
-          <h2>Game Settings</h2>
+          <h2>{t('settings', 'screenTitle')}</h2>
           <div className="header-spacer" />
         </div>
         <div className="error-message">
           <p>{error}</p>
           <button className="btn btn-primary" onClick={() => window.location.reload()}>
-            Retry
+            {t('common', 'retry')}
           </button>
         </div>
       </div>
@@ -128,16 +130,16 @@ export default function GameSettingsScreen() {
     <div className="screen settings-screen">
       <div className="screen-header">
         <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
-          Back
+          {t('common', 'back')}
         </button>
-        <h2>Game Settings</h2>
+        <h2>{t('settings', 'screenTitle')}</h2>
         <div className="header-spacer" />
       </div>
 
       <div className="settings-content">
         {/* Preset Selector */}
         <div className="settings-presets">
-          <label className="settings-label">Preset</label>
+          <label className="settings-label">{t('settings', 'preset')}</label>
           <div className="preset-row">
             <div className="preset-buttons">
               {presets.map((preset) => (
@@ -153,7 +155,7 @@ export default function GameSettingsScreen() {
                 className={`btn btn-preset ${isCustom ? 'active' : ''}`}
                 onClick={() => updateSetting('presetName', 'Custom')}
               >
-                Custom
+                {t('common', 'custom')}
               </button>
             </div>
             {isCustom && (
@@ -161,7 +163,7 @@ export default function GameSettingsScreen() {
                 <input
                   type="text"
                   className="custom-name-input"
-                  placeholder="Preset name..."
+                  placeholder={t('settings', 'presetPlaceholder')}
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
@@ -171,7 +173,7 @@ export default function GameSettingsScreen() {
                   disabled={!customName.trim() || saving}
                   onClick={handleSave}
                 >
-                  {saving ? 'Saving...' : 'Save'}
+                  {saving ? t('common', 'saving') : t('common', 'save')}
                 </button>
               </>
             )}
@@ -181,27 +183,27 @@ export default function GameSettingsScreen() {
         <div className="settings-cards">
           {/* Periods */}
           <div className="settings-card">
-            <h3 className="card-title">Periods</h3>
+            <h3 className="card-title">{t('settings', 'periodsTitle')}</h3>
             <div className="card-body">
               <div className="setting-row">
-                <label>Format</label>
+                <label>{t('settings', 'format')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.periods.format.quarters ? 'active' : ''}`}
                     onClick={() => toggleFormat(true)}
                   >
-                    Quarters
+                    {t('settings', 'quarters')}
                   </button>
                   <button
                     className={`btn btn-toggle ${settings.periods.format.halves ? 'active' : ''}`}
                     onClick={() => toggleFormat(false)}
                   >
-                    Halves
+                    {t('settings', 'halves')}
                   </button>
                 </div>
               </div>
               <div className="setting-row">
-                <label>Minutes per {settings.periods.format.quarters ? 'Quarter' : 'Half'}</label>
+                <label>{settings.periods.format.quarters ? t('settings', 'minutesPerQuarter') : t('settings', 'minutesPerHalf')}</label>
                 <input
                   type="number"
                   min="1"
@@ -211,7 +213,7 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
-                <label>Minutes per Overtime</label>
+                <label>{t('settings', 'minutesPerOvertime')}</label>
                 <input
                   type="number"
                   min="1"
@@ -220,9 +222,9 @@ export default function GameSettingsScreen() {
                   onChange={(e) => updateSetting('periods.minutesPerOvertime', parseInt(e.target.value) || 1)}
                 />
               </div>
-              <h4 className="subsection-title">Shot Clock</h4>
+              <h4 className="subsection-title">{t('settings', 'shotClock')}</h4>
               <div className="setting-row">
-                <label>Enabled</label>
+                <label>{t('settings', 'enabled')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.shotClock.active ? 'active' : ''}`}
@@ -233,13 +235,13 @@ export default function GameSettingsScreen() {
                       }
                     }}
                   >
-                    {settings.shotClock.active ? 'On' : 'Off'}
+                    {settings.shotClock.active ? t('common', 'on') : t('common', 'off')}
                   </button>
                 </div>
               </div>
               {settings.shotClock.active && (
                 <div className="setting-row">
-                  <label>Duration (seconds)</label>
+                  <label>{t('settings', 'durationSeconds')}</label>
                   <input
                     type="number"
                     min="10"
@@ -249,10 +251,10 @@ export default function GameSettingsScreen() {
                   />
                 </div>
               )}
-              <h4 className="subsection-title">Breaks</h4>
+              <h4 className="subsection-title">{t('settings', 'breaks')}</h4>
               {settings.periods.format.quarters && (
                 <div className="setting-row">
-                  <label>Between Quarters (min)</label>
+                  <label>{t('settings', 'betweenQuarters')}</label>
                   <input
                     type="number"
                     min="0"
@@ -263,7 +265,7 @@ export default function GameSettingsScreen() {
                 </div>
               )}
               <div className="setting-row">
-                <label>Halftime (min)</label>
+                <label>{t('settings', 'halftime')}</label>
                 <input
                   type="number"
                   min="0"
@@ -273,7 +275,7 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
-                <label>Before Overtime (min)</label>
+                <label>{t('settings', 'beforeOvertime')}</label>
                 <input
                   type="number"
                   min="0"
@@ -287,25 +289,25 @@ export default function GameSettingsScreen() {
 
           {/* Stoppages */}
           <div className="settings-card">
-            <h3 className="card-title">Stoppages</h3>
+            <h3 className="card-title">{t('settings', 'stoppagesTitle')}</h3>
             <div className="card-body">
               <p className="setting-hint">
-                Controls when the game clock auto-stops on dead balls. Each period can activate stoppages in the last X minutes.
+                {t('settings', 'stoppagesHint')}
               </p>
               {(() => {
                 const mode = settings.periods.format.quarters ? 'perQuarter' : 'perHalf';
                 const periods = settings.periods.format.quarters
                   ? [
-                      { key: '1stQuarter', label: '1st Quarter' },
-                      { key: '2ndQuarter', label: '2nd Quarter' },
-                      { key: '3rdQuarter', label: '3rd Quarter' },
-                      { key: '4thQuarter', label: '4th Quarter' },
-                      { key: 'overtime', label: 'Overtime' },
+                      { key: '1stQuarter', tKey: 'period_1stQuarter' },
+                      { key: '2ndQuarter', tKey: 'period_2ndQuarter' },
+                      { key: '3rdQuarter', tKey: 'period_3rdQuarter' },
+                      { key: '4thQuarter', tKey: 'period_4thQuarter' },
+                      { key: 'overtime', tKey: 'period_overtime' },
                     ]
                   : [
-                      { key: '1stHalf', label: '1st Half' },
-                      { key: '2ndHalf', label: '2nd Half' },
-                      { key: 'overtime', label: 'Overtime' },
+                      { key: '1stHalf', tKey: 'period_1stHalf' },
+                      { key: '2ndHalf', tKey: 'period_2ndHalf' },
+                      { key: 'overtime', tKey: 'period_overtime' },
                     ];
                 const allOn = periods.every(({ key }) => {
                   const val = settings.stoppages.during[mode][key];
@@ -314,7 +316,7 @@ export default function GameSettingsScreen() {
                 return (
                   <>
                     <div className="setting-row">
-                      <label>Full Game</label>
+                      <label>{t('settings', 'fullGame')}</label>
                       <div className="toggle-group">
                         <button
                           className={`btn btn-toggle ${allOn ? 'active' : ''}`}
@@ -331,17 +333,17 @@ export default function GameSettingsScreen() {
                             });
                           }}
                         >
-                          {allOn ? 'On' : 'Off'}
+                          {allOn ? t('common', 'on') : t('common', 'off')}
                         </button>
                       </div>
                     </div>
-                    {periods.map(({ key, label }) => {
+                    {periods.map(({ key, tKey }) => {
                       const val = settings.stoppages.during[mode][key];
                       const isOn = val && val.enabled;
                       return (
                         <div key={key}>
                           <div className="setting-row">
-                            <label>{label}</label>
+                            <label>{t('settings', tKey)}</label>
                             <div className="toggle-group">
                               <button
                                 className={`btn btn-toggle ${isOn ? 'active' : ''}`}
@@ -353,13 +355,13 @@ export default function GameSettingsScreen() {
                                   }
                                 }}
                               >
-                                {isOn ? 'On' : 'Off'}
+                                {isOn ? t('common', 'on') : t('common', 'off')}
                               </button>
                             </div>
                           </div>
                           {isOn && (
                             <div className="setting-row">
-                              <label>Last (min)</label>
+                              <label>{t('settings', 'lastMin')}</label>
                               <input
                                 type="number"
                                 min="1"
@@ -380,20 +382,20 @@ export default function GameSettingsScreen() {
 
           {/* Actions */}
           <div className="settings-card">
-            <h3 className="card-title">Actions</h3>
+            <h3 className="card-title">{t('settings', 'actionsTitle')}</h3>
             <div className="card-body">
               <p className="setting-hint">
-                "On" actions always stop the clock. "Off" actions only stop the clock when the period's stoppages are active.
+                {t('settings', 'actionsHint')}
               </p>
               {settings.stoppages.for.map((entry, i) => (
                 <div className="setting-row" key={entry.action}>
-                  <label>{entry.action}</label>
+                  <label>{t('actions', entry.action) || entry.action}</label>
                   <div className="toggle-group">
                     <button
                       className={`btn btn-toggle ${entry.always ? 'active' : ''}`}
                       onClick={() => updateSetting(`stoppages.for.${i}.always`, !entry.always)}
                     >
-                      {entry.always ? 'On' : 'Off'}
+                      {entry.always ? t('common', 'on') : t('common', 'off')}
                     </button>
                   </div>
                 </div>
@@ -403,51 +405,51 @@ export default function GameSettingsScreen() {
 
           {/* Tip-Off & Fouls */}
           <div className="settings-card">
-            <h3 className="card-title">Tip-Off</h3>
+            <h3 className="card-title">{t('settings', 'tipOffTitle')}</h3>
             <div className="card-body">
               <div className="setting-row">
-                <label>Possession Rule</label>
+                <label>{t('settings', 'possessionRule')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.tipOff.possessionRule === 'tipWinner' ? 'active' : ''}`}
                     onClick={() => updateSetting('tipOff.possessionRule', 'tipWinner')}
                   >
-                    Tip Winner
+                    {t('settings', 'tipWinner')}
                   </button>
                   <button
                     className={`btn btn-toggle ${settings.tipOff.possessionRule === 'manual' ? 'active' : ''}`}
                     onClick={() => updateSetting('tipOff.possessionRule', 'manual')}
                   >
-                    Manual
+                    {t('settings', 'manual')}
                   </button>
                 </div>
               </div>
               <p className="setting-hint">
                 {settings.tipOff.possessionRule === 'tipWinner'
-                  ? 'Tip-off loser gets the possession on the next Jump Ball or in the next period.'
-                  : 'You will choose what team got possession first on the tip-off, the other team will be getting possession of the ball on the next Jump Ball or in the next period.'}
+                  ? t('settings', 'tipWinnerHint')
+                  : t('settings', 'manualHint')}
               </p>
-              <h4 className="subsection-title">Jump Ball</h4>
+              <h4 className="subsection-title">{t('settings', 'jumpBall')}</h4>
               <div className="setting-row">
-                <label>Rule</label>
+                <label>{t('settings', 'rule')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.tipOff.jumpBallRule === 'switchPossession' ? 'active' : ''}`}
                     onClick={() => updateSetting('tipOff.jumpBallRule', 'switchPossession')}
                   >
-                    Switch Possession
+                    {t('settings', 'switchPossession')}
                   </button>
                   <button
                     className={`btn btn-toggle ${settings.tipOff.jumpBallRule === 'tipOff' ? 'active' : ''}`}
                     onClick={() => updateSetting('tipOff.jumpBallRule', 'tipOff')}
                   >
-                    Tip-Off
+                    {t('settings', 'tipOffOption')}
                   </button>
                 </div>
               </div>
-              <h4 className="subsection-title">Fouls</h4>
+              <h4 className="subsection-title">{t('settings', 'fouls')}</h4>
               <div className="setting-row">
-                <label>Foul-Out Limit</label>
+                <label>{t('settings', 'foulOutLimit')}</label>
                 <input
                   type="number"
                   min="3"
@@ -457,24 +459,24 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
-                <label>Bonus Reset</label>
+                <label>{t('settings', 'bonusReset')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.fouls.bonus.perPeriod ? 'active' : ''}`}
                     onClick={() => toggleBonusReset(true)}
                   >
-                    Per Period
+                    {t('settings', 'perPeriod')}
                   </button>
                   <button
                     className={`btn btn-toggle ${settings.fouls.bonus.perHalf ? 'active' : ''}`}
                     onClick={() => toggleBonusReset(false)}
                   >
-                    Per Half
+                    {t('settings', 'perHalf')}
                   </button>
                 </div>
               </div>
               <div className="setting-row">
-                <label>1-and-1</label>
+                <label>{t('settings', 'oneAndOne')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.fouls.bonus.oneAndOne != null ? 'active' : ''}`}
@@ -486,13 +488,13 @@ export default function GameSettingsScreen() {
                       }
                     }}
                   >
-                    {settings.fouls.bonus.oneAndOne != null ? 'On' : 'Off'}
+                    {settings.fouls.bonus.oneAndOne != null ? t('common', 'on') : t('common', 'off')}
                   </button>
                 </div>
               </div>
               {settings.fouls.bonus.oneAndOne != null && (
                 <div className="setting-row">
-                  <label>1-and-1 Threshold</label>
+                  <label>{t('settings', 'oneAndOneThreshold')}</label>
                   <input
                     type="number"
                     min="1"
@@ -503,13 +505,13 @@ export default function GameSettingsScreen() {
                 </div>
               )}
               <div className="setting-row">
-                <label>Double Bonus Threshold</label>
+                <label>{t('settings', 'doubleBonusThreshold')}</label>
                 <input
                   type="number"
                   min="0"
                   max="20"
                   value={settings.fouls.bonus.doubleBonus ?? ''}
-                  placeholder="Off"
+                  placeholder={t('common', 'off')}
                   onChange={(e) => {
                     const val = e.target.value === '' ? null : parseInt(e.target.value);
                     updateSetting('fouls.bonus.doubleBonus', val);
@@ -517,7 +519,7 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
-                <label>Tech Ejection Limit</label>
+                <label>{t('settings', 'techEjectionLimit')}</label>
                 <input
                   type="number"
                   min="1"
@@ -531,27 +533,27 @@ export default function GameSettingsScreen() {
 
           {/* Timeouts */}
           <div className="settings-card">
-            <h3 className="card-title">Timeouts</h3>
+            <h3 className="card-title">{t('settings', 'timeoutsTitle')}</h3>
             <div className="card-body">
               <div className="setting-row">
-                <label>Allocation</label>
+                <label>{t('settings', 'allocation')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.timeouts.regulation.allocation.perGame ? 'active' : ''}`}
                     onClick={() => toggleTimeoutAllocation(true)}
                   >
-                    Per Game
+                    {t('settings', 'perGame')}
                   </button>
                   <button
                     className={`btn btn-toggle ${settings.timeouts.regulation.allocation.perHalf ? 'active' : ''}`}
                     onClick={() => toggleTimeoutAllocation(false)}
                   >
-                    Per Half
+                    {t('settings', 'perHalf')}
                   </button>
                 </div>
               </div>
               <div className="setting-row">
-                <label>Full Timeouts</label>
+                <label>{t('settings', 'fullTimeouts')}</label>
                 <input
                   type="number"
                   min="0"
@@ -561,7 +563,7 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
-                <label>Short Timeouts</label>
+                <label>{t('settings', 'shortTimeouts')}</label>
                 <input
                   type="number"
                   min="0"
@@ -571,7 +573,7 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
-                <label>Full Duration (sec)</label>
+                <label>{t('settings', 'fullDuration')}</label>
                 <input
                   type="number"
                   min="10"
@@ -581,7 +583,7 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
-                <label>Short Duration (sec)</label>
+                <label>{t('settings', 'shortDuration')}</label>
                 <input
                   type="number"
                   min="10"
@@ -590,9 +592,9 @@ export default function GameSettingsScreen() {
                   onChange={(e) => updateSetting('timeouts.duration.short', parseInt(e.target.value) || 30)}
                 />
               </div>
-              <h4 className="subsection-title">Overtime</h4>
+              <h4 className="subsection-title">{t('settings', 'overtimeSection')}</h4>
               <div className="setting-row">
-                <label>OT Full Timeouts</label>
+                <label>{t('settings', 'otFullTimeouts')}</label>
                 <input
                   type="number"
                   min="0"
@@ -602,7 +604,7 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
-                <label>OT Short Timeouts</label>
+                <label>{t('settings', 'otShortTimeouts')}</label>
                 <input
                   type="number"
                   min="0"
@@ -611,26 +613,26 @@ export default function GameSettingsScreen() {
                   onChange={(e) => updateSetting('timeouts.overtime.short', parseInt(e.target.value) || 0)}
                 />
               </div>
-              <h4 className="subsection-title">Rollover</h4>
+              <h4 className="subsection-title">{t('settings', 'rollover')}</h4>
               <div className="setting-row">
-                <label>Regulation to OT</label>
+                <label>{t('settings', 'regulationToOT')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.timeouts.rollover.regulationtoOT ? 'active' : ''}`}
                     onClick={() => updateSetting('timeouts.rollover.regulationtoOT', !settings.timeouts.rollover.regulationtoOT)}
                   >
-                    {settings.timeouts.rollover.regulationtoOT ? 'On' : 'Off'}
+                    {settings.timeouts.rollover.regulationtoOT ? t('common', 'on') : t('common', 'off')}
                   </button>
                 </div>
               </div>
               <div className="setting-row">
-                <label>OT to OT</label>
+                <label>{t('settings', 'otToOT')}</label>
                 <div className="toggle-group">
                   <button
                     className={`btn btn-toggle ${settings.timeouts.rollover.OTtoOT ? 'active' : ''}`}
                     onClick={() => updateSetting('timeouts.rollover.OTtoOT', !settings.timeouts.rollover.OTtoOT)}
                   >
-                    {settings.timeouts.rollover.OTtoOT ? 'On' : 'Off'}
+                    {settings.timeouts.rollover.OTtoOT ? t('common', 'on') : t('common', 'off')}
                   </button>
                 </div>
               </div>
@@ -644,7 +646,7 @@ export default function GameSettingsScreen() {
           className="btn btn-primary btn-large"
           onClick={() => dispatch({ type: 'SET_STEP', step: 2 })}
         >
-          Next: Pick Teams
+          {t('settings', 'nextPickTeams')}
         </button>
       </div>
     </div>

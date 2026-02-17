@@ -1,4 +1,6 @@
 import { GameProvider, useGame } from './context/GameContext';
+import { LanguageProvider } from './context/LanguageContext';
+import LangToggle from './components/LangToggle';
 import HomeScreen from './screens/HomeScreen';
 import GameSettingsScreen from './screens/GameSettingsScreen';
 import TeamSelectScreen from './screens/TeamSelectScreen';
@@ -35,8 +37,11 @@ function AppContent() {
 
 export default function App() {
   return (
-    <GameProvider>
-      <AppContent />
-    </GameProvider>
+    <LanguageProvider>
+      <GameProvider>
+        <LangToggle />
+        <AppContent />
+      </GameProvider>
+    </LanguageProvider>
   );
 }

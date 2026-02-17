@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useGame, useGameDispatch } from '../context/GameContext';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function TipOffScreen() {
   const game = useGame();
   const dispatch = useGameDispatch();
+  const { t } = useTranslation();
   const isManual = game.settings.tipOff.possessionRule === 'manual';
   const [tipWinner, setTipWinner] = useState(null);
 
@@ -35,42 +37,41 @@ export default function TipOffScreen() {
             dispatch({ type: 'SET_STEP', step: 3 });
           }
         }}>
-          Back
+          {t('common', 'back')}
         </button>
-        <h2>Tip-Off</h2>
+        <h2>{t('tipoff', 'screenTitle')}</h2>
         <div className="header-spacer" />
       </div>
 
       <div className="tipoff-content">
         {!tipWinner ? (
           <>
-            <p className="tipoff-prompt">Who wins the tip?</p>
+            <p className="tipoff-prompt">{t('tipoff', 'whoWins')}</p>
             <div className="tipoff-choices">
               <button className="btn btn-tipoff" onClick={() => selectWinner('home')}>
                 <span className="tipoff-team-name">{game.homeTeam?.name}</span>
-                <span className="tipoff-label">Home</span>
+                <span className="tipoff-label">{t('common', 'home')}</span>
               </button>
               <button className="btn btn-tipoff" onClick={() => selectWinner('away')}>
                 <span className="tipoff-team-name">{game.awayTeam?.name}</span>
-                <span className="tipoff-label">Away</span>
+                <span className="tipoff-label">{t('common', 'away')}</span>
               </button>
             </div>
           </>
         ) : (
           <>
-            <p className="tipoff-prompt">Who gained possession?</p>
+            <p className="tipoff-prompt">{t('tipoff', 'whoPossession')}</p>
             <p className="tipoff-hint">
-              {tipWinner === 'home' ? game.homeTeam?.name : game.awayTeam?.name} won the tip.
-              Who ended up with the ball?
+              {t('tipoff', 'wonTipHint', { teamName: tipWinner === 'home' ? game.homeTeam?.name : game.awayTeam?.name })}
             </p>
             <div className="tipoff-choices">
               <button className="btn btn-tipoff" onClick={() => selectPossession('home')}>
                 <span className="tipoff-team-name">{game.homeTeam?.name}</span>
-                <span className="tipoff-label">Home</span>
+                <span className="tipoff-label">{t('common', 'home')}</span>
               </button>
               <button className="btn btn-tipoff" onClick={() => selectPossession('away')}>
                 <span className="tipoff-team-name">{game.awayTeam?.name}</span>
-                <span className="tipoff-label">Away</span>
+                <span className="tipoff-label">{t('common', 'away')}</span>
               </button>
             </div>
           </>

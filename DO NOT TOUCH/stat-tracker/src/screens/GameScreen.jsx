@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGame, useGameDispatch } from '../context/GameContext';
 import { syncLiveGame, saveEndGame } from '../data/api';
+import { useTranslation } from '../i18n/useTranslation';
 
 function formatClock(totalSeconds) {
   const m = Math.floor(totalSeconds / 60);
@@ -13,34 +14,10 @@ function formatQuarter(q) {
   return `OT${q - 4}`;
 }
 
-function actionLabel(points, made) {
-  return `${points}PT ${made ? 'MADE' : 'MISS'}`;
-}
-
-function pendingLabel(pending) {
-  if (!pending) return '';
-  if (pending.type === 'shot') return actionLabel(pending.points, pending.made);
-  const LABELS = {
-    rebound: 'REBOUND',
-    'rebound-offensive': 'OFF. REBOUND',
-    'rebound-defensive': 'DEF. REBOUND',
-    assist: 'ASSIST',
-    steal: 'STEAL',
-    block: 'BLOCK',
-    turnover: 'TURNOVER',
-    'foul-personal': 'PERSONAL FOUL',
-    'foul-technical': 'TECHNICAL FOUL',
-    'foul-flagrant': 'FLAGRANT FOUL',
-    'foul-offensive': 'OFFENSIVE FOUL',
-    substitution: 'SUBSTITUTION',
-    'late-add-sub-in': 'LATE ADD SUB IN',
-  };
-  return LABELS[pending.action] || pending.action?.toUpperCase() || '';
-}
-
 export default function GameScreen() {
   const game = useGame();
   const dispatch = useGameDispatch();
+  const { t } = useTranslation();
   const [pendingAction, setPendingAction] = useState(null);
   const [correctionMode, setCorrectionMode] = useState(false);
   const [clockEdit, setClockEdit] = useState(null); // null | { minutes, seconds }
@@ -59,6 +36,55 @@ export default function GameScreen() {
   const [saveError, setSaveError] = useState(null);
 
   const bs = game.boxScore;
+
+  // Translated labels for pending actions
+  const PENDING_LABELS = {
+    rebound: t('game', 'rebound'),
+    'rebound-offensive': t('game', 'offRebound'),
+    'rebound-defensive': t('game', 'defRebound'),
+    assist: t('game', 'assist'),
+    steal: t('game', 'steal'),
+    block: t('game', 'block'),
+    turnover: t('game', 'turnover'),
+    'foul-personal': t('game', 'personalFoul'),
+    'foul-technical': t('game', 'technicalFoul'),
+    'foul-flagrant': t('game', 'flagrantFoul'),
+    'foul-offensive': t('game', 'offensiveFoul'),
+    substitution: t('game', 'substitution'),
+    'late-add-sub-in': t('game', 'lateAddSubIn'),
+  };
+
+  function actionLabel(points, made) {
+    return `${points}PT ${made ? t('game', 'made') : t('game', 'miss')}`;
+  }
+
+  function pendingLabel(pending) {
+    if (!pending) return '';
+    if (pending.type === 'shot') return actionLabel(pending.points, pending.made);
+    return PENDING_LABELS[pending.action] || pending.action?.toUpperCase() || '';
+  }
+
+  // Translated sub-menu choices
+  const SUB_MENU_CHOICES = {
+    rebound: [
+      { action: 'rebound-offensive', label: t('game', 'offensive') },
+      { action: 'rebound-defensive', label: t('game', 'defensive') },
+    ],
+    foul: [
+      { action: 'foul-personal', label: t('game', 'personal') },
+      { action: 'foul-offensive', label: t('game', 'offensive') },
+      { action: 'foul-technical', label: t('game', 'technical') },
+      { action: 'foul-flagrant', label: t('game', 'flagrant') },
+    ],
+    turnover: [
+      { action: 'turnover-steal', label: t('game', 'stolen') },
+      { action: 'turnover-error', label: t('game', 'error') },
+    ],
+    timeout: [
+      { action: 'timeout-full', label: t('game', 'full'), timeoutType: 'full' },
+      { action: 'timeout-short', label: t('game', 'short'), timeoutType: 'short' },
+    ],
+  };
 
   // --- Live game sync (fire-and-forget POST to Cosmos) ---
   const shouldSync = useRef(false);
@@ -90,11 +116,11 @@ export default function GameScreen() {
     const homeScore = bs.teamInfo.home.score.current;
     const awayScore = bs.teamInfo.away.score.current;
     const isTied = homeScore === awayScore;
-    if (quarter >= 4 && !isTied) return 'FINAL';
-    if (quarter === 2) return '1ST HALF';
-    return `END ${formatQuarter(quarter)}`;
+    if (quarter >= 4 && !isTied) return t('game', 'final');
+    if (quarter === 2) return t('game', 'firstHalf');
+    return t('game', 'endQuarter', { quarter: formatQuarter(quarter) });
   })();
-  const isGameOver = periodOver && periodEndLabel === 'FINAL';
+  const isGameOver = periodOver && periodEndLabel === t('game', 'final');
 
   // Derived: is auto-stop currently active based on game settings + current period/time?
   const isAutoStopActive = (() => {
@@ -142,14 +168,14 @@ export default function GameScreen() {
   useEffect(() => {
     if (!isActive) return;
     const id = setInterval(() => {
-      const t = timeLeftRef.current;
-      if (t <= 0) {
+      const tl = timeLeftRef.current;
+      if (tl <= 0) {
         clearInterval(id);
         dispatch({ type: 'TOGGLE_CLOCK' });
         shouldSync.current = true;
         return;
       }
-      dispatch({ type: 'SET_CLOCK_TIME', timeLeft: t - 1 });
+      dispatch({ type: 'SET_CLOCK_TIME', timeLeft: tl - 1 });
     }, 1000);
     return () => clearInterval(id);
   }, [isActive, dispatch]);
@@ -408,7 +434,7 @@ export default function GameScreen() {
   function renderShotSection(side) {
     return (
       <div className="game-section">
-        <div className="section-label">SCORING</div>
+        <div className="section-label">{t('game', 'scoring')}</div>
         <div className="action-row">
           {[1, 2, 3].map((pts) => (
             <button
@@ -436,43 +462,43 @@ export default function GameScreen() {
   function renderStatSection(side) {
     return (
       <div className="game-section">
-        <div className="section-label">STATS</div>
+        <div className="section-label">{t('game', 'stats')}</div>
         <div className="action-row action-row-stats">
           <button
             className={`btn-action stat ${isStatActive(side, 'rebound') || isStatActive(side, 'rebound-offensive') || isStatActive(side, 'rebound-defensive') ? 'active' : ''} ${suggestRebound ? 'suggest' : ''}`}
             onClick={() => handleStatTap(side, 'rebound')}
           >
-            REBOUND
+            {t('game', 'rebound')}
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'assist') ? 'active' : ''} ${suggestAssist === side ? 'suggest' : ''}`}
             onClick={() => handleStatTap(side, 'assist')}
           >
-            ASSIST
+            {t('game', 'assist')}
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'steal') ? 'active' : ''} ${suggestSteal === side ? 'suggest' : ''}`}
             onClick={() => handleStatTap(side, 'steal')}
           >
-            STEAL
+            {t('game', 'steal')}
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'block') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'block')}
           >
-            BLOCK
+            {t('game', 'block')}
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'turnover') || isStatActive(side, 'turnover-steal') || isStatActive(side, 'turnover-error') ? 'active' : ''} ${suggestTurnover === side ? 'suggest' : ''}`}
             onClick={() => handleStatTap(side, 'turnover')}
           >
-            TURNOVER
+            {t('game', 'turnover')}
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'foul') || isStatActive(side, 'foul-personal') || isStatActive(side, 'foul-technical') || isStatActive(side, 'foul-flagrant') || isStatActive(side, 'foul-offensive') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'foul')}
           >
-            FOUL
+            {t('game', 'foul')}
           </button>
         </div>
       </div>
@@ -483,16 +509,16 @@ export default function GameScreen() {
     const toActive = timeoutCountdown?.side === side;
     return (
       <div className="game-section">
-        <div className="section-label">GAME</div>
+        <div className="section-label">{t('game', 'gameLabel')}</div>
         <div className="action-row action-row-mgmt">
           <button
             className={`btn-action mgmt ${isStatActive(side, 'timeout') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'timeout')}
           >
-            TIMEOUT
+            {t('game', 'timeout')}
             {toActive && (
               <span className="to-timer">
-                {timeoutCountdown.type === 'full' ? 'FULL' : 'SHORT'} {formatClock(timeoutCountdown.timeLeft)}
+                {timeoutCountdown.type === 'full' ? t('game', 'full') : t('game', 'short')} {formatClock(timeoutCountdown.timeLeft)}
               </span>
             )}
           </button>
@@ -500,39 +526,18 @@ export default function GameScreen() {
             className={`btn-action mgmt ${isStatActive(side, 'substitution') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'substitution')}
           >
-            SUBSTITUTION
+            {t('game', 'substitution')}
           </button>
           <button
             className={`btn-action mgmt ${isStatActive(side, 'late-add') ? 'active' : ''}`}
             onClick={() => { setLateAddNumbers({}); handleStatTap(side, 'late-add'); }}
           >
-            LATE ADD
+            {t('game', 'lateAdd')}
           </button>
         </div>
       </div>
     );
   }
-
-  const SUB_MENU_CHOICES = {
-    rebound: [
-      { action: 'rebound-offensive', label: 'OFFENSIVE' },
-      { action: 'rebound-defensive', label: 'DEFENSIVE' },
-    ],
-    foul: [
-      { action: 'foul-personal', label: 'PERSONAL' },
-      { action: 'foul-offensive', label: 'OFFENSIVE' },
-      { action: 'foul-technical', label: 'TECHNICAL' },
-      { action: 'foul-flagrant', label: 'FLAGRANT' },
-    ],
-    turnover: [
-      { action: 'turnover-steal', label: 'STOLEN' },
-      { action: 'turnover-error', label: 'ERROR' },
-    ],
-    timeout: [
-      { action: 'timeout-full', label: 'FULL', timeoutType: 'full' },
-      { action: 'timeout-short', label: 'SHORT', timeoutType: 'short' },
-    ],
-  };
 
   function renderPlayerCard(player, team, opts = {}) {
     const { selectable, onClick, highlighted, dimmed } = opts;
@@ -601,15 +606,15 @@ export default function GameScreen() {
       return (
         <div className="game-section game-section-players">
           <div className="selection-banner">
-            <span className="selection-banner-text">LATE ADD: SELECT PLAYER</span>
+            <span className="selection-banner-text">{t('game', 'lateAddSelect')}</span>
             <button className="btn btn-small" onClick={() => { setLateAddNumbers({}); cancelPending(); }}>
-              Cancel
+              {t('common', 'cancel')}
             </button>
           </div>
           {!hasEmptySlot ? (
-            <div className="late-add-full">Roster is full (12 players)</div>
+            <div className="late-add-full">{t('game', 'rosterFull')}</div>
           ) : available.length === 0 ? (
-            <div className="late-add-full">All roster players are already in the game</div>
+            <div className="late-add-full">{t('game', 'allInGame')}</div>
           ) : (
             <div className="late-add-list">
               {available.map((player) => {
@@ -631,7 +636,7 @@ export default function GameScreen() {
                       disabled={!num}
                       onClick={() => handleLateAdd(side, player)}
                     >
-                      ADD
+                      {t('game', 'add')}
                     </button>
                   </div>
                 );
@@ -647,9 +652,9 @@ export default function GameScreen() {
       return (
         <div className="game-section game-section-players">
           <div className="selection-banner">
-            <span className="selection-banner-text">LATE ADD SUB IN: SELECT PLAYER</span>
+            <span className="selection-banner-text">{t('game', 'lateAddSubInSelect')}</span>
             <button className="btn btn-small" onClick={() => cancelPending()}>
-              Cancel
+              {t('common', 'cancel')}
             </button>
           </div>
           <div className="player-grid">
@@ -660,7 +665,7 @@ export default function GameScreen() {
                 onClick: () => handleLateAddSubIn(side, actualIndex),
               });
             }) : (
-              <div className="sub-empty-bench">No bench players available</div>
+              <div className="sub-empty-bench">{t('game', 'noBenchAvailable')}</div>
             )}
           </div>
         </div>
@@ -675,8 +680,8 @@ export default function GameScreen() {
           <div className="selection-banner">
             <span className="selection-banner-text">
               {subStep === 1
-                ? 'SELECT: PLAYER OUT'
-                : `#${outPlayer?.number || '?'} ${outPlayer?.name} OUT → SELECT: PLAYER IN`}
+                ? t('game', 'selectPlayerOut')
+                : t('game', 'playerOutSelectIn', { number: outPlayer?.number || '?', name: outPlayer?.name })}
             </span>
             <button className="btn btn-small" onClick={() => {
               if (subStep === 2) {
@@ -685,11 +690,11 @@ export default function GameScreen() {
                 setPendingAction(null);
               }
             }}>
-              {subStep === 2 ? 'Back' : 'Cancel'}
+              {subStep === 2 ? t('common', 'back') : t('common', 'cancel')}
             </button>
           </div>
 
-          <div className="sub-section-label">ON COURT</div>
+          <div className="sub-section-label">{t('game', 'onCourt')}</div>
           <div className="player-grid">
             {courtPlayers.map((player) => {
               const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
@@ -703,7 +708,7 @@ export default function GameScreen() {
             })}
           </div>
 
-          <div className="sub-section-label">ON BENCH</div>
+          <div className="sub-section-label">{t('game', 'onBench')}</div>
           <div className="player-grid">
             {benchPlayers.length > 0 ? benchPlayers.map((player) => {
               const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
@@ -713,7 +718,7 @@ export default function GameScreen() {
                 dimmed: subStep === 1,
               });
             }) : (
-              <div className="sub-empty-bench">No bench players</div>
+              <div className="sub-empty-bench">{t('game', 'noBench')}</div>
             )}
           </div>
         </div>
@@ -722,14 +727,14 @@ export default function GameScreen() {
 
     return (
       <div className="game-section game-section-players">
-        <div className="section-label">PLAYERS</div>
+        <div className="section-label">{t('game', 'players')}</div>
         {isSelecting && (
           <div className="selection-banner">
             <span className="selection-banner-text">
-              {correctionMode ? 'CORRECT' : 'SELECT'}: {pendingLabel(pendingAction)}
+              {correctionMode ? t('game', 'correct') : t('game', 'select')}: {pendingLabel(pendingAction)}
             </span>
             <button className="btn btn-small" onClick={() => cancelPending()}>
-              Cancel
+              {t('common', 'cancel')}
             </button>
           </div>
         )}
@@ -771,8 +776,8 @@ export default function GameScreen() {
               className="player-card player-card-placeholder selectable"
               onClick={() => setPendingAction({ type: 'stat', side, action: 'late-add-sub-in' })}
             >
-              <span className="placeholder-label">LATE ADD</span>
-              <span className="placeholder-label">SUB IN</span>
+              <span className="placeholder-label">{t('game', 'lateAddLine1')}</span>
+              <span className="placeholder-label">{t('game', 'lateAddLine2')}</span>
             </div>
           )}
         </div>
@@ -893,7 +898,7 @@ export default function GameScreen() {
     return (
       <div className="screen endgame-screen">
         <div className="endgame-header">
-          <span className="endgame-label">FINAL</span>
+          <span className="endgame-label">{t('endgame', 'final')}</span>
           {otCount > 0 && <span className="endgame-ot">({otCount > 1 ? `${otCount}OT` : 'OT'})</span>}
         </div>
 
@@ -910,15 +915,14 @@ export default function GameScreen() {
         </div>
 
         <div className="endgame-body">
-          {/* Left half: Scoring by Period + Team Stats */}
           <div className="endgame-left">
             <div className="endgame-section">
-              <div className="endgame-section-title">SCORING BY PERIOD</div>
+              <div className="endgame-section-title">{t('endgame', 'scoringByPeriod')}</div>
               <div className="endgame-quarter-table">
                 <div className="eq-row eq-header">
                   <span className="eq-team-col"></span>
                   {periodLabels.map((l) => <span key={l} className="eq-cell">{l}</span>)}
-                  <span className="eq-cell eq-total">T</span>
+                  <span className="eq-cell eq-total">{t('endgame', 'totalCol')}</span>
                 </div>
                 {['home', 'away'].map((side) => (
                   <div key={side} className={`eq-row ${winner === side ? 'eq-winner' : ''}`}>
@@ -931,7 +935,7 @@ export default function GameScreen() {
             </div>
 
             <div className="endgame-section">
-              <div className="endgame-section-title">TEAM STATS</div>
+              <div className="endgame-section-title">{t('endgame', 'teamStats')}</div>
               <div className="endgame-team-stats">
                 {(() => {
                   const stats = [
@@ -950,7 +954,7 @@ export default function GameScreen() {
                     { label: 'STL', home: bs.teamInfo.home.stats.defense.steals, away: bs.teamInfo.away.stats.defense.steals },
                     { label: 'BLK', home: bs.teamInfo.home.stats.defense.blocks, away: bs.teamInfo.away.stats.defense.blocks },
                     { label: 'TO', home: bs.teamInfo.home.stats.turnovers, away: bs.teamInfo.away.stats.turnovers },
-                    { label: 'FOULS', home: bs.teamInfo.home.stats.fouls.total, away: bs.teamInfo.away.stats.fouls.total },
+                    { label: t('endgame', 'fouls'), home: bs.teamInfo.home.stats.fouls.total, away: bs.teamInfo.away.stats.fouls.total },
                   ];
                   return stats.map((s) => (
                     <div key={s.label} className="ets-row">
@@ -964,11 +968,10 @@ export default function GameScreen() {
             </div>
           </div>
 
-          {/* Right half: Player Box Scores */}
           <div className="endgame-right">
             {['home', 'away'].map((side) => (
               <div key={side} className="endgame-section">
-                <div className="endgame-section-title">{bs.teamInfo[side].name} — BOX SCORE</div>
+                <div className="endgame-section-title">{t('endgame', 'boxScore', { teamName: bs.teamInfo[side].name })}</div>
                 <div className="endgame-player-table-wrap">
                   <table className="endgame-player-table">
                     <thead>
@@ -1006,17 +1009,17 @@ export default function GameScreen() {
         </div>
 
         <div className="endgame-footer">
-          {saveStatus === 'saving' && <span className="save-indicator saving">Saving game...</span>}
-          {saveStatus === 'saved' && <span className="save-indicator saved">Game saved!</span>}
+          {saveStatus === 'saving' && <span className="save-indicator saving">{t('endgame', 'savingGame')}</span>}
+          {saveStatus === 'saved' && <span className="save-indicator saved">{t('endgame', 'gameSaved')}</span>}
           {saveStatus === 'error' && (
             <span className="save-indicator error">
-              Save failed{saveError ? `: ${saveError}` : ''}
-              <button className="btn btn-small" onClick={() => setSaveStatus('pending')}>RETRY</button>
+              {saveError ? t('endgame', 'saveFailedDetail', { error: saveError }) : t('endgame', 'saveFailed')}
+              <button className="btn btn-small" onClick={() => setSaveStatus('pending')}>{t('endgame', 'retry')}</button>
             </span>
           )}
-          <button className="btn btn-back-to-game" onClick={() => { dispatch({ type: 'UNDO_END_GAME' }); shouldSync.current = true; }}>BACK TO GAME</button>
-          <button className="btn" onClick={exportBoxScore}>EXPORT BOX SCORE</button>
-          <button className="btn btn-primary btn-large" onClick={() => dispatch({ type: 'RESET_GAME' })}>NEW GAME</button>
+          <button className="btn btn-back-to-game" onClick={() => { dispatch({ type: 'UNDO_END_GAME' }); shouldSync.current = true; }}>{t('endgame', 'backToGame')}</button>
+          <button className="btn" onClick={exportBoxScore}>{t('endgame', 'exportBoxScore')}</button>
+          <button className="btn btn-primary btn-large" onClick={() => dispatch({ type: 'RESET_GAME' })}>{t('endgame', 'newGame')}</button>
         </div>
       </div>
     );
@@ -1055,16 +1058,16 @@ export default function GameScreen() {
       {/* Scoreboard */}
       <div className="game-scoreboard">
         <div className="scoreboard-team home">
-          <span className={`scoreboard-badge ${homeInfo.inDoubleBonus ? 'active' : ''}`}>2x BONUS</span>
-          <span className={`scoreboard-badge ${homeInfo.inBonus && !homeInfo.inDoubleBonus ? 'active' : ''}`}>BONUS</span>
-          <span className="scoreboard-fouls">FOULS: {homeInfo.teamFouls}</span>
+          <span className={`scoreboard-badge ${homeInfo.inDoubleBonus ? 'active' : ''}`}>{t('game', 'doubleBonus')}</span>
+          <span className={`scoreboard-badge ${homeInfo.inBonus && !homeInfo.inDoubleBonus ? 'active' : ''}`}>{t('game', 'bonus')}</span>
+          <span className="scoreboard-fouls">{t('game', 'foulsLabel', { count: homeInfo.teamFouls })}</span>
           <span className="scoreboard-timeouts">
-            <span className="to-label">Timeouts:</span>
-            <span className={`to-count ${homeInfo.timeouts.full <= 0 ? 'depleted' : ''}`}>Full:{homeInfo.timeouts.full}</span>
+            <span className="to-label">{t('game', 'timeoutsLabel')}</span>
+            <span className={`to-count ${homeInfo.timeouts.full <= 0 ? 'depleted' : ''}`}>{t('game', 'fullCount', { count: homeInfo.timeouts.full })}</span>
             <span className="to-divider"></span>
-            <span className={`to-count ${homeInfo.timeouts.short <= 0 ? 'depleted' : ''}`}>Short:{homeInfo.timeouts.short}</span>
+            <span className={`to-count ${homeInfo.timeouts.short <= 0 ? 'depleted' : ''}`}>{t('game', 'shortCount', { count: homeInfo.timeouts.short })}</span>
           </span>
-          <span className={`scoreboard-poss ${arrow === 'home' ? 'active' : ''}`}>POSSESSION</span>
+          <span className={`scoreboard-poss ${arrow === 'home' ? 'active' : ''}`}>{t('game', 'possession')}</span>
           <span className="scoreboard-team-name">{bs.teamInfo.home.name}</span>
           <span className="scoreboard-score">{bs.teamInfo.home.score.current}</span>
         </div>
@@ -1095,7 +1098,7 @@ export default function GameScreen() {
                   shouldSync.current = true;
                   setClockEdit(null);
                   setCorrectionMode(false);
-                }}>SET</button>
+                }}>{t('game', 'set')}</button>
                 <button onClick={() => setClockEdit(null)}>X</button>
               </div>
             </div>
@@ -1125,34 +1128,34 @@ export default function GameScreen() {
               className="btn btn-small btn-end-game"
               onClick={() => { dispatch({ type: 'END_GAME' }); shouldSync.current = true; setSaveStatus('pending'); }}
             >
-              END GAME
+              {t('game', 'endGame')}
             </button>
           )}
         </div>
         <div className="scoreboard-team away">
           <span className="scoreboard-score">{bs.teamInfo.away.score.current}</span>
           <span className="scoreboard-team-name">{bs.teamInfo.away.name}</span>
-          <span className={`scoreboard-poss ${arrow === 'away' ? 'active' : ''}`}>POSSESSION</span>
+          <span className={`scoreboard-poss ${arrow === 'away' ? 'active' : ''}`}>{t('game', 'possession')}</span>
           <span className="scoreboard-timeouts">
-            <span className="to-label">Timeouts:</span>
-            <span className={`to-count ${awayInfo.timeouts.full <= 0 ? 'depleted' : ''}`}>Full:{awayInfo.timeouts.full}</span>
+            <span className="to-label">{t('game', 'timeoutsLabel')}</span>
+            <span className={`to-count ${awayInfo.timeouts.full <= 0 ? 'depleted' : ''}`}>{t('game', 'fullCount', { count: awayInfo.timeouts.full })}</span>
             <span className="to-divider"></span>
-            <span className={`to-count ${awayInfo.timeouts.short <= 0 ? 'depleted' : ''}`}>Short:{awayInfo.timeouts.short}</span>
+            <span className={`to-count ${awayInfo.timeouts.short <= 0 ? 'depleted' : ''}`}>{t('game', 'shortCount', { count: awayInfo.timeouts.short })}</span>
           </span>
-          <span className="scoreboard-fouls">FOULS: {awayInfo.teamFouls}</span>
-          <span className={`scoreboard-badge ${awayInfo.inBonus && !awayInfo.inDoubleBonus ? 'active' : ''}`}>BONUS</span>
-          <span className={`scoreboard-badge ${awayInfo.inDoubleBonus ? 'active' : ''}`}>2x BONUS</span>
+          <span className="scoreboard-fouls">{t('game', 'foulsLabel', { count: awayInfo.teamFouls })}</span>
+          <span className={`scoreboard-badge ${awayInfo.inBonus && !awayInfo.inDoubleBonus ? 'active' : ''}`}>{t('game', 'bonus')}</span>
+          <span className={`scoreboard-badge ${awayInfo.inDoubleBonus ? 'active' : ''}`}>{t('game', 'doubleBonus')}</span>
         </div>
       </div>
 
       {/* Clock status banner */}
       {!periodOver ? (
         <div className={`game-status-banner ${isActive ? 'running' : 'stopped'}`}>
-          {isActive ? 'CLOCK RUNNING' : 'CLOCK STOPPED'}
+          {isActive ? t('game', 'clockRunning') : t('game', 'clockStopped')}
         </div>
       ) : (
         <div className={`game-status-banner period-end ${isGameOver || isFinal ? 'final' : ''}`}>
-          {isFinal ? 'FINAL' : periodEndLabel}
+          {isFinal ? t('game', 'final') : periodEndLabel}
         </div>
       )}
 
@@ -1161,9 +1164,19 @@ export default function GameScreen() {
         {renderHalf('home')}
 
         <div className="game-divider">
+          {breakCountdown != null && breakCountdown > 0 && (
+            <button
+              className="btn-divider skip-break"
+              onClick={() => { breakRef.current = 0; setBreakCountdown(0); }}
+            >
+              <span>{t('game', 'skip')}</span>
+              <span>{t('game', 'breakLabel')}</span>
+            </button>
+          )}
+
           <button className={`btn-divider indicator ${isAutoStopActive ? 'on' : 'off'}`}>
-            <span>AUTO</span>
-            <span>STOP</span>
+            <span>{t('game', 'auto')}</span>
+            <span>{t('game', 'stop')}</span>
           </button>
 
           {periodOver && !isGameOver && !isFinal ? (
@@ -1171,28 +1184,28 @@ export default function GameScreen() {
               className="btn-clock next-period"
               onClick={() => { dispatch({ type: 'ADVANCE_QUARTER' }); dispatch({ type: 'TOGGLE_CLOCK' }); shouldSync.current = true; }}
             >
-              <span>START</span>
-              <span>NEXT</span>
-              <span>PERIOD</span>
+              <span>{t('game', 'start')}</span>
+              <span>{t('game', 'next')}</span>
+              <span>{t('game', 'period')}</span>
             </button>
           ) : (
             <button
               className={`btn-clock ${isActive ? 'running' : 'stopped'} ${suggestStopClock && isActive ? 'suggest' : ''}`}
               onClick={() => { if (!isActive && timeoutCountdown) setTimeoutCountdown(null); dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true; }}
             >
-              <span>{isActive ? 'STOP' : 'RUN'}</span>
-              <span>CLOCK</span>
+              <span>{isActive ? t('game', 'stop') : t('game', 'run')}</span>
+              <span>{t('game', 'clock')}</span>
             </button>
           )}
 
           <button className="btn-divider" onClick={() => { maybeAutoStop('Referee Timeout'); shouldSync.current = true; }}>
-            <span>REF</span>
-            <span>T.O.</span>
+            <span>{t('game', 'ref')}</span>
+            <span>{t('game', 'to')}</span>
           </button>
 
           <button className="btn-divider" onClick={() => { dispatch({ type: 'JUMP_BALL' }); maybeAutoStop('Jump Ball'); shouldSync.current = true; }}>
-            <span>JUMP</span>
-            <span>BALL</span>
+            <span>{t('game', 'jump')}</span>
+            <span>{t('game', 'ball')}</span>
           </button>
 
           <button
@@ -1203,8 +1216,8 @@ export default function GameScreen() {
               setClockEdit(null);
             }}
           >
-            <span>CORR</span>
-            <span>ECT</span>
+            <span>{t('game', 'corr')}</span>
+            <span>{t('game', 'ect')}</span>
           </button>
 
           {correctionMode && quarter > 1 && (
@@ -1216,8 +1229,8 @@ export default function GameScreen() {
                 setCorrectionMode(false);
               }}
             >
-              <span>PREV</span>
-              <span>PERIOD</span>
+              <span>{t('game', 'prev')}</span>
+              <span>{t('game', 'period')}</span>
             </button>
           )}
         </div>

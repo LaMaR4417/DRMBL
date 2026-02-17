@@ -247,6 +247,30 @@ body {
   color: var(--white);
 }
 
+/* ===== LANGUAGE TOGGLE ===== */
+.btn-lang-toggle {
+  position: fixed;
+  top: 6px;
+  right: 8px;
+  z-index: 9999;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--text-muted);
+  color: var(--text-secondary);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+}
+.btn-lang-toggle:hover {
+  border-color: var(--court-wood);
+  color: var(--court-wood);
+  background: rgba(200, 164, 92, 0.1);
+}
+
 /* ===== HOME SCREEN ===== */
 .home-screen {
   justify-content: center;
@@ -1779,6 +1803,14 @@ body {
 .btn-divider.indicator:hover {
   color: inherit;
   border-color: inherit;
+}
+
+/* ── Skip break button ── */
+.btn-divider.skip-break {
+  background: var(--court-wood);
+  color: var(--bg-page);
+  border-color: var(--court-wood);
+  font-weight: 700;
 }
 
 /* ── Correction mode ── */

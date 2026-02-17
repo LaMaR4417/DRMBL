@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useGame, useGameDispatch } from '../context/GameContext';
 import { fetchSeasons, fetchSeasonTeams, fetchTeamRoster, fetchLiveGames } from '../data/api';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function TeamSelectScreen() {
   const game = useGame();
   const dispatch = useGameDispatch();
+  const { t } = useTranslation();
 
   const [seasons, setSeasons] = useState([]);
   const [teams, setTeams] = useState([]);
@@ -66,7 +68,7 @@ export default function TeamSelectScreen() {
         setTeams(data.teams);
       })
       .catch((err) => {
-        setError('Failed to load teams. ' + err.message);
+        setError(t('teamSelect', 'failedTeams') + ' ' + err.message);
         setTeams([]);
       })
       .finally(() => {
@@ -112,7 +114,7 @@ export default function TeamSelectScreen() {
       dispatch({ type: 'SET_TEAM_ROSTER', side: 'away', roster: awayData.roster });
       dispatch({ type: 'SET_STEP', step: 3 });
     } catch (err) {
-      setError('Failed to load rosters. ' + err.message);
+      setError(t('teamSelect', 'failedRosters') + ' ' + err.message);
     } finally {
       setAdvancing(false);
     }
@@ -123,12 +125,12 @@ export default function TeamSelectScreen() {
       <div className="screen team-select-screen">
         <div className="screen-header">
           <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 1 })}>
-            Back
+            {t('common', 'back')}
           </button>
-          <h2>Pick Teams</h2>
+          <h2>{t('teamSelect', 'screenTitle')}</h2>
           <div className="header-spacer" />
         </div>
-        <div className="loading-message">Loading seasons...</div>
+        <div className="loading-message">{t('teamSelect', 'loadingSeasons')}</div>
       </div>
     );
   }
@@ -138,15 +140,15 @@ export default function TeamSelectScreen() {
       <div className="screen team-select-screen">
         <div className="screen-header">
           <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 1 })}>
-            Back
+            {t('common', 'back')}
           </button>
-          <h2>Pick Teams</h2>
+          <h2>{t('teamSelect', 'screenTitle')}</h2>
           <div className="header-spacer" />
         </div>
         <div className="error-message">
           <p>{error}</p>
           <button className="btn btn-primary" onClick={() => window.location.reload()}>
-            Retry
+            {t('common', 'retry')}
           </button>
         </div>
       </div>
@@ -158,12 +160,12 @@ export default function TeamSelectScreen() {
       <div className="screen team-select-screen">
         <div className="screen-header">
           <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 1 })}>
-            Back
+            {t('common', 'back')}
           </button>
-          <h2>Pick Teams</h2>
+          <h2>{t('teamSelect', 'screenTitle')}</h2>
           <div className="header-spacer" />
         </div>
-        <div className="empty-message">No seasons available.</div>
+        <div className="empty-message">{t('teamSelect', 'noSeasons')}</div>
       </div>
     );
   }
@@ -172,17 +174,17 @@ export default function TeamSelectScreen() {
     <div className="screen team-select-screen">
       <div className={`screen-header ${canProceed ? 'has-matchup' : ''}`}>
         <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 1 })}>
-          Back
+          {t('common', 'back')}
         </button>
         {canProceed ? (
           <div className="matchup-bar">
             <span className="matchup-bar-team home">{game.homeTeam.name}</span>
-            <span className="matchup-bar-vs">VS</span>
+            <span className="matchup-bar-vs">{t('teamSelect', 'vs')}</span>
             <span className="matchup-bar-team away">{game.awayTeam.name}</span>
           </div>
         ) : (
           <>
-            <h2>Pick Teams</h2>
+            <h2>{t('teamSelect', 'screenTitle')}</h2>
             <div className="header-spacer" />
           </>
         )}
@@ -209,14 +211,14 @@ export default function TeamSelectScreen() {
       )}
 
       {teamsLoading ? (
-        <div className="loading-message">Loading teams...</div>
+        <div className="loading-message">{t('teamSelect', 'loadingTeams')}</div>
       ) : teams.length === 0 ? (
-        <div className="empty-message">No teams registered for this season yet.</div>
+        <div className="empty-message">{t('teamSelect', 'noTeams')}</div>
       ) : (
         <div className="team-select-content">
           {/* Home Team */}
           <div className="team-select-half">
-            <h3 className="team-select-label">Home</h3>
+            <h3 className="team-select-label">{t('common', 'home')}</h3>
             <div className="team-list">
               {teams.map((team) => {
                 const isSelected = game.homeTeam?.teamID === team.teamID;
@@ -232,7 +234,7 @@ export default function TeamSelectScreen() {
                   >
                     <span className="team-slot">{team.slot}</span>
                     <span className="team-name">{team.name}</span>
-                    {isInGame && <span className="team-in-game-badge">IN GAME</span>}
+                    {isInGame && <span className="team-in-game-badge">{t('teamSelect', 'inGame')}</span>}
                   </button>
                 );
               })}
@@ -241,7 +243,7 @@ export default function TeamSelectScreen() {
 
           {/* Away Team */}
           <div className="team-select-half">
-            <h3 className="team-select-label">Away</h3>
+            <h3 className="team-select-label">{t('common', 'away')}</h3>
             <div className="team-list">
               {teams.map((team) => {
                 const isSelected = game.awayTeam?.teamID === team.teamID;
@@ -257,7 +259,7 @@ export default function TeamSelectScreen() {
                   >
                     <span className="team-slot">{team.slot}</span>
                     <span className="team-name">{team.name}</span>
-                    {isInGame && <span className="team-in-game-badge">IN GAME</span>}
+                    {isInGame && <span className="team-in-game-badge">{t('teamSelect', 'inGame')}</span>}
                   </button>
                 );
               })}
@@ -274,7 +276,7 @@ export default function TeamSelectScreen() {
           disabled={!canProceed || advancing}
           onClick={handleNext}
         >
-          {advancing ? 'Loading Rosters...' : 'Next: Check Attendance'}
+          {advancing ? t('teamSelect', 'loadingRosters') : t('teamSelect', 'nextCheckAttendance')}
         </button>
       </div>
     </div>

@@ -1,8 +1,10 @@
 import { useGame, useGameDispatch } from '../context/GameContext';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function AttendanceScreen() {
   const game = useGame();
   const dispatch = useGameDispatch();
+  const { t } = useTranslation();
 
   const homePresent = game.homeAttendance.size;
   const awayPresent = game.awayAttendance.size;
@@ -120,12 +122,10 @@ export default function AttendanceScreen() {
           <div className="attendance-team-header">
             <h3>{team.name}</h3>
           </div>
-          <div className="loading-message">Loading roster...</div>
+          <div className="loading-message">{t('attendance', 'loadingRoster')}</div>
         </div>
       );
     }
-
-    const allSelected = team.roster.every((p) => attendance.has(p.playerID));
 
     return (
       <div className="attendance-half">
@@ -133,10 +133,10 @@ export default function AttendanceScreen() {
           <h3>{team.name}</h3>
           <div className="attendance-actions">
             <button className="btn btn-small" onClick={() => selectAll(side)}>
-              Select All
+              {t('attendance', 'selectAll')}
             </button>
             <button className="btn btn-small" onClick={() => clearAll(side)}>
-              Clear All
+              {t('attendance', 'clearAll')}
             </button>
             <span className="attendance-count">{attendance.size}/{team.roster.length}</span>
           </div>
@@ -164,7 +164,7 @@ export default function AttendanceScreen() {
                   disabled={!canSetCaptain}
                   onClick={() => toggleCaptain(side, player.playerID)}
                 >
-                  C
+                  {t('attendance', 'captain')}
                 </button>
                 <button
                   tabIndex={-1}
@@ -172,7 +172,7 @@ export default function AttendanceScreen() {
                   disabled={!canSetStarter}
                   onClick={() => toggleStarter(side, player.playerID)}
                 >
-                  Starter
+                  {t('attendance', 'starter')}
                 </button>
                 <input
                   className="number-input"
@@ -190,7 +190,7 @@ export default function AttendanceScreen() {
           })}
         </div>
         {attendance.size > 12 && (
-          <p className="attendance-warning">Max 12 players per game. Currently: {attendance.size}</p>
+          <p className="attendance-warning">{t('attendance', 'maxPlayers', { count: attendance.size })}</p>
         )}
       </div>
     );
@@ -198,16 +198,16 @@ export default function AttendanceScreen() {
 
   function getFooterHint() {
     if (homePresent < 1 || awayPresent < 1) {
-      return 'Each team needs at least 1 player checked in';
+      return t('attendance', 'needPlayers');
     }
     if (!allNumbersAssigned('home') || !allNumbersAssigned('away')) {
-      return 'Every checked-in player needs a number assigned';
+      return t('attendance', 'needNumbers');
     }
     if (game.homeCaptain === null || game.awayCaptain === null) {
-      return 'Each team needs a captain selected';
+      return t('attendance', 'needCaptain');
     }
     if (homeStarters.size < homeStartersNeeded || awayStarters.size < awayStartersNeeded) {
-      return `Pick 5 starters per team (Home: ${homeStarters.size}/5, Away: ${awayStarters.size}/5)`;
+      return t('attendance', 'needStarters', { homeCount: homeStarters.size, awayCount: awayStarters.size });
     }
     return null;
   }
@@ -218,9 +218,9 @@ export default function AttendanceScreen() {
     <div className="screen attendance-screen">
       <div className="screen-header">
         <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 2 })}>
-          Back
+          {t('common', 'back')}
         </button>
-        <h2>Check Attendance</h2>
+        <h2>{t('attendance', 'screenTitle')}</h2>
         <div className="header-spacer" />
       </div>
 
@@ -236,7 +236,7 @@ export default function AttendanceScreen() {
           disabled={!canProceed}
           onClick={() => dispatch({ type: 'SET_STEP', step: 6 })}
         >
-          Next: Tip-Off
+          {t('attendance', 'nextTipOff')}
         </button>
         {!canProceed && footerHint && (
           <p className="footer-hint">{footerHint}</p>
