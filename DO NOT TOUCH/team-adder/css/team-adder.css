@@ -1,0 +1,335 @@
+/* ── TEAM ADDER: Admin Portal Styles ── */
+
+.admin-portal {
+    max-width: 720px;
+}
+
+.admin-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: #c8a45c;
+    background: rgba(200, 164, 92, 0.08);
+    border: 1px solid rgba(200, 164, 92, 0.2);
+    display: inline-block;
+    padding: 4px 16px;
+    margin: 0 auto 40px;
+    display: block;
+    text-align: center;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── Season Select Row ── */
+.season-select-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.season-select-row select {
+    flex: 1;
+}
+
+.btn-inline {
+    margin-top: 0;
+    white-space: nowrap;
+    padding: 12px 16px;
+    font-size: 13px;
+}
+
+/* ── Collapsible ── */
+.collapsible {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.collapsible.hidden {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ── Form Subsection ── */
+.form-subsection {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 18px;
+    padding-top: 18px;
+}
+
+/* ── Admin Submit Button ── */
+.btn-admin {
+    background: #c8a45c;
+    color: #0d0d0d;
+    font-weight: 700;
+}
+
+.btn-admin:hover {
+    background: #b89445;
+}
+
+.btn-admin:disabled {
+    background: rgba(200, 164, 92, 0.3);
+    color: rgba(0, 0, 0, 0.5);
+    cursor: not-allowed;
+}
+
+/* ── Slot Grid ── */
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.slot-card {
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.slot-letter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.3);
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.slot-team-name {
+    color: rgba(255, 255, 255, 0.6);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.slot-card.occupied {
+    border-color: rgba(46, 125, 50, 0.3);
+    background: rgba(46, 125, 50, 0.05);
+}
+
+.slot-card.occupied .slot-letter {
+    color: #4caf50;
+}
+
+.slot-card.occupied .slot-team-name {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.slot-card.open {
+    border-color: rgba(200, 164, 92, 0.2);
+    border-style: dashed;
+}
+
+.slot-card.open .slot-team-name {
+    color: rgba(200, 164, 92, 0.4);
+    font-style: italic;
+}
+
+/* ── Playoff Round Rows ── */
+.playoff-round-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.playoff-round-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.playoff-round-row input:focus {
+    border-color: var(--court-wood);
+}
+
+.playoff-round-row .playoff-round-name {
+    flex: 2;
+}
+
+.playoff-remove {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+}
+
+/* ── Player Roster Row (admin version) ── */
+.admin-roster-row {
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-roster-row:last-child {
+    margin-bottom: 0;
+}
+
+.admin-roster-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.admin-roster-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.3);
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.admin-roster-name-input {
+    flex: 1;
+}
+
+.admin-roster-remove {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.admin-roster-remove:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.admin-roster-details {
+    display: none;
+    margin-left: 36px;
+}
+
+.admin-roster-details.expanded {
+    display: block;
+}
+
+.admin-roster-toggle {
+    background: none;
+    border: none;
+    color: rgba(200, 164, 92, 0.6);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 4px 0;
+    margin-left: 36px;
+    transition: color 0.2s;
+}
+
+.admin-roster-toggle:hover {
+    color: var(--court-wood);
+}
+
+.admin-roster-details .form-row {
+    gap: 10px;
+}
+
+.admin-roster-details .form-group {
+    margin-bottom: 10px;
+}
+
+.admin-roster-details .form-group label {
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+.admin-roster-details .form-group input,
+.admin-roster-details .form-group select {
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+/* ── Status Message ── */
+.status-message {
+    margin-top: 20px;
+    padding: 16px;
+    text-align: center;
+    font-size: 14px;
+    transition: opacity 0.3s;
+}
+
+.status-message.hidden {
+    display: none;
+}
+
+.status-message.success {
+    background: rgba(46, 125, 50, 0.1);
+    border: 1px solid rgba(46, 125, 50, 0.3);
+    color: #4caf50;
+}
+
+.status-message.error {
+    background: rgba(201, 48, 44, 0.1);
+    border: 1px solid rgba(201, 48, 44, 0.3);
+    color: var(--accent);
+}
+
+/* ── Number input styling ── */
+input[type="number"] {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
+input[type="number"]:focus {
+    border-color: var(--court-wood);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .season-select-row {
+        flex-direction: column;
+    }
+
+    .btn-inline {
+        width: 100%;
+    }
+
+    .slot-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    }
+
+    .playoff-round-row {
+        flex-wrap: wrap;
+    }
+
+    .playoff-round-row .playoff-round-name {
+        flex-basis: 100%;
+    }
+}
