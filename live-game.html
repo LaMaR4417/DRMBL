@@ -34,38 +34,36 @@
             <span id="live-header-sub" class="live-header-sub"></span>
         </div>
 
-        <!-- League badge -->
-        <div id="live-league-badge" class="live-league-badge hidden"></div>
-
-        <!-- Score row -->
-        <div class="live-score-row">
-            <div class="live-team">
+        <!-- Scoreboard -->
+        <div class="live-scoreboard">
+            <div class="live-teams-row">
                 <span class="live-team-name" id="home-name">HOME</span>
-                <span class="live-team-score" id="home-score">0</span>
-            </div>
-            <div class="live-clock-inline">
-                <span class="live-quarter" id="live-quarter">Q1</span>
-                <span class="live-clock" id="live-clock">10:00</span>
-            </div>
-            <div class="live-team">
-                <span class="live-team-score" id="away-score">0</span>
+                <span class="live-league-badge" id="live-league-badge"></span>
                 <span class="live-team-name" id="away-name">AWAY</span>
+            </div>
+            <div class="live-score-row">
+                <span class="live-team-score" id="home-score">0</span>
+                <div class="live-clock-inline">
+                    <span class="live-quarter" id="live-quarter">Q1</span>
+                    <span class="live-clock" id="live-clock">10:00</span>
+                </div>
+                <span class="live-team-score" id="away-score">0</span>
             </div>
         </div>
 
-        <!-- Body: left (period scores + team stats) | right (player box scores) -->
+        <!-- Body: top row (period scores + team stats) | bottom row (box scores side by side) -->
         <div class="live-body">
-            <div class="live-left">
-                <div class="live-section">
+            <div class="live-row">
+                <div class="live-section live-section-half">
                     <div class="live-section-title">SCORING BY PERIOD</div>
                     <div id="quarter-scores"></div>
                 </div>
-                <div class="live-section">
+                <div class="live-section live-section-half">
                     <div class="live-section-title">TEAM STATS</div>
                     <div id="team-stats"></div>
                 </div>
             </div>
-            <div class="live-right" id="player-stats"></div>
+            <div class="live-row" id="player-stats"></div>
         </div>
     </section>
 

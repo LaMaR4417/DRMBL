@@ -1,5 +1,5 @@
 (function () {
-    var POLL_INTERVAL = 3000;
+    var POLL_INTERVAL = 1000;
 
     var pollTimer = null;
     var clockTimer = null;
@@ -235,14 +235,9 @@
             els.headerSub.textContent = formatQuarter(state.currentQuarter);
         }
 
-        // League badge
+        // League badge (centered between team names)
         var league = bs.league;
-        if (league && league.abbreviation) {
-            els.leagueBadge.textContent = league.abbreviation;
-            els.leagueBadge.classList.remove('hidden');
-        } else {
-            els.leagueBadge.classList.add('hidden');
-        }
+        els.leagueBadge.textContent = (league && league.abbreviation) ? league.abbreviation : '';
 
         // Score row
         els.homeName.textContent = home.name;
@@ -347,7 +342,11 @@
             { label: 'FOULS', home: home.fouls.total, away: away.fouls.total }
         ];
 
-        var html = '';
+        var html = '<div class="ets-row ets-header">';
+        html += '<span class="ets-val home ets-team-name">' + bs.teamInfo.home.name + '</span>';
+        html += '<span class="ets-label"></span>';
+        html += '<span class="ets-val away ets-team-name">' + bs.teamInfo.away.name + '</span>';
+        html += '</div>';
         for (var i = 0; i < rows.length; i++) {
             html += '<div class="ets-row">';
             html += '<span class="ets-val home">' + rows[i].home + '</span>';
@@ -371,7 +370,7 @@
                 .filter(function (p) { return p.playerID !== null; })
                 .sort(function (a, b) { return b.stats.offense.points - a.stats.offense.points; });
 
-            html += '<div class="live-section">';
+            html += '<div class="live-section live-section-half">';
             html += '<div class="live-section-title">' + team.name + ' \u2014 BOX SCORE</div>';
             html += '<div class="live-player-table-wrap">';
             html += '<table class="live-player-table">';

@@ -104,6 +104,17 @@ export default function GameScreen() {
     syncLiveGame(bs);
   }, [bs]);
 
+  // Periodic sync while clock is running (keeps live page clock aligned)
+  const bsRef = useRef(bs);
+  useEffect(() => { bsRef.current = bs; }, [bs]);
+  useEffect(() => {
+    if (!bs.gameInfo.state.active) return;
+    const id = setInterval(() => {
+      if (bsRef.current) syncLiveGame(bsRef.current);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [bs.gameInfo.state.active]);
+
   const isActive = bs.gameInfo.state.active;
   const timeLeft = bs.gameInfo.state.clock.timeLeft;
   const quarter = bs.gameInfo.state.currentQuarter;
