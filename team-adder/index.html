@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Adder - DRMBL Admin</title>
+    <link rel="icon" href="/assets/favicon.ico">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/form.css">
+    <link rel="stylesheet" href="css/team-adder.css">
+    <script src="/js/skeleton.js"></script>
+</head>
+<body>
+
+    <section class="form-page">
+        <div class="form-inner admin-portal">
+            <h1 class="form-title">Team Adder</h1>
+            <hr class="section-rule">
+            <p class="form-subtitle admin-badge">ADMIN PORTAL</p>
+
+            <!-- ═══════ SECTION 1: SEASON ═══════ -->
+            <fieldset class="form-section" id="season-section">
+                <legend>Season</legend>
+
+                <div class="form-group">
+                    <label for="season-select">Select Season</label>
+                    <div class="season-select-row">
+                        <select id="season-select">
+                            <option value="">Loading seasons...</option>
+                        </select>
+                        <button type="button" id="btn-new-season" class="btn-secondary btn-inline">+ New Season</button>
+                    </div>
+                </div>
+
+                <!-- New Season Form (hidden by default) -->
+                <div id="new-season-form" class="collapsible hidden">
+                    <div class="form-subsection">
+                        <p class="form-note form-note-highlight">Create a new season</p>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="season-name">Season Name <span class="req">*</span></label>
+                                <input type="text" id="season-name" placeholder="e.g. Spring 2026">
+                            </div>
+                            <div class="form-group">
+                                <label for="season-division">Division <span class="req">*</span></label>
+                                <input type="text" id="season-division" placeholder="e.g. Mens">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="season-team-count">Number of Teams <span class="req">*</span></label>
+                                <input type="number" id="season-team-count" min="2" max="26" value="12">
+                            </div>
+                            <div class="form-group">
+                                <label for="season-max-roster">Max Players per Team <span class="req">*</span></label>
+                                <input type="number" id="season-max-roster" min="1" max="30" value="12">
+                            </div>
+                            <div class="form-group">
+                                <label for="season-weeks">Regular Season Weeks <span class="req">*</span></label>
+                                <input type="number" id="season-weeks" min="1" max="50" value="10">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="season-start-mm">Start Date <span class="req">*</span></label>
+                                <div class="dob-group">
+                                    <input type="text" id="season-start-mm" placeholder="MM" maxlength="2" inputmode="numeric">
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" id="season-start-dd" placeholder="DD" maxlength="2" inputmode="numeric">
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" id="season-start-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="season-end-mm">End Date</label>
+                                <div class="dob-group">
+                                    <input type="text" id="season-end-mm" placeholder="MM" maxlength="2" inputmode="numeric">
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" id="season-end-dd" placeholder="DD" maxlength="2" inputmode="numeric">
+                                    <span class="dob-sep">/</span>
+                                    <input type="text" id="season-end-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="season-week-interval">Days Between Game Days</label>
+                                <input type="number" id="season-week-interval" min="1" max="30" value="7">
+                            </div>
+                            <div class="form-group">
+                                <label for="season-game-start">First Game Time</label>
+                                <input type="text" id="season-game-start" value="8:00 AM" placeholder="8:00 AM">
+                            </div>
+                            <div class="form-group">
+                                <label for="season-game-interval">Minutes Between Games</label>
+                                <input type="number" id="season-game-interval" min="15" max="180" value="60">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="season-break-weeks">Break Weeks (comma-separated week numbers)</label>
+                            <input type="text" id="season-break-weeks" placeholder="e.g. 5, 8">
+                        </div>
+
+                        <!-- Playoffs -->
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="season-playoffs-enabled" checked>
+                                <span>Include Playoffs</span>
+                            </label>
+                        </div>
+
+                        <div id="playoff-config" class="collapsible">
+                            <div class="form-group">
+                                <label>Playoff Rounds</label>
+                                <div id="playoff-rounds-list">
+                                    <div class="playoff-round-row">
+                                        <input type="text" class="playoff-round-name" value="Semifinal 1" placeholder="Round name">
+                                        <input type="text" class="playoff-round-away" value="#4 Seed" placeholder="Away">
+                                        <input type="text" class="playoff-round-home" value="#1 Seed" placeholder="Home">
+                                        <button type="button" class="link-remove playoff-remove">&times;</button>
+                                    </div>
+                                    <div class="playoff-round-row">
+                                        <input type="text" class="playoff-round-name" value="Semifinal 2" placeholder="Round name">
+                                        <input type="text" class="playoff-round-away" value="#3 Seed" placeholder="Away">
+                                        <input type="text" class="playoff-round-home" value="#2 Seed" placeholder="Home">
+                                        <button type="button" class="link-remove playoff-remove">&times;</button>
+                                    </div>
+                                    <div class="playoff-round-row">
+                                        <input type="text" class="playoff-round-name" value="3rd Place" placeholder="Round name">
+                                        <input type="text" class="playoff-round-away" value="Loser SF1" placeholder="Away">
+                                        <input type="text" class="playoff-round-home" value="Loser SF2" placeholder="Home">
+                                        <button type="button" class="link-remove playoff-remove">&times;</button>
+                                    </div>
+                                    <div class="playoff-round-row">
+                                        <input type="text" class="playoff-round-name" value="Championship" placeholder="Round name">
+                                        <input type="text" class="playoff-round-away" value="Winner SF1" placeholder="Away">
+                                        <input type="text" class="playoff-round-home" value="Winner SF2" placeholder="Home">
+                                        <button type="button" class="link-remove playoff-remove">&times;</button>
+                                    </div>
+                                </div>
+                                <button type="button" id="btn-add-playoff-round" class="btn-secondary">+ Add Round</button>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="playoff-date-mm">Playoff Date (auto if blank)</label>
+                                    <div class="dob-group">
+                                        <input type="text" id="playoff-date-mm" placeholder="MM" maxlength="2" inputmode="numeric">
+                                        <span class="dob-sep">/</span>
+                                        <input type="text" id="playoff-date-dd" placeholder="DD" maxlength="2" inputmode="numeric">
+                                        <span class="dob-sep">/</span>
+                                        <input type="text" id="playoff-date-yyyy" placeholder="YYYY" maxlength="4" inputmode="numeric">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="playoff-game-interval">Minutes Between Playoff Games</label>
+                                    <input type="number" id="playoff-game-interval" min="15" max="180" value="90">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btn-create-season" class="btn-submit btn-admin">Create Season</button>
+                    </div>
+                </div>
+
+                <!-- Slot Overview (shown after season selected) -->
+                <div id="slot-overview" class="hidden">
+                    <p class="form-note form-note-highlight" id="slot-overview-label">Team Slots</p>
+                    <p class="form-note">Click an open slot to add a new team, or click a filled slot to edit.</p>
+                    <div id="slot-grid" class="slot-grid"></div>
+                </div>
+            </fieldset>
+
+            <!-- ═══════ MODE BANNER ═══════ -->
+            <div id="mode-banner" class="mode-banner hidden">
+                <span id="mode-banner-text"></span>
+                <button type="button" id="mode-banner-cancel" class="mode-banner-cancel">&times; Cancel</button>
+            </div>
+
+            <!-- ═══════ SECTION 2: TEAM INFO ═══════ -->
+            <fieldset class="form-section hidden" id="team-section">
+                <legend id="team-section-legend">Team Info</legend>
+
+                <div class="form-group">
+                    <label for="team-name">Team Name <span class="req">*</span></label>
+                    <input type="text" id="team-name">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="owner-name">Owner Name <span class="req">*</span></label>
+                        <input type="text" id="owner-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="owner-phone">Owner Phone</label>
+                        <input type="tel" id="owner-phone">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="owner-email">Owner Email</label>
+                    <input type="email" id="owner-email">
+                </div>
+            </fieldset>
+
+            <!-- ═══════ SECTION 3: ROSTER ═══════ -->
+            <fieldset class="form-section hidden" id="roster-section">
+                <legend>Roster</legend>
+                <p class="form-note" id="roster-note">Add players to the team. Only name is required.</p>
+
+                <div id="roster-list"></div>
+
+                <button type="button" id="btn-add-player" class="btn-secondary">+ Add Player</button>
+            </fieldset>
+
+            <!-- ═══════ SUBMIT ═══════ -->
+            <div class="hidden" id="submit-section">
+                <button type="button" id="btn-submit-team" class="btn-submit btn-admin">Add Team to Season</button>
+            </div>
+
+            <!-- ═══════ STATUS ═══════ -->
+            <div id="status-message" class="status-message hidden"></div>
+        </div>
+    </section>
+
+    <script src="js/team-adder.js"></script>
+
+</body>
+</html>

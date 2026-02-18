@@ -1,8 +1,6 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/tracker/(.*)", "destination": "/tracker/index.html" },
-    { "source": "/team-adder", "destination": "/DO NOT TOUCH/team-adder/index.html" },
-    { "source": "/team-adder/(.*)", "destination": "/DO NOT TOUCH/team-adder/$1" }
+    { "source": "/tracker/(.*)", "destination": "/tracker/index.html" }
   ]
 }
