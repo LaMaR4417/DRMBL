@@ -60,7 +60,7 @@
 
     function loadSeasons() {
         seasonSelect.innerHTML = '<option value="">Loading...</option>';
-        fetch('/api/admin/seasons')
+        fetch('/api/admin?action=seasons')
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (!data.success || !data.seasons) {
@@ -216,7 +216,7 @@
         btnSubmitTeam.disabled = true;
 
         // Fetch team data
-        var url = '/api/admin/team?id=' + encodeURIComponent(teamId) + '&season=' + encodeURIComponent(state.selectedSeason.id);
+        var url = '/api/admin?action=team&id=' + encodeURIComponent(teamId) + '&season=' + encodeURIComponent(state.selectedSeason.id);
         fetch(url)
             .then(function (res) { return res.json(); })
             .then(function (data) {
@@ -449,7 +449,7 @@
         btnCreateSeason.disabled = true;
         btnCreateSeason.textContent = 'CREATING...';
 
-        fetch('/api/admin/create-season', {
+        fetch('/api/admin?action=create-season', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -712,7 +712,7 @@
         btnSubmitTeam.disabled = true;
         btnSubmitTeam.textContent = 'ADDING TEAM...';
 
-        fetch('/api/admin/add-team', {
+        fetch('/api/admin?action=add-team', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -751,7 +751,7 @@
         btnSubmitTeam.disabled = true;
         btnSubmitTeam.textContent = 'SAVING...';
 
-        fetch('/api/admin/edit-team', {
+        fetch('/api/admin?action=edit-team', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
