@@ -1,0 +1,261 @@
+/* ── BOX SCORES PAGE ── */
+
+/* Hero */
+.bs-hero {
+    padding: 200px 20px 60px;
+    text-align: center;
+    background: #0a0602;
+}
+
+.bs-hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 8vw, 64px);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.bs-hero-sub {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.5);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* ── FILTER BAR ── */
+.bs-filter-bar {
+    position: sticky;
+    top: 53px;
+    z-index: 90;
+    background: rgba(17, 17, 17, 0.95);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bs-filter-inner {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.bs-filter-inner::-webkit-scrollbar {
+    display: none;
+}
+
+/* Season dropdown */
+.bs-season-select {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    background: transparent;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 14px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+}
+
+.bs-season-select option {
+    background: #111;
+    color: #fff;
+}
+
+/* Week tabs */
+.bs-week-tabs {
+    display: flex;
+    gap: 0;
+    min-width: max-content;
+}
+
+.bs-week-tab {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 14px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.bs-week-tab:hover {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.bs-week-tab.active {
+    color: var(--white);
+    border-bottom-color: var(--accent);
+}
+
+/* ── EMPTY STATE ── */
+.bs-empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 16px;
+    background: #0d0d0d;
+}
+
+.bs-empty.hidden {
+    display: none;
+}
+
+/* ── GAME CARDS LIST ── */
+.bs-game-list {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    background: #0d0d0d;
+}
+
+.bs-game-list.hidden {
+    display: none;
+}
+
+.bs-week-group {
+    margin-bottom: 30px;
+}
+
+.bs-week-group:last-child {
+    margin-bottom: 0;
+}
+
+.bs-week-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bs-games-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.bs-game-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 24px;
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.bs-game-card:hover {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.bs-game-card.selected {
+    border-color: var(--court-wood);
+    background: #1c1408;
+}
+
+.bs-game-card-badge {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.bs-game-card-teams {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.bs-game-card-team {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.bs-game-card-team.winner {
+    color: #fff;
+}
+
+.bs-game-card-vs {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.bs-game-card-score {
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: #fff;
+}
+
+/* ── BOX SCORE DETAIL ── */
+#bs-detail.live-game-section {
+    padding-top: 0;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .bs-hero {
+        padding: 180px 16px 40px;
+    }
+
+    .bs-filter-inner {
+        padding: 0 12px;
+    }
+
+    .bs-season-select {
+        font-size: 13px;
+        padding: 12px 10px;
+    }
+
+    .bs-week-tab {
+        font-size: 13px;
+        padding: 12px 10px;
+    }
+
+    .bs-game-list {
+        padding: 20px 12px;
+    }
+
+    .bs-game-card {
+        min-width: 0;
+        max-width: none;
+        flex: 1 1 100%;
+        padding: 12px 16px;
+    }
+
+    .bs-game-card-teams {
+        font-size: 14px;
+    }
+
+    .bs-game-card-score {
+        font-size: 18px;
+    }
+}

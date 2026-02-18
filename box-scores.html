@@ -8,20 +8,80 @@
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="stylesheet" href="css/skeleton.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/placeholder.css">
+    <link rel="stylesheet" href="css/live-game.css">
+    <link rel="stylesheet" href="css/box-scores.css">
     <script src="js/skeleton.js"></script>
 </head>
 <body>
 
-    <section class="placeholder-page">
-        <div class="placeholder-content">
-            <div class="placeholder-icon">&#128203;</div>
-            <h1>Box Scores</h1>
-            <p>This page is under construction.</p>
-            <p class="placeholder-sub">Full game box scores and stat breakdowns are coming soon.</p>
-            <a href="index.html" class="hero-cta">Back to Home</a>
+    <!-- Hero -->
+    <section class="bs-hero">
+        <h1 class="bs-hero-title">Box Scores</h1>
+        <p class="bs-hero-sub">Browse completed game stats and box scores.</p>
+    </section>
+
+    <!-- Filter bar: season dropdown + week tabs -->
+    <nav class="bs-filter-bar" id="bs-filter-bar">
+        <div class="bs-filter-inner">
+            <select id="bs-season-select" class="bs-season-select" title="Select season">
+                <option value="">Loading...</option>
+            </select>
+            <div class="bs-week-tabs" id="bs-week-tabs"></div>
+        </div>
+    </nav>
+
+    <!-- Empty state -->
+    <section id="bs-empty" class="bs-empty">
+        <p>No completed games yet.</p>
+    </section>
+
+    <!-- Game cards list -->
+    <section id="bs-game-list" class="bs-game-list hidden"></section>
+
+    <!-- Full box score display (hidden until a game is clicked) -->
+    <section id="bs-detail" class="live-game-section hidden">
+
+        <!-- Scoreboard (reuses live-game classes, no status header) -->
+        <div class="live-scoreboard">
+            <div class="live-score-row">
+                <div class="live-team-side home">
+                    <span class="live-team-name" id="bs-home-name">HOME</span>
+                    <span class="live-team-score" id="bs-home-score">0</span>
+                </div>
+                <div class="live-clock-inline">
+                    <span class="live-league-badge" id="bs-league-badge"></span>
+                    <span class="live-quarter" id="bs-quarter">FINAL</span>
+                </div>
+                <div class="live-team-side away">
+                    <span class="live-team-score" id="bs-away-score">0</span>
+                    <span class="live-team-name" id="bs-away-name">AWAY</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body: two columns (same as live-game) -->
+        <div class="live-body">
+            <div class="live-col live-col-left">
+                <div class="live-section">
+                    <div class="live-section-title">SCORING BY PERIOD</div>
+                    <div id="bs-quarter-scores"></div>
+                </div>
+                <div class="live-section">
+                    <div class="live-section-title">TEAM STATS</div>
+                    <div id="bs-team-stats"></div>
+                </div>
+            </div>
+            <div class="live-col live-col-right">
+                <div class="live-section" id="bs-away-player-stats"></div>
+                <div class="live-section" id="bs-home-player-stats"></div>
+            </div>
         </div>
     </section>
 
+    <footer>
+        &copy; 2026 Del Rio Men's Basketball League
+    </footer>
+
+    <script src="js/box-scores.js"></script>
 </body>
 </html>
