@@ -424,7 +424,7 @@ async function handleAddTeam(req, res) {
         if (body.slot) {
             for (var i = 0; i < seasonDoc.teams.length; i++) {
                 if (seasonDoc.teams[i].slot === body.slot) {
-                    if (seasonDoc.teams[i].teamID) {
+                    if (seasonDoc.teams[i].teamID && !body.force) {
                         return res.status(409).json({ error: "Slot " + body.slot + " is already taken by " + seasonDoc.teams[i].name });
                     }
                     targetSlot = body.slot;

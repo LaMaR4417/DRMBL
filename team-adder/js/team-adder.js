@@ -218,15 +218,27 @@
         // Fetch team data
         var url = '/api/admin?action=team&id=' + encodeURIComponent(teamId) + '&season=' + encodeURIComponent(state.selectedSeason.id);
         fetch(url)
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (!data.success || !data.team) {
-                    showStatus('Error: ' + (data.error || 'Failed to load team'), 'error');
+            .then(function (res) {
+                return res.json().then(function (data) { return { status: res.status, data: data }; });
+            })
+            .then(function (result) {
+                if (result.status === 404 || !result.data.success || !result.data.team) {
+                    // Team document doesn't exist — fall back to add mode with pre-filled data
                     exitMode();
+                    enterAddMode(slotLetter);
+
+                    // Pre-fill from the team ID (format: "TeamName - OwnerName")
+                    var parts = teamId.split(' - ');
+                    var teamName = parts.length > 0 ? parts[0] : '';
+                    var ownerName = parts.length > 1 ? parts.slice(1).join(' - ') : '';
+                    document.getElementById('team-name').value = teamName;
+                    document.getElementById('owner-name').value = ownerName;
+
+                    showStatus('Team document not found in database. You can create it by filling in the details and submitting.', 'error');
                     return;
                 }
-                populateTeamForm(data.team);
-                modeBannerText.textContent = 'Editing: ' + data.team.name + ' (Slot ' + slotLetter + ')';
+                populateTeamForm(result.data.team);
+                modeBannerText.textContent = 'Editing: ' + result.data.team.name + ' (Slot ' + slotLetter + ')';
                 btnSubmitTeam.disabled = false;
                 teamSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             })
@@ -697,6 +709,17 @@
     });
 
     function submitAddTeam(teamName, ownerName, players) {
+        // Check if slot is already occupied (missing team doc scenario)
+        var slotOccupied = false;
+        if (state.selectedSeason && state.selectedSeason.teams) {
+            for (var i = 0; i < state.selectedSeason.teams.length; i++) {
+                if (state.selectedSeason.teams[i].slot === state.selectedSlot && state.selectedSeason.teams[i].teamID) {
+                    slotOccupied = true;
+                    break;
+                }
+            }
+        }
+
         var payload = {
             seasonId: state.selectedSeason.id,
             teamName: teamName,
@@ -708,6 +731,7 @@
             players: players,
             slot: state.selectedSlot
         };
+        if (slotOccupied) payload.force = true;
 
         btnSubmitTeam.disabled = true;
         btnSubmitTeam.textContent = 'ADDING TEAM...';
