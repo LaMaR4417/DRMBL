@@ -185,6 +185,7 @@
         show(teamSection);
         show(rosterSection);
         show(submitSection);
+        btnSubmitTeam.disabled = false;
 
         teamSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
