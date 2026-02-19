@@ -19,7 +19,7 @@
         "teams": DEFAULT_TEAMS,
         "weeks": [
             {
-                "week": 1, "date": "2026-04-05", "label": "Week 1",
+                "week": 1, "date": "TBD", "label": "Week 1", "sponsor": "Walmart",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "A" },
                     { "time": "9:00 AM",  "away": "B", "home": "K" },
@@ -30,7 +30,7 @@
                 ]
             },
             {
-                "week": 2, "date": "2026-04-12", "label": "Week 2",
+                "week": 2, "date": "TBD", "label": "Week 2", "sponsor": "El Tacon Madre",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "B" },
                     { "time": "9:00 AM",  "away": "C", "home": "A" },
@@ -41,7 +41,7 @@
                 ]
             },
             {
-                "week": 3, "date": "2026-04-19", "label": "Week 3",
+                "week": 3, "date": "TBD", "label": "Week 3",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "C" },
                     { "time": "9:00 AM",  "away": "D", "home": "B" },
@@ -52,7 +52,7 @@
                 ]
             },
             {
-                "week": 4, "date": "2026-04-26", "label": "Week 4",
+                "week": 4, "date": "TBD", "label": "Week 4",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "D" },
                     { "time": "9:00 AM",  "away": "E", "home": "C" },
@@ -63,7 +63,7 @@
                 ]
             },
             {
-                "week": 5, "date": "2026-05-03", "label": "Week 5",
+                "week": 5, "date": "TBD", "label": "Week 5",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "E" },
                     { "time": "9:00 AM",  "away": "F", "home": "D" },
@@ -74,7 +74,7 @@
                 ]
             },
             {
-                "week": 6, "date": "2026-05-10", "label": "Week 6",
+                "week": 6, "date": "TBD", "label": "Week 6",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "F" },
                     { "time": "9:00 AM",  "away": "G", "home": "E" },
@@ -85,7 +85,7 @@
                 ]
             },
             {
-                "week": 7, "date": "2026-05-17", "label": "Week 7",
+                "week": 7, "date": "TBD", "label": "Week 7",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "G" },
                     { "time": "9:00 AM",  "away": "H", "home": "F" },
@@ -96,7 +96,7 @@
                 ]
             },
             {
-                "week": 8, "date": "2026-05-24", "label": "Week 8",
+                "week": 8, "date": "TBD", "label": "Week 8",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "H" },
                     { "time": "9:00 AM",  "away": "I", "home": "G" },
@@ -107,7 +107,7 @@
                 ]
             },
             {
-                "week": 9, "date": "2026-05-31", "label": "Week 9",
+                "week": 9, "date": "TBD", "label": "Week 9",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "I" },
                     { "time": "9:00 AM",  "away": "J", "home": "H" },
@@ -118,7 +118,7 @@
                 ]
             },
             {
-                "week": 10, "date": "2026-06-07", "label": "Week 10",
+                "week": 10, "date": "TBD", "label": "Week 10",
                 "games": [
                     { "time": "8:00 AM",  "away": "L", "home": "J" },
                     { "time": "9:00 AM",  "away": "K", "home": "I" },
@@ -129,7 +129,7 @@
                 ]
             },
             {
-                "week": 11, "date": "2026-06-14", "label": "Playoff Sunday", "type": "playoffs",
+                "week": 11, "date": "TBD", "label": "Playoff Sunday", "type": "playoffs",
                 "games": [
                     { "time": "8:00 AM",  "away": "#4 Seed", "home": "#1 Seed", "round": "Semifinal 1" },
                     { "time": "9:30 AM",  "away": "#3 Seed", "home": "#2 Seed", "round": "Semifinal 2" },
@@ -141,6 +141,7 @@
     };
 
     function formatDate(dateStr) {
+        if (!dateStr || dateStr === 'TBD') return 'TBD';
         var parts = dateStr.split('-');
         var d = new Date(parts[0], parts[1] - 1, parts[2]);
         var months = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -153,6 +154,14 @@
             if (teams[i].id === id) return teams[i].name;
         }
         return id;
+    }
+
+    function findSponsor(name) {
+        if (typeof SPONSORS === 'undefined') return null;
+        for (var i = 0; i < SPONSORS.length; i++) {
+            if (SPONSORS[i].name === name) return SPONSORS[i];
+        }
+        return null;
     }
 
     function buildWeekNav(weeks) {
@@ -236,7 +245,18 @@
 
             html += '<section class="' + sectionCls + '" data-week="' + i + '">';
             html += '<div class="week-header">';
-            html += '<h2 class="week-title">' + w.label + '</h2>';
+            if (w.sponsor) {
+                var sp = findSponsor(w.sponsor);
+                html += '<div class="week-sponsor-bar">';
+                html += '<h2 class="week-title">' + w.label + '</h2>';
+                html += '<p class="week-sponsor">Presented by ' + w.sponsor + '</p>';
+                if (sp && sp.img) {
+                    html += '<a href="sponsor-bio.html?id=' + encodeURIComponent(sp.id) + '" class="week-sponsor-logo"><img src="' + sp.img + '" alt="' + sp.name + '"></a>';
+                }
+                html += '</div>';
+            } else {
+                html += '<h2 class="week-title">' + w.label + '</h2>';
+            }
             html += '<p class="week-date">' + formatDate(w.date) + '</p>';
             html += '</div>';
             html += '<div class="games-grid">';
