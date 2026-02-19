@@ -33,38 +33,44 @@ var SPONSORS = [
 ];
 
 document.addEventListener('DOMContentLoaded', function() {
+    // ── BASE PATH PREFIX ──
+    // Derive from skeleton.js src so relative URLs work from any page depth
+    var skeletonScript = document.querySelector('script[src*="skeleton.js"]');
+    var basePrefix = skeletonScript ? skeletonScript.getAttribute('src').replace('js/skeleton.js', '') : '';
+
     // ── HEADER NAV ──
+    var b = basePrefix;
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
         '<nav class="nav-inner">' +
-            '<a href="index.html" class="nav-link nav-primary">Home</a>' +
-            '<a href="index.html#info" class="nav-link nav-secondary">Join the League</a>' +
-            '<a href="sponsor.html#current-sponsors" class="nav-link nav-secondary">Our Sponsors</a>' +
-            '<a href="schedule.html" class="nav-link nav-secondary">Schedule</a>' +
-            '<a href="live-game.html" class="nav-link nav-secondary">Live Game</a>' +
-            '<a href="standings.html" class="nav-link nav-secondary">Standings</a>' +
-            '<a href="stats.html" class="nav-link nav-secondary">Stats</a>' +
-            '<a href="box-scores.html" class="nav-link nav-secondary">Box Scores</a>' +
-            '<a href="owner.html" class="nav-link nav-secondary">Owner</a>' +
-            '<a href="rules.html" class="nav-link nav-secondary">Rules</a>' +
-            '<a href="sponsor.html" class="nav-link nav-secondary">Sponsor Us</a>' +
+            '<a href="' + b + 'index.html" class="nav-link nav-primary">Home</a>' +
+            '<a href="' + b + 'index.html#info" class="nav-link nav-secondary">Join the League</a>' +
+            '<a href="' + b + 'sponsor.html#current-sponsors" class="nav-link nav-secondary">Our Sponsors</a>' +
+            '<a href="' + b + 'schedule.html" class="nav-link nav-secondary">Schedule</a>' +
+            '<a href="' + b + 'live-game.html" class="nav-link nav-secondary">Live Game</a>' +
+            '<a href="' + b + 'standings.html" class="nav-link nav-secondary">Standings</a>' +
+            '<a href="' + b + 'stats.html" class="nav-link nav-secondary">Stats</a>' +
+            '<a href="' + b + 'box-scores.html" class="nav-link nav-secondary">Box Scores</a>' +
+            '<a href="' + b + 'owner.html" class="nav-link nav-secondary">Owner</a>' +
+            '<a href="' + b + 'rules.html" class="nav-link nav-secondary">Rules</a>' +
+            '<a href="' + b + 'sponsor.html" class="nav-link nav-secondary">Sponsor Us</a>' +
             '<button type="button" class="menu-toggle" aria-label="Menu">' +
                 '<span></span><span></span><span></span>' +
             '</button>' +
         '</nav>' +
         '<div class="mobile-menu">' +
-            '<a href="index.html" class="nav-link">Home</a>' +
-            '<a href="index.html#info" class="nav-link">Join the League</a>' +
-            '<a href="sponsor.html#current-sponsors" class="nav-link">Our Sponsors</a>' +
-            '<a href="schedule.html" class="nav-link">Schedule</a>' +
-            '<a href="live-game.html" class="nav-link">Live Game</a>' +
-            '<a href="standings.html" class="nav-link">Standings</a>' +
-            '<a href="stats.html" class="nav-link">Stats</a>' +
-            '<a href="box-scores.html" class="nav-link">Box Scores</a>' +
-            '<a href="owner.html" class="nav-link">Owner</a>' +
-            '<a href="rules.html" class="nav-link">Rules</a>' +
-            '<a href="sponsor.html" class="nav-link">Sponsor Us</a>' +
+            '<a href="' + b + 'index.html" class="nav-link">Home</a>' +
+            '<a href="' + b + 'index.html#info" class="nav-link">Join the League</a>' +
+            '<a href="' + b + 'sponsor.html#current-sponsors" class="nav-link">Our Sponsors</a>' +
+            '<a href="' + b + 'schedule.html" class="nav-link">Schedule</a>' +
+            '<a href="' + b + 'live-game.html" class="nav-link">Live Game</a>' +
+            '<a href="' + b + 'standings.html" class="nav-link">Standings</a>' +
+            '<a href="' + b + 'stats.html" class="nav-link">Stats</a>' +
+            '<a href="' + b + 'box-scores.html" class="nav-link">Box Scores</a>' +
+            '<a href="' + b + 'owner.html" class="nav-link">Owner</a>' +
+            '<a href="' + b + 'rules.html" class="nav-link">Rules</a>' +
+            '<a href="' + b + 'sponsor.html" class="nav-link">Sponsor Us</a>' +
         '</div>';
 
     document.body.insertBefore(header, document.body.firstChild);
@@ -91,11 +97,6 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = '/tracker/';
         }
     });
-
-    // ── BASE PATH PREFIX ──
-    // Derive from skeleton.js src so relative URLs work from any page depth
-    var skeletonScript = document.querySelector('script[src*="skeleton.js"]');
-    var basePrefix = skeletonScript ? skeletonScript.getAttribute('src').replace('js/skeleton.js', '') : '';
 
     // ── OUR SPONSORS SECTION (before footer) ──
     // Skip on sponsor.html (has its own) and sponsor-form
