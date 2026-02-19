@@ -325,6 +325,20 @@ section {
     padding-bottom: 60px;
 }
 
+.no-carousel .sponsor-page {
+    padding-top: 15px;
+}
+
+.sponsor-presented {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-style: italic;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 0 16px 0;
+}
+
 .sponsor-page .section-inner {
     max-width: 100%;
     padding: 0 60px;
@@ -339,6 +353,7 @@ section {
 
 .sponsor-logo-col {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 60px;
@@ -382,7 +397,88 @@ section {
     line-height: 1.7;
     color: rgba(255, 255, 255, 0.75);
     margin-bottom: 44px;
-    max-width: 520px;
+    max-width: 580px;
+}
+
+/* ── STRUCTURED BIO SECTIONS ── */
+.bio-tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    margin-bottom: 32px;
+}
+
+.bio-menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 36px;
+}
+
+.bio-menu-item {
+    display: inline-block;
+    padding: 8px 20px;
+    border: 1px solid rgba(200, 164, 92, 0.35);
+    border-radius: 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(200, 164, 92, 0.08);
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.bio-menu-item:hover {
+    background: rgba(200, 164, 92, 0.18);
+    border-color: rgba(200, 164, 92, 0.6);
+}
+
+.bio-hours {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0;
+    margin-bottom: 32px;
+    width: 100%;
+    max-width: 580px;
+}
+
+.bio-hours-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 20px 0;
+}
+
+.bio-hours-row + .bio-hours-row {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bio-hours-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--court-wood);
+}
+
+.bio-hours-detail {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.5px;
+}
+
+.bio-thanks {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0;
 }
 
 .sponsor-links {
@@ -460,6 +556,39 @@ section {
 
     .sponsor-bio {
         font-size: 16px;
+    }
+
+    .bio-tagline {
+        font-size: 14px;
+        letter-spacing: 2px;
+        margin-bottom: 24px;
+    }
+
+    .bio-menu {
+        gap: 8px;
+        margin-bottom: 28px;
+    }
+
+    .bio-menu-item {
+        font-size: 13px;
+        padding: 6px 14px;
+    }
+
+    .bio-hours {
+        padding: 16px 0;
+        margin-bottom: 24px;
+    }
+
+    .bio-hours-label {
+        font-size: 17px;
+    }
+
+    .bio-hours-detail {
+        font-size: 13px;
+    }
+
+    .bio-thanks {
+        font-size: 14px;
     }
 
     .sponsor-link {

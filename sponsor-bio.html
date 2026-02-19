@@ -46,6 +46,7 @@
     var html =
         '<div class="sponsor-profile">' +
             '<div class="sponsor-logo-col">' +
+                '<p class="sponsor-presented">The DRMBL is proudly sponsored by:</p>' +
                 (sponsor.img
                     ? '<img src="' + sponsor.img + '" alt="' + sponsor.name + '">'
                     : '<div class="sponsor-logo-placeholder">' + sponsor.name + '</div>') +
@@ -53,7 +54,7 @@
             '<div class="sponsor-info-col">' +
                 '<h2 class="section-heading">' + sponsor.name + '</h2>' +
                 '<hr class="section-rule">' +
-                (sponsor.bio ? '<p class="sponsor-bio">' + sponsor.bio + '</p>' : '') +
+                (sponsor.bio ? '<div class="sponsor-bio">' + sponsor.bio + '</div>' : '') +
                 buildLinks(sponsor.links) +
                 '<a href="index.html" class="sponsor-back">&larr; Back to Home</a>' +
             '</div>' +

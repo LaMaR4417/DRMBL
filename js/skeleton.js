@@ -29,7 +29,7 @@ var SPONSOR_EACH = 50;
 var SPONSORS = [
     // { id: 'example-biz', name: 'Example Biz', img: 'sponsors/example.png', amount: 200, bio: 'A great local business.', links: [{ label: 'Website', url: 'https://example.com' }] },
     { id: 'walmart', name: 'Walmart', img: 'sponsors/Walmart/logo.png', amount: 100, bio: 'Walmart of Del Rio proudly supports local youth and adult athletics. Thank you to our Del Rio Walmart for sponsoring $100 and donating a game ball for the season!', links: [{ label: 'Website', url: 'https://walmart.com' }, { label: 'Facebook', url: 'https://www.facebook.com/Walmart447' }, { label: 'Instagram', url: 'https://instagram.com/walmart0447' }, { label: '(830) 744-6034', url: 'tel:+18307446034' }, { label: '2410 Dodson Ave, Del Rio, TX 78840', url: 'https://maps.google.com/?q=2410+Dodson+Ave,+Del+Rio,+TX+78840' }] },
-    { id: 'el-tacon-madre', name: 'El Tacon Madre', img: 'sponsors/El Tacon Madre/logo.jpg', amount: 150, bio: 'El Tacon Madre serves up tasty, authentic Mexican food right here in Del Rio. Stop by 101 Texas St for some of the best tacos in town, or give them a call at (830) 212-1101. Thank you El Tacon Madre for supporting the DRMBL!', links: [{ label: 'Facebook', url: 'https://www.facebook.com/profile.php?id=100057549785035' }, { label: '(830) 212-1101', url: 'tel:+18302121101' }, { label: '101 Texas St, Del Rio, TX 78840', url: 'https://maps.google.com/?q=101+Texas+St,+Del+Rio,+TX+78840' }] },
+    { id: 'el-tacon-madre', name: 'El Tacon Madre', img: 'sponsors/El Tacon Madre/logo.jpg', amount: 150, bio: '<p class="bio-tagline">Authentic Mexican Restaurant</p><div class="bio-menu"><span class="bio-menu-item">Tacos de Bistec</span><span class="bio-menu-item">Tacos de Pastor</span><span class="bio-menu-item">Tacos de Tripas</span><span class="bio-menu-item">Tapat\u00edos</span><span class="bio-menu-item">Hamburgers</span><span class="bio-menu-item">Tortas</span></div><p class="bio-tagline">and so much more to choose from!</p><div class="bio-hours"><div class="bio-hours-row"><span class="bio-hours-label">Lunch Buffet</span><span class="bio-hours-detail">Monday \u2013 Friday &bull; 11 AM \u2013 2 PM</span></div><div class="bio-hours-row"><span class="bio-hours-label">Breakfast Buffet</span><span class="bio-hours-detail">Sunday &bull; 10 AM \u2013 2 PM</span></div></div><p class="bio-thanks">Thank you El Tacon Madre for supporting the DRMBL!</p>', links: [{ label: 'Facebook', url: 'https://www.facebook.com/profile.php?id=100057549785035' }, { label: 'Email', url: 'mailto:cord1226@gmail.com' }, { label: '(830) 212-1101', url: 'tel:+18302121101' }, { label: '(830) 309-1889', url: 'tel:+18303091889' }, { label: '101 Texas St, Del Rio, TX 78840', url: 'https://maps.google.com/?q=101+Texas+St,+Del+Rio,+TX+78840' }] },
 ];
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -92,10 +92,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // ── OUR SPONSORS SECTION (before footer) ──
+    // Skip on sponsor.html (has its own), sponsor-bio, and sponsor-form
+    var path = window.location.pathname;
+    var skipSponsorsGrid = path.indexOf('sponsor.html') !== -1 ||
+                           path.indexOf('sponsor-bio') !== -1 ||
+                           path.indexOf('sponsor-form') !== -1;
+
+    if (!skipSponsorsGrid && SPONSORS.length > 0) {
+        var footer = document.querySelector('footer');
+        if (footer) {
+            var sponsorSection = document.createElement('section');
+            sponsorSection.className = 'skeleton-sponsors-section';
+            sponsorSection.id = 'current-sponsors';
+            var innerHtml = '<div class="section-inner">' +
+                '<h2 class="section-heading">Our Sponsors</h2>' +
+                '<hr class="section-rule">' +
+                '<div class="sponsor-logos-grid">';
+            for (var s = 0; s < SPONSORS.length; s++) {
+                var sp = SPONSORS[s];
+                innerHtml += '<a href="sponsor-bio.html?id=' + encodeURIComponent(sp.id) + '" class="sponsor-logo-card">';
+                if (sp.img) {
+                    innerHtml += '<img src="' + sp.img + '" alt="' + sp.name + '">';
+                } else {
+                    innerHtml += '<span class="sponsor-logo-text">' + sp.name + '</span>';
+                }
+                innerHtml += '</a>';
+            }
+            innerHtml += '</div></div>';
+            sponsorSection.innerHTML = innerHtml;
+            footer.parentNode.insertBefore(sponsorSection, footer);
+        }
+    }
+
     // ── SPONSOR CAROUSEL ──
     // Skip carousel on sponsor bio and sponsor form pages
-    if (window.location.pathname.indexOf('sponsor-bio') !== -1) { document.body.classList.add('no-carousel'); return; }
-    if (window.location.pathname.indexOf('sponsor-form') !== -1) { document.body.classList.add('no-carousel'); return; }
+    if (path.indexOf('sponsor-bio') !== -1) { document.body.classList.add('no-carousel'); return; }
+    if (path.indexOf('sponsor-form') !== -1) { document.body.classList.add('no-carousel'); return; }
 
     // Inject carousel HTML after the header
     var section = document.createElement('section');
