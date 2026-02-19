@@ -187,7 +187,10 @@
         var html = '<div class="sponsor-logos-grid">';
         for (var j = 0; j < SPONSORS.length; j++) {
             var sp = SPONSORS[j];
-            html += '<a href="sponsor-bio.html?id=' + encodeURIComponent(sp.id) + '" class="sponsor-logo-card">';
+            var bgStyle = sp.bgColor ? ' style="background-color:' + sp.bgColor + '"' : '';
+            var fillCls = sp.fillCard ? ' sponsor-logo-fill' : '';
+            var spHref = sp.page ? sp.page : 'sponsor-bio.html?id=' + encodeURIComponent(sp.id);
+            html += '<a href="' + spHref + '" class="sponsor-logo-card' + fillCls + '"' + bgStyle + '>';
             if (sp.img) {
                 html += '<img src="' + sp.img + '" alt="' + sp.name + '">';
             } else {

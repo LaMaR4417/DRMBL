@@ -45,7 +45,7 @@
 
     var html =
         '<div class="sponsor-profile">' +
-            '<div class="sponsor-logo-col">' +
+            '<div class="sponsor-logo-col"' + (sponsor.bgColor ? ' style="background-color:' + sponsor.bgColor + '"' : '') + '>' +
                 '<p class="sponsor-presented">The DRMBL is proudly sponsored by:</p>' +
                 (sponsor.img
                     ? '<img src="' + sponsor.img + '" alt="' + sponsor.name + '">'

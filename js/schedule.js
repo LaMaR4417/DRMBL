@@ -251,7 +251,8 @@
                 html += '<h2 class="week-title">' + w.label + '</h2>';
                 html += '<p class="week-sponsor">Presented by ' + w.sponsor + '</p>';
                 if (sp && sp.img) {
-                    html += '<a href="sponsor-bio.html?id=' + encodeURIComponent(sp.id) + '" class="week-sponsor-logo"><img src="' + sp.img + '" alt="' + sp.name + '"></a>';
+                    var spHref = sp.page ? sp.page : 'sponsor-bio.html?id=' + encodeURIComponent(sp.id);
+                    html += '<a href="' + spHref + '" class="week-sponsor-logo"><img src="' + sp.img + '" alt="' + sp.name + '"></a>';
                 }
                 html += '</div>';
             } else {
