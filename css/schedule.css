@@ -146,6 +146,11 @@
     border-radius: 4px;
 }
 
+.week-sponsor-logo-el-tacon-madre img {
+    width: 110px;
+    height: 70px;
+}
+
 .week-date {
     font-size: 15px;
     color: rgba(255, 255, 255, 0.45);

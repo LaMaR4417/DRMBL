@@ -252,7 +252,7 @@
                 html += '<p class="week-sponsor">Presented by ' + w.sponsor + '</p>';
                 if (sp && sp.img) {
                     var spHref = sp.page ? sp.page : 'sponsor-bio.html?id=' + encodeURIComponent(sp.id);
-                    html += '<a href="' + spHref + '" class="week-sponsor-logo"><img src="' + sp.img + '" alt="' + sp.name + '"></a>';
+                    html += '<a href="' + spHref + '" class="week-sponsor-logo week-sponsor-logo-' + sp.id + '"><img src="' + sp.img + '" alt="' + sp.name + '"></a>';
                 }
                 html += '</div>';
             } else {
