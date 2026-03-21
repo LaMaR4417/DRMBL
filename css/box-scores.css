@@ -37,6 +37,7 @@
 .bs-filter-inner {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0;
     padding: 0 20px;
     overflow-x: auto;
@@ -49,7 +50,47 @@
 }
 
 /* Season dropdown */
-.bs-season-select {
+.bs-filter-dropdowns {
+    display: flex;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.bs-filter-group {
+    display: flex;
+    align-items: center;
+    position: relative;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bs-filter-group .bs-filter-select {
+    border-right: none;
+    padding-right: 8px;
+}
+
+.bs-filter-clear {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 14px 10px 14px 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s ease;
+}
+
+.bs-filter-clear:hover {
+    color: var(--accent, #e74c3c);
+}
+
+.bs-filter-clear.hidden {
+    display: none;
+}
+
+.bs-filter-select {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 15px;
     letter-spacing: 2px;
@@ -61,14 +102,23 @@
     padding: 14px 16px;
     cursor: pointer;
     white-space: nowrap;
-    appearance: none;
     -webkit-appearance: none;
+    appearance: none;
     outline: none;
+    text-align: center;
+    text-align-last: center;
 }
 
-.bs-season-select option {
+.bs-filter-select option {
     background: #111;
     color: #fff;
+    text-align: left;
+}
+
+.bs-filter-select optgroup {
+    text-align: left;
+    background: #111;
+    color: var(--court-wood);
 }
 
 /* Week tabs */
@@ -144,6 +194,15 @@
     margin-bottom: 12px;
     padding-bottom: 6px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bs-week-date-range {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.25);
 }
 
 .bs-games-grid {
@@ -184,6 +243,53 @@
     letter-spacing: 3px;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.4);
+}
+
+.bs-game-card-badge.badge-final {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.bs-game-card-badge.badge-live {
+    color: #4caf50;
+    animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+.bs-game-card-badge.badge-scheduled {
+    color: var(--court-wood);
+}
+
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.bs-game-card.scheduled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.bs-game-card.live {
+    border-color: #4caf50;
+}
+
+.scheduled-score {
+    color: rgba(255, 255, 255, 0.3);
+    font-style: italic;
+}
+
+.bs-league-section {
+    margin-bottom: 16px;
+}
+
+.bs-league-section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    padding: 8px 0 4px;
+    border-bottom: 1px solid rgba(200, 164, 92, 0.15);
+    margin-bottom: 12px;
 }
 
 .bs-game-card-teams {
@@ -230,7 +336,7 @@
         padding: 0 12px;
     }
 
-    .bs-season-select {
+    .bs-filter-select {
         font-size: 13px;
         padding: 12px 10px;
     }

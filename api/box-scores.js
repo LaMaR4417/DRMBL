@@ -9,11 +9,11 @@ var database = client.database("DRMBL Database");
 var seasonsContainer = database.container("Seasons");
 
 var BOX_SCORES_CONTAINER_ID = "Box Scores";
-var DEFAULT_SEASON_ID = "Spring - Mens - 2026";
+var LIVE_GAMES_CONTAINER_ID = "Live Games";
 
-async function getBoxScoresContainer() {
+async function getContainer(id) {
     var { container } = await database.containers.createIfNotExists({
-        id: BOX_SCORES_CONTAINER_ID,
+        id: id,
         partitionKey: { paths: ["/id"] }
     });
     return container;
@@ -30,7 +30,7 @@ module.exports = async function (req, res) {
     // ── Single box score fetch ──
     if (boxScoreId) {
         try {
-            var boxScoresContainer = await getBoxScoresContainer();
+            var boxScoresContainer = await getContainer(BOX_SCORES_CONTAINER_ID);
             var resp = await boxScoresContainer.item(boxScoreId, boxScoreId).read();
             var doc = resp.resource;
 
@@ -48,11 +48,10 @@ module.exports = async function (req, res) {
         }
     }
 
-    // ── Game summaries for a season ──
-    if (seasonId || !boxScoreId) {
+    // ── Game list for a season ──
+    if (seasonId) {
         try {
-            var sid = seasonId || DEFAULT_SEASON_ID;
-            var seasonResp = await seasonsContainer.item(sid, sid).read();
+            var seasonResp = await seasonsContainer.item(seasonId, seasonId).read();
             var seasonDoc = seasonResp.resource;
 
             if (!seasonDoc) {
@@ -70,65 +69,156 @@ module.exports = async function (req, res) {
                 }
             }
 
-            // Extract completed games from weeklySchedule
-            var weeks = [];
-            var schedule = seasonDoc.weeklySchedule || [];
+            // Collect all game IDs from both weeklySchedule and schedule
+            var allGames = [];
 
-            for (var w = 0; w < schedule.length; w++) {
-                var weekEntry = schedule[w];
-                var completedGames = [];
-
-                if (!weekEntry.games) continue;
-
-                for (var g = 0; g < weekEntry.games.length; g++) {
-                    var game = weekEntry.games[g];
-                    if (!game.result || !game.result.boxScoreID) continue;
-
-                    var result = game.result;
-
-                    // Determine which side won
-                    var homeSlot = game.home;
-                    var awaySlot = game.away;
-                    var winnerIsHome = result.winner.slot === homeSlot;
-
-                    completedGames.push({
-                        boxScoreID: result.boxScoreID,
-                        time: game.time || null,
-                        home: {
-                            name: winnerIsHome ? result.winner.team : result.loser.team,
-                            slot: homeSlot,
-                            score: winnerIsHome ? result.winner.score : result.loser.score
-                        },
-                        away: {
-                            name: winnerIsHome ? result.loser.team : result.winner.team,
-                            slot: awaySlot,
-                            score: winnerIsHome ? result.loser.score : result.winner.score
-                        },
-                        winner: winnerIsHome ? "home" : "away"
-                    });
+            // Mode 1: weeklySchedule (predetermined — DRMBL)
+            if (seasonDoc.weeklySchedule) {
+                for (var w = 0; w < seasonDoc.weeklySchedule.length; w++) {
+                    var week = seasonDoc.weeklySchedule[w];
+                    if (!week.games) continue;
+                    for (var g = 0; g < week.games.length; g++) {
+                        var game = week.games[g];
+                        var homeName = slotNames[game.home] || game.home;
+                        var awayName = slotNames[game.away] || game.away;
+                        allGames.push({
+                            id: game.id || null,
+                            home: homeName,
+                            away: awayName,
+                            homeSlot: game.home,
+                            awaySlot: game.away,
+                            time: game.time || null,
+                            week: week.week,
+                            weekType: week.type || null,
+                            weekNote: week.note || null,
+                            weekDate: week.date || null,
+                            round: game.round || null,
+                            status: "scheduled"
+                        });
+                    }
                 }
+            }
 
-                if (completedGames.length > 0) {
-                    weeks.push({
-                        week: weekEntry.week,
-                        date: weekEntry.date || null,
-                        type: weekEntry.type || null,
-                        games: completedGames
+            // Mode 2: schedule (on-the-fly — LOMBA)
+            if (seasonDoc.schedule) {
+                for (var s = 0; s < seasonDoc.schedule.length; s++) {
+                    var entry = seasonDoc.schedule[s];
+                    if (!entry.games) continue;
+                    for (var g = 0; g < entry.games.length; g++) {
+                        var game = entry.games[g];
+                        allGames.push({
+                            id: game.id || null,
+                            home: game.home,
+                            away: game.away,
+                            homeSlot: null,
+                            awaySlot: null,
+                            time: null,
+                            week: null,
+                            weekType: null,
+                            weekNote: null,
+                            weekDate: entry.date || null,
+                            round: null,
+                            status: "scheduled"
+                        });
+                    }
+                }
+            }
+
+            // Collect all game IDs that need lookup
+            var gameIds = [];
+            for (var i = 0; i < allGames.length; i++) {
+                if (allGames[i].id) gameIds.push(allGames[i].id);
+            }
+
+            // Batch lookup: Box Scores
+            var boxScoreMap = {};
+            if (gameIds.length > 0) {
+                try {
+                    var boxScoresContainer = await getContainer(BOX_SCORES_CONTAINER_ID);
+                    // Also fetch any box scores for this season not in the schedule
+                    var query = "SELECT c.id, c.team, c.gameInfo, c.teamInfo.home.score.current AS homeScore, c.teamInfo.away.score.current AS awayScore FROM c WHERE c.season = @season";
+                    var { resources: boxDocs } = await boxScoresContainer.items
+                        .query({ query: query, parameters: [{ name: "@season", value: seasonId }] })
+                        .fetchAll();
+                    for (var b = 0; b < boxDocs.length; b++) {
+                        boxScoreMap[boxDocs[b].id] = boxDocs[b];
+                    }
+                } catch (err) {
+                    console.error("Box scores lookup failed:", err.message);
+                }
+            }
+
+            // Batch lookup: Live Games
+            var liveGameMap = {};
+            try {
+                var liveContainer = await getContainer(LIVE_GAMES_CONTAINER_ID);
+                var { resources: liveDocs } = await liveContainer.items
+                    .query("SELECT c.id, c.team, c.gameInfo, c.teamInfo.home.score.current AS homeScore, c.teamInfo.away.score.current AS awayScore FROM c")
+                    .fetchAll();
+                for (var l = 0; l < liveDocs.length; l++) {
+                    liveGameMap[liveDocs[l].id] = liveDocs[l];
+                }
+            } catch (err) {
+                console.error("Live games lookup failed:", err.message);
+            }
+
+            // Merge status into allGames
+            for (var i = 0; i < allGames.length; i++) {
+                var gid = allGames[i].id;
+                if (gid && boxScoreMap[gid]) {
+                    var bs = boxScoreMap[gid];
+                    allGames[i].status = "final";
+                    allGames[i].homeScore = bs.homeScore || 0;
+                    allGames[i].awayScore = bs.awayScore || 0;
+                    allGames[i].winner = bs.gameInfo && bs.gameInfo.state ? bs.gameInfo.state.winner : null;
+                } else if (gid && liveGameMap[gid]) {
+                    var lg = liveGameMap[gid];
+                    allGames[i].status = "live";
+                    allGames[i].homeScore = lg.homeScore || 0;
+                    allGames[i].awayScore = lg.awayScore || 0;
+                    allGames[i].quarter = lg.gameInfo && lg.gameInfo.state ? lg.gameInfo.state.currentQuarter : null;
+                }
+            }
+
+            // Add any box scores for this season that weren't in the schedule
+            var scheduledIds = {};
+            for (var i = 0; i < allGames.length; i++) {
+                if (allGames[i].id) scheduledIds[allGames[i].id] = true;
+            }
+            for (var bsId in boxScoreMap) {
+                if (!scheduledIds[bsId]) {
+                    var bs = boxScoreMap[bsId];
+                    allGames.push({
+                        id: bsId,
+                        home: bs.team ? bs.team.home : "Unknown",
+                        away: bs.team ? bs.team.away : "Unknown",
+                        homeSlot: null,
+                        awaySlot: null,
+                        time: null,
+                        week: null,
+                        weekType: null,
+                        weekNote: null,
+                        weekDate: bs.gameInfo && bs.gameInfo.general ? bs.gameInfo.general.date : null,
+                        round: null,
+                        status: "final",
+                        homeScore: bs.homeScore || 0,
+                        awayScore: bs.awayScore || 0,
+                        winner: bs.gameInfo && bs.gameInfo.state ? bs.gameInfo.state.winner : null
                     });
                 }
             }
 
             return res.status(200).json({
                 league: seasonDoc.league || null,
-                weeks: weeks
+                games: allGames
             });
 
         } catch (err) {
             if (err.code === 404) {
                 return res.status(404).json({ error: "Season not found." });
             }
-            console.error("Box scores summary error:", err.message);
-            return res.status(500).json({ error: "Failed to load game summaries." });
+            console.error("Box scores error:", err.message);
+            return res.status(500).json({ error: "Failed to load games." });
         }
     }
 

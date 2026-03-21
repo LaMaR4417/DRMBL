@@ -20,12 +20,41 @@
         <p class="bs-hero-sub">Browse completed game stats and box scores.</p>
     </section>
 
-    <!-- Filter bar: season dropdown + week tabs -->
+    <!-- Filter bar -->
     <nav class="bs-filter-bar" id="bs-filter-bar">
         <div class="bs-filter-inner">
-            <select id="bs-season-select" class="bs-season-select" title="Select season">
-                <option value="">Loading...</option>
-            </select>
+            <div class="bs-filter-dropdowns">
+                <div class="bs-filter-group">
+                    <select id="bs-league-select" class="bs-filter-select" title="Select league">
+                        <option value="">Loading...</option>
+                    </select>
+                    <button type="button" class="bs-filter-clear hidden" id="bs-league-clear" title="Clear league">&times;</button>
+                </div>
+                <div class="bs-filter-group">
+                    <select id="bs-division-select" class="bs-filter-select" title="Select division">
+                        <option value="">All Divisions</option>
+                    </select>
+                    <button type="button" class="bs-filter-clear hidden" id="bs-division-clear" title="Clear division">&times;</button>
+                </div>
+                <div class="bs-filter-group">
+                    <select id="bs-season-select" class="bs-filter-select" title="Select season">
+                        <option value="">All Seasons</option>
+                    </select>
+                    <button type="button" class="bs-filter-clear hidden" id="bs-season-clear" title="Clear season">&times;</button>
+                </div>
+                <div class="bs-filter-group">
+                    <select id="bs-team-select" class="bs-filter-select" title="Select team">
+                        <option value="">All Teams</option>
+                    </select>
+                    <button type="button" class="bs-filter-clear hidden" id="bs-team-clear" title="Clear team">&times;</button>
+                </div>
+                <div class="bs-filter-group">
+                    <select id="bs-date-select" class="bs-filter-select" title="Select date">
+                        <option value="">All Dates</option>
+                    </select>
+                    <button type="button" class="bs-filter-clear hidden" id="bs-date-clear" title="Clear date">&times;</button>
+                </div>
+            </div>
             <div class="bs-week-tabs" id="bs-week-tabs"></div>
         </div>
     </nav>

@@ -164,6 +164,87 @@
         container.innerHTML = html;
     }
 
+    // Fallback data for local/offline viewing
+    var FALLBACK_TEAMS = [
+        { "slot": "A", "name": "Wonderland" },
+        { "slot": "B", "name": "DR Elite" },
+        { "slot": "C", "name": "Air Ballers" },
+        { "slot": "D", "name": "bbl crackin" },
+        { "slot": "E", "name": null },
+        { "slot": "F", "name": null },
+        { "slot": "G", "name": null },
+        { "slot": "H", "name": null }
+    ];
+
+    var FALLBACK_SCHEDULE = [
+        { "week": 1, "date": "TBD", "games": [
+            { "time": "9:00 AM",  "away": "A", "home": "H" },
+            { "time": "10:00 AM", "away": "G", "home": "B" },
+            { "time": "11:00 AM", "away": "C", "home": "F" },
+            { "time": "12:00 PM", "away": "E", "home": "D" }
+        ]},
+        { "week": 2, "date": "TBD", "games": [
+            { "time": "9:00 AM",  "away": "H", "home": "G" },
+            { "time": "10:00 AM", "away": "F", "home": "A" },
+            { "time": "11:00 AM", "away": "B", "home": "E" },
+            { "time": "12:00 PM", "away": "D", "home": "C" }
+        ]},
+        { "week": 3, "date": "TBD", "games": [
+            { "time": "9:00 AM",  "away": "F", "home": "H" },
+            { "time": "10:00 AM", "away": "E", "home": "G" },
+            { "time": "11:00 AM", "away": "A", "home": "D" },
+            { "time": "12:00 PM", "away": "C", "home": "B" }
+        ]},
+        { "week": 4, "date": "TBD", "games": [
+            { "time": "9:00 AM",  "away": "H", "home": "E" },
+            { "time": "10:00 AM", "away": "F", "home": "D" },
+            { "time": "11:00 AM", "away": "G", "home": "C" },
+            { "time": "12:00 PM", "away": "B", "home": "A" }
+        ]},
+        { "week": 5, "date": "TBD", "games": [
+            { "time": "9:00 AM",  "away": "D", "home": "H" },
+            { "time": "10:00 AM", "away": "E", "home": "C" },
+            { "time": "11:00 AM", "away": "F", "home": "B" },
+            { "time": "12:00 PM", "away": "A", "home": "G" }
+        ]},
+        { "week": 6, "date": "TBD", "games": [
+            { "time": "9:00 AM",  "away": "H", "home": "C" },
+            { "time": "10:00 AM", "away": "D", "home": "B" },
+            { "time": "11:00 AM", "away": "E", "home": "A" },
+            { "time": "12:00 PM", "away": "G", "home": "F" }
+        ]},
+        { "week": 7, "date": "TBD", "games": [
+            { "time": "9:00 AM",  "away": "B", "home": "H" },
+            { "time": "10:00 AM", "away": "C", "home": "A" },
+            { "time": "11:00 AM", "away": "D", "home": "G" },
+            { "time": "12:00 PM", "away": "F", "home": "E" }
+        ]},
+        { "week": 8, "date": "TBD", "type": "seeded", "note": "Seeds determined by Week 7 standings", "games": [
+            { "time": "9:00 AM",  "away": "#4 Seed", "home": "#1 Seed" },
+            { "time": "10:00 AM", "away": "#3 Seed", "home": "#2 Seed" },
+            { "time": "11:00 AM", "away": "#8 Seed", "home": "#5 Seed" },
+            { "time": "12:00 PM", "away": "#7 Seed", "home": "#6 Seed" }
+        ]},
+        { "week": 9, "date": "TBD", "type": "seeded", "note": "Seeds determined by Week 7 standings", "games": [
+            { "time": "9:00 AM",  "away": "#3 Seed", "home": "#1 Seed" },
+            { "time": "10:00 AM", "away": "#4 Seed", "home": "#2 Seed" },
+            { "time": "11:00 AM", "away": "#8 Seed", "home": "#5 Seed" },
+            { "time": "12:00 PM", "away": "#7 Seed", "home": "#6 Seed" }
+        ]},
+        { "week": 10, "date": "TBD", "type": "seeded", "note": "Seeds determined by Week 7 standings", "games": [
+            { "time": "9:00 AM",  "away": "#2 Seed", "home": "#1 Seed" },
+            { "time": "10:00 AM", "away": "#4 Seed", "home": "#3 Seed" },
+            { "time": "11:00 AM", "away": "#6 Seed", "home": "#5 Seed" },
+            { "time": "12:00 PM", "away": "#8 Seed", "home": "#7 Seed" }
+        ]},
+        { "week": 11, "date": "TBD", "type": "playoffs", "games": [
+            { "time": "9:00 AM",  "away": "#4 Seed", "home": "#1 Seed", "round": "Semifinal 1" },
+            { "time": "10:30 AM", "away": "#3 Seed", "home": "#2 Seed", "round": "Semifinal 2" },
+            { "time": "12:00 PM", "away": "Loser SF1", "home": "Loser SF2", "round": "3rd Place" },
+            { "time": "1:30 PM",  "away": "Winner SF1", "home": "Winner SF2", "round": "Championship" }
+        ]}
+    ];
+
     function loadSeason() {
         fetch('/api/season')
             .then(function (res) { return res.json(); })
@@ -174,8 +255,9 @@
                 }
             })
             .catch(function () {
-                document.getElementById('schedule-content').innerHTML =
-                    '<div class="schedule-empty">Unable to load schedule.</div>';
+                // API unavailable (local dev) — use fallback data
+                buildWeekNav(FALLBACK_SCHEDULE);
+                buildSchedule(FALLBACK_TEAMS, FALLBACK_SCHEDULE);
             });
     }
 
