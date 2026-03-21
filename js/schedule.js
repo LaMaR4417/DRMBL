@@ -1,136 +1,26 @@
 (function () {
-    // Fallback team names used until live data loads
-    var DEFAULT_TEAMS = [
-        { "id": "A", "name": "TBD" },
-        { "id": "B", "name": "TBD" },
-        { "id": "C", "name": "TBD" },
-        { "id": "D", "name": "TBD" },
-        { "id": "E", "name": "TBD" },
-        { "id": "F", "name": "TBD" },
-        { "id": "G", "name": "TBD" },
-        { "id": "H", "name": "TBD" }
-    ];
-
-    var SCHEDULE_DATA = {
-        "teams": DEFAULT_TEAMS,
-        "weeks": [
-            {
-                "week": 1, "date": "TBD", "label": "Week 1", "sponsor": "Walmart",
-                "games": [
-                    { "time": "9:00 AM",  "away": "A", "home": "H" },
-                    { "time": "10:00 AM", "away": "G", "home": "B" },
-                    { "time": "11:00 AM", "away": "C", "home": "F" },
-                    { "time": "12:00 PM", "away": "E", "home": "D" }
-                ]
-            },
-            {
-                "week": 2, "date": "TBD", "label": "Week 2", "sponsor": "El Tacon Madre",
-                "games": [
-                    { "time": "9:00 AM",  "away": "H", "home": "G" },
-                    { "time": "10:00 AM", "away": "F", "home": "A" },
-                    { "time": "11:00 AM", "away": "B", "home": "E" },
-                    { "time": "12:00 PM", "away": "D", "home": "C" }
-                ]
-            },
-            {
-                "week": 3, "date": "TBD", "label": "Week 3",
-                "games": [
-                    { "time": "9:00 AM",  "away": "F", "home": "H" },
-                    { "time": "10:00 AM", "away": "E", "home": "G" },
-                    { "time": "11:00 AM", "away": "A", "home": "D" },
-                    { "time": "12:00 PM", "away": "C", "home": "B" }
-                ]
-            },
-            {
-                "week": 4, "date": "TBD", "label": "Week 4",
-                "games": [
-                    { "time": "9:00 AM",  "away": "H", "home": "E" },
-                    { "time": "10:00 AM", "away": "F", "home": "D" },
-                    { "time": "11:00 AM", "away": "G", "home": "C" },
-                    { "time": "12:00 PM", "away": "B", "home": "A" }
-                ]
-            },
-            {
-                "week": 5, "date": "TBD", "label": "Week 5",
-                "games": [
-                    { "time": "9:00 AM",  "away": "D", "home": "H" },
-                    { "time": "10:00 AM", "away": "E", "home": "C" },
-                    { "time": "11:00 AM", "away": "F", "home": "B" },
-                    { "time": "12:00 PM", "away": "A", "home": "G" }
-                ]
-            },
-            {
-                "week": 6, "date": "TBD", "label": "Week 6",
-                "games": [
-                    { "time": "9:00 AM",  "away": "H", "home": "C" },
-                    { "time": "10:00 AM", "away": "D", "home": "B" },
-                    { "time": "11:00 AM", "away": "E", "home": "A" },
-                    { "time": "12:00 PM", "away": "G", "home": "F" }
-                ]
-            },
-            {
-                "week": 7, "date": "TBD", "label": "Week 7",
-                "games": [
-                    { "time": "9:00 AM",  "away": "B", "home": "H" },
-                    { "time": "10:00 AM", "away": "C", "home": "A" },
-                    { "time": "11:00 AM", "away": "D", "home": "G" },
-                    { "time": "12:00 PM", "away": "F", "home": "E" }
-                ]
-            },
-            {
-                "week": 8, "date": "TBD", "label": "Week 8", "type": "seeded",
-                "note": "Seeds determined by Week 7 standings",
-                "games": [
-                    { "time": "9:00 AM",  "away": "#4 Seed", "home": "#1 Seed" },
-                    { "time": "10:00 AM", "away": "#3 Seed", "home": "#2 Seed" },
-                    { "time": "11:00 AM", "away": "#8 Seed", "home": "#5 Seed" },
-                    { "time": "12:00 PM", "away": "#7 Seed", "home": "#6 Seed" }
-                ]
-            },
-            {
-                "week": 9, "date": "TBD", "label": "Week 9", "type": "seeded",
-                "note": "Seeds determined by Week 7 standings",
-                "games": [
-                    { "time": "9:00 AM",  "away": "#3 Seed", "home": "#1 Seed" },
-                    { "time": "10:00 AM", "away": "#4 Seed", "home": "#2 Seed" },
-                    { "time": "11:00 AM", "away": "#8 Seed", "home": "#5 Seed" },
-                    { "time": "12:00 PM", "away": "#7 Seed", "home": "#6 Seed" }
-                ]
-            },
-            {
-                "week": 10, "date": "TBD", "label": "Week 10", "type": "seeded",
-                "note": "Seeds determined by Week 7 standings",
-                "games": [
-                    { "time": "9:00 AM",  "away": "#2 Seed", "home": "#1 Seed" },
-                    { "time": "10:00 AM", "away": "#4 Seed", "home": "#3 Seed" },
-                    { "time": "11:00 AM", "away": "#6 Seed", "home": "#5 Seed" },
-                    { "time": "12:00 PM", "away": "#8 Seed", "home": "#7 Seed" }
-                ]
-            },
-            {
-                "week": 11, "date": "TBD", "label": "Playoff Sunday", "type": "playoffs",
-                "games": [
-                    { "time": "9:00 AM",  "away": "#4 Seed", "home": "#1 Seed", "round": "Semifinal 1" },
-                    { "time": "10:30 AM", "away": "#3 Seed", "home": "#2 Seed", "round": "Semifinal 2" },
-                    { "time": "12:00 PM", "away": "Loser SF1", "home": "Loser SF2", "round": "3rd Place" },
-                    { "time": "1:30 PM",  "away": "Winner SF1", "home": "Winner SF2", "round": "Championship" }
-                ]
-            }
-        ]
+    // Presentation config — maps week numbers to sponsor/label overrides
+    var WEEK_META = {
+        1:  { sponsor: 'Walmart' },
+        2:  { sponsor: 'El Tacon Madre' },
+        11: { label: 'Playoff Sunday' }
     };
 
-    function formatDate(dateStr) {
-        if (!dateStr || dateStr === 'TBD') return 'TBD';
-        var parts = dateStr.split('-');
-        var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    function formatDate(date) {
+        if (!date || date === 'TBD') return 'TBD';
+        if (typeof date === 'string') {
+            if (date === 'TBD') return 'TBD';
+            var parts = date.split('-');
+            date = { year: parseInt(parts[0]), month: parseInt(parts[1]), date: parseInt(parts[2]) };
+        }
         var months = ['January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'];
-        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        return months[date.month - 1] + ' ' + date.date + ', ' + date.year;
     }
 
     function getTeamName(teams, id) {
         for (var i = 0; i < teams.length; i++) {
-            if (teams[i].id === id) return teams[i].name;
+            if (teams[i].slot === id) return teams[i].name || 'TBD';
         }
         return id;
     }
@@ -149,6 +39,7 @@
         html += '<button type="button" class="week-tab active" data-week="all">All</button>';
         for (var i = 0; i < weeks.length; i++) {
             var w = weeks[i];
+            var meta = WEEK_META[w.week] || {};
             var isPlayoff = w.type === 'playoffs';
             var cls = 'week-tab' + (isPlayoff ? ' week-tab-playoff' : '');
             var label = isPlayoff ? 'Playoffs' : 'Wk ' + w.week;
@@ -165,7 +56,6 @@
     function handleTabClick(e) {
         var weekVal = e.currentTarget.getAttribute('data-week');
 
-        // "All" scrolls to top of schedule
         if (weekVal === 'all') {
             var hero = document.querySelector('.schedule-hero');
             if (hero) window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -181,7 +71,6 @@
         }
     }
 
-    // Highlight active tab on scroll
     function updateActiveTab() {
         var sections = document.querySelectorAll('.week-section');
         var tabs = document.querySelectorAll('.week-tab');
@@ -211,32 +100,32 @@
         scrollTimer = setTimeout(updateActiveTab, 50);
     });
 
-    function buildSchedule(data) {
+    function buildSchedule(teams, weeks) {
         var container = document.getElementById('schedule-content');
-        var teams = data.teams;
-        var weeks = data.weeks;
         var html = '';
 
         for (var i = 0; i < weeks.length; i++) {
             var w = weeks[i];
+            var meta = WEEK_META[w.week] || {};
             var isPlayoff = w.type === 'playoffs';
             var isSeeded = w.type === 'seeded';
+            var label = meta.label || ('Week ' + w.week);
             var sectionCls = 'week-section' + (isPlayoff ? ' week-section-playoff' : '') + (isSeeded ? ' week-section-seeded' : '');
 
             html += '<section class="' + sectionCls + '" data-week="' + i + '">';
             html += '<div class="week-header">';
-            if (w.sponsor) {
-                var sp = findSponsor(w.sponsor);
+            if (meta.sponsor) {
+                var sp = findSponsor(meta.sponsor);
                 html += '<div class="week-sponsor-bar">';
-                html += '<h2 class="week-title">' + w.label + '</h2>';
-                html += '<p class="week-sponsor">Presented by ' + w.sponsor + '</p>';
+                html += '<h2 class="week-title">' + label + '</h2>';
+                html += '<p class="week-sponsor">Presented by ' + meta.sponsor + '</p>';
                 if (sp && sp.img) {
                     var spHref = sp.page ? sp.page : 'sponsor-bio.html?id=' + encodeURIComponent(sp.id);
                     html += '<a href="' + spHref + '" class="week-sponsor-logo week-sponsor-logo-' + sp.id + '"><img src="' + sp.img + '" alt="' + sp.name + '"></a>';
                 }
                 html += '</div>';
             } else {
-                html += '<h2 class="week-title">' + w.label + '</h2>';
+                html += '<h2 class="week-title">' + label + '</h2>';
             }
             html += '<p class="week-date">' + formatDate(w.date) + '</p>';
             if (w.note) {
@@ -247,7 +136,6 @@
 
             for (var g = 0; g < w.games.length; g++) {
                 var game = w.games[g];
-                var isSeeded = w.type === 'seeded';
                 var awayName = (isPlayoff || isSeeded) ? game.away : getTeamName(teams, game.away);
                 var homeName = (isPlayoff || isSeeded) ? game.home : getTeamName(teams, game.home);
                 var cardCls = 'game-card' + (isPlayoff ? ' game-card-playoff' : '');
@@ -276,32 +164,25 @@
         container.innerHTML = html;
     }
 
-    function loadLiveTeams() {
+    function loadSeason() {
         fetch('/api/season')
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (data && data.teams) {
-                    var liveTeams = [];
-                    for (var i = 0; i < data.teams.length; i++) {
-                        var t = data.teams[i];
-                        liveTeams.push({
-                            id: t.slot,
-                            name: t.name || "TBD"
-                        });
-                    }
-                    SCHEDULE_DATA.teams = liveTeams;
-                    buildSchedule(SCHEDULE_DATA);
+                if (data && data.teams && data.weeklySchedule) {
+                    buildWeekNav(data.weeklySchedule);
+                    buildSchedule(data.teams, data.weeklySchedule);
                 }
             })
             .catch(function () {
-                // Keep fallback names on error
+                document.getElementById('schedule-content').innerHTML =
+                    '<div class="schedule-empty">Unable to load schedule.</div>';
             });
     }
 
     function init() {
-        buildWeekNav(SCHEDULE_DATA.weeks);
-        buildSchedule(SCHEDULE_DATA);
-        loadLiveTeams();
+        document.getElementById('schedule-content').innerHTML =
+            '<div class="schedule-empty">Loading schedule...</div>';
+        loadSeason();
     }
 
     if (document.readyState === 'loading') {

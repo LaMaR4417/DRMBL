@@ -154,25 +154,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     var track = section.querySelector('.sponsors-track');
-    var totalSlots = Math.round(SPONSOR_GOAL / SPONSOR_EACH);
+
+    // Build carousel: one slot per sponsor + one "Become a Sponsor" slot, repeating
     var pool = [];
-
-    // Build weighted sponsor slots
-    var filled = 0;
-    SPONSORS.forEach(function (sp) {
-        var count = Math.max(1, Math.round(sp.amount / SPONSOR_EACH));
-        filled += count;
-        for (var i = 0; i < count; i++) pool.push(sp);
-    });
-
-    // Fill remaining with empty placeholders
-    for (var i = filled; i < totalSlots; i++) pool.push(null);
-
-    // Shuffle for even distribution
-    for (var i = pool.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
-    }
+    SPONSORS.forEach(function (sp) { pool.push(sp); });
+    pool.push(null); // "Become a Sponsor" slot
 
     // Render slots
     pool.forEach(function (sp) {

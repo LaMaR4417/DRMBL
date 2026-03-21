@@ -28,7 +28,8 @@ module.exports = async function (req, res) {
         return res.status(200).json({
             id: seasonDoc.id,
             league: seasonDoc.league || null,
-            teams: seasonDoc.teams
+            teams: seasonDoc.teams,
+            weeklySchedule: seasonDoc.weeklySchedule || null
         });
 
     } catch (err) {
