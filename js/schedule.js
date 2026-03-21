@@ -8,11 +8,7 @@
         { "id": "E", "name": "TBD" },
         { "id": "F", "name": "TBD" },
         { "id": "G", "name": "TBD" },
-        { "id": "H", "name": "TBD" },
-        { "id": "I", "name": "TBD" },
-        { "id": "J", "name": "TBD" },
-        { "id": "K", "name": "TBD" },
-        { "id": "L", "name": "TBD" }
+        { "id": "H", "name": "TBD" }
     ];
 
     var SCHEDULE_DATA = {
@@ -21,120 +17,103 @@
             {
                 "week": 1, "date": "TBD", "label": "Week 1", "sponsor": "Walmart",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "A" },
-                    { "time": "9:00 AM",  "away": "B", "home": "K" },
-                    { "time": "10:00 AM", "away": "C", "home": "J" },
-                    { "time": "11:00 AM", "away": "D", "home": "I" },
-                    { "time": "12:00 PM", "away": "E", "home": "H" },
-                    { "time": "1:00 PM",  "away": "F", "home": "G" }
+                    { "time": "9:00 AM",  "away": "A", "home": "H" },
+                    { "time": "10:00 AM", "away": "G", "home": "B" },
+                    { "time": "11:00 AM", "away": "C", "home": "F" },
+                    { "time": "12:00 PM", "away": "E", "home": "D" }
                 ]
             },
             {
                 "week": 2, "date": "TBD", "label": "Week 2", "sponsor": "El Tacon Madre",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "B" },
-                    { "time": "9:00 AM",  "away": "C", "home": "A" },
-                    { "time": "10:00 AM", "away": "D", "home": "K" },
-                    { "time": "11:00 AM", "away": "E", "home": "J" },
-                    { "time": "12:00 PM", "away": "F", "home": "I" },
-                    { "time": "1:00 PM",  "away": "G", "home": "H" }
+                    { "time": "9:00 AM",  "away": "H", "home": "G" },
+                    { "time": "10:00 AM", "away": "F", "home": "A" },
+                    { "time": "11:00 AM", "away": "B", "home": "E" },
+                    { "time": "12:00 PM", "away": "D", "home": "C" }
                 ]
             },
             {
                 "week": 3, "date": "TBD", "label": "Week 3",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "C" },
-                    { "time": "9:00 AM",  "away": "D", "home": "B" },
-                    { "time": "10:00 AM", "away": "E", "home": "A" },
-                    { "time": "11:00 AM", "away": "F", "home": "K" },
-                    { "time": "12:00 PM", "away": "G", "home": "J" },
-                    { "time": "1:00 PM",  "away": "H", "home": "I" }
+                    { "time": "9:00 AM",  "away": "F", "home": "H" },
+                    { "time": "10:00 AM", "away": "E", "home": "G" },
+                    { "time": "11:00 AM", "away": "A", "home": "D" },
+                    { "time": "12:00 PM", "away": "C", "home": "B" }
                 ]
             },
             {
                 "week": 4, "date": "TBD", "label": "Week 4",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "D" },
-                    { "time": "9:00 AM",  "away": "E", "home": "C" },
-                    { "time": "10:00 AM", "away": "F", "home": "B" },
-                    { "time": "11:00 AM", "away": "G", "home": "A" },
-                    { "time": "12:00 PM", "away": "H", "home": "K" },
-                    { "time": "1:00 PM",  "away": "I", "home": "J" }
+                    { "time": "9:00 AM",  "away": "H", "home": "E" },
+                    { "time": "10:00 AM", "away": "F", "home": "D" },
+                    { "time": "11:00 AM", "away": "G", "home": "C" },
+                    { "time": "12:00 PM", "away": "B", "home": "A" }
                 ]
             },
             {
                 "week": 5, "date": "TBD", "label": "Week 5",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "E" },
-                    { "time": "9:00 AM",  "away": "F", "home": "D" },
-                    { "time": "10:00 AM", "away": "G", "home": "C" },
-                    { "time": "11:00 AM", "away": "H", "home": "B" },
-                    { "time": "12:00 PM", "away": "I", "home": "A" },
-                    { "time": "1:00 PM",  "away": "J", "home": "K" }
+                    { "time": "9:00 AM",  "away": "D", "home": "H" },
+                    { "time": "10:00 AM", "away": "E", "home": "C" },
+                    { "time": "11:00 AM", "away": "F", "home": "B" },
+                    { "time": "12:00 PM", "away": "A", "home": "G" }
                 ]
             },
             {
                 "week": 6, "date": "TBD", "label": "Week 6",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "F" },
-                    { "time": "9:00 AM",  "away": "G", "home": "E" },
-                    { "time": "10:00 AM", "away": "H", "home": "D" },
-                    { "time": "11:00 AM", "away": "I", "home": "C" },
-                    { "time": "12:00 PM", "away": "J", "home": "B" },
-                    { "time": "1:00 PM",  "away": "K", "home": "A" }
+                    { "time": "9:00 AM",  "away": "H", "home": "C" },
+                    { "time": "10:00 AM", "away": "D", "home": "B" },
+                    { "time": "11:00 AM", "away": "E", "home": "A" },
+                    { "time": "12:00 PM", "away": "G", "home": "F" }
                 ]
             },
             {
                 "week": 7, "date": "TBD", "label": "Week 7",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "G" },
-                    { "time": "9:00 AM",  "away": "H", "home": "F" },
-                    { "time": "10:00 AM", "away": "I", "home": "E" },
-                    { "time": "11:00 AM", "away": "J", "home": "D" },
-                    { "time": "12:00 PM", "away": "K", "home": "C" },
-                    { "time": "1:00 PM",  "away": "A", "home": "B" }
+                    { "time": "9:00 AM",  "away": "B", "home": "H" },
+                    { "time": "10:00 AM", "away": "C", "home": "A" },
+                    { "time": "11:00 AM", "away": "D", "home": "G" },
+                    { "time": "12:00 PM", "away": "F", "home": "E" }
                 ]
             },
             {
-                "week": 8, "date": "TBD", "label": "Week 8",
+                "week": 8, "date": "TBD", "label": "Week 8", "type": "seeded",
+                "note": "Seeds determined by Week 7 standings",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "H" },
-                    { "time": "9:00 AM",  "away": "I", "home": "G" },
-                    { "time": "10:00 AM", "away": "J", "home": "F" },
-                    { "time": "11:00 AM", "away": "K", "home": "E" },
-                    { "time": "12:00 PM", "away": "A", "home": "D" },
-                    { "time": "1:00 PM",  "away": "B", "home": "C" }
+                    { "time": "9:00 AM",  "away": "#4 Seed", "home": "#1 Seed" },
+                    { "time": "10:00 AM", "away": "#3 Seed", "home": "#2 Seed" },
+                    { "time": "11:00 AM", "away": "#8 Seed", "home": "#5 Seed" },
+                    { "time": "12:00 PM", "away": "#7 Seed", "home": "#6 Seed" }
                 ]
             },
             {
-                "week": 9, "date": "TBD", "label": "Week 9",
+                "week": 9, "date": "TBD", "label": "Week 9", "type": "seeded",
+                "note": "Seeds determined by Week 7 standings",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "I" },
-                    { "time": "9:00 AM",  "away": "J", "home": "H" },
-                    { "time": "10:00 AM", "away": "K", "home": "G" },
-                    { "time": "11:00 AM", "away": "A", "home": "F" },
-                    { "time": "12:00 PM", "away": "B", "home": "E" },
-                    { "time": "1:00 PM",  "away": "C", "home": "D" }
+                    { "time": "9:00 AM",  "away": "#3 Seed", "home": "#1 Seed" },
+                    { "time": "10:00 AM", "away": "#4 Seed", "home": "#2 Seed" },
+                    { "time": "11:00 AM", "away": "#8 Seed", "home": "#5 Seed" },
+                    { "time": "12:00 PM", "away": "#7 Seed", "home": "#6 Seed" }
                 ]
             },
             {
-                "week": 10, "date": "TBD", "label": "Week 10",
+                "week": 10, "date": "TBD", "label": "Week 10", "type": "seeded",
+                "note": "Seeds determined by Week 7 standings",
                 "games": [
-                    { "time": "8:00 AM",  "away": "L", "home": "J" },
-                    { "time": "9:00 AM",  "away": "K", "home": "I" },
-                    { "time": "10:00 AM", "away": "A", "home": "H" },
-                    { "time": "11:00 AM", "away": "B", "home": "G" },
-                    { "time": "12:00 PM", "away": "C", "home": "F" },
-                    { "time": "1:00 PM",  "away": "D", "home": "E" }
+                    { "time": "9:00 AM",  "away": "#2 Seed", "home": "#1 Seed" },
+                    { "time": "10:00 AM", "away": "#4 Seed", "home": "#3 Seed" },
+                    { "time": "11:00 AM", "away": "#6 Seed", "home": "#5 Seed" },
+                    { "time": "12:00 PM", "away": "#8 Seed", "home": "#7 Seed" }
                 ]
             },
             {
                 "week": 11, "date": "TBD", "label": "Playoff Sunday", "type": "playoffs",
                 "games": [
-                    { "time": "8:00 AM",  "away": "#4 Seed", "home": "#1 Seed", "round": "Semifinal 1" },
-                    { "time": "9:30 AM",  "away": "#3 Seed", "home": "#2 Seed", "round": "Semifinal 2" },
-                    { "time": "11:00 AM", "away": "Loser SF1", "home": "Loser SF2", "round": "3rd Place" },
-                    { "time": "12:30 PM", "away": "Winner SF1", "home": "Winner SF2", "round": "Championship" }
+                    { "time": "9:00 AM",  "away": "#4 Seed", "home": "#1 Seed", "round": "Semifinal 1" },
+                    { "time": "10:30 AM", "away": "#3 Seed", "home": "#2 Seed", "round": "Semifinal 2" },
+                    { "time": "12:00 PM", "away": "Loser SF1", "home": "Loser SF2", "round": "3rd Place" },
+                    { "time": "1:30 PM",  "away": "Winner SF1", "home": "Winner SF2", "round": "Championship" }
                 ]
             }
         ]
@@ -241,7 +220,8 @@
         for (var i = 0; i < weeks.length; i++) {
             var w = weeks[i];
             var isPlayoff = w.type === 'playoffs';
-            var sectionCls = 'week-section' + (isPlayoff ? ' week-section-playoff' : '');
+            var isSeeded = w.type === 'seeded';
+            var sectionCls = 'week-section' + (isPlayoff ? ' week-section-playoff' : '') + (isSeeded ? ' week-section-seeded' : '');
 
             html += '<section class="' + sectionCls + '" data-week="' + i + '">';
             html += '<div class="week-header">';
@@ -259,13 +239,17 @@
                 html += '<h2 class="week-title">' + w.label + '</h2>';
             }
             html += '<p class="week-date">' + formatDate(w.date) + '</p>';
+            if (w.note) {
+                html += '<p class="week-note">' + w.note + '</p>';
+            }
             html += '</div>';
             html += '<div class="games-grid">';
 
             for (var g = 0; g < w.games.length; g++) {
                 var game = w.games[g];
-                var awayName = isPlayoff ? game.away : getTeamName(teams, game.away);
-                var homeName = isPlayoff ? game.home : getTeamName(teams, game.home);
+                var isSeeded = w.type === 'seeded';
+                var awayName = (isPlayoff || isSeeded) ? game.away : getTeamName(teams, game.away);
+                var homeName = (isPlayoff || isSeeded) ? game.home : getTeamName(teams, game.home);
                 var cardCls = 'game-card' + (isPlayoff ? ' game-card-playoff' : '');
 
                 html += '<div class="' + cardCls + '">';

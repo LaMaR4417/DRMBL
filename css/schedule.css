@@ -156,6 +156,13 @@
     color: rgba(255, 255, 255, 0.45);
 }
 
+.week-note {
+    font-size: 13px;
+    color: var(--court-wood);
+    font-style: italic;
+    margin-top: 4px;
+}
+
 /* Game Cards */
 .games-grid {
     max-width: 700px;
