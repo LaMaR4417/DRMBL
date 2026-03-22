@@ -24,82 +24,53 @@
 }
 
 /* ── FILTER BAR ── */
+/* Divider between hero and content */
+.bs-divider {
+    height: 12px;
+    background: linear-gradient(to bottom, #0a0602, #111);
+}
+
 .bs-filter-bar {
-    position: sticky;
-    top: 53px;
-    z-index: 90;
-    background: rgba(17, 17, 17, 0.95);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
+    margin-bottom: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.bs-filter-inner {
+.bs-filter-row {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0;
-    padding: 0 20px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
 }
 
-.bs-filter-inner::-webkit-scrollbar {
+.bs-filter-row > * {
+    width: 20%;
+}
+
+.bs-filter-group .bs-filter-select {
+    width: 100%;
+}
+
+.bs-filter-row::-webkit-scrollbar {
     display: none;
 }
 
-/* Season dropdown */
-.bs-filter-dropdowns {
-    display: flex;
-    gap: 0;
-    flex-shrink: 0;
-}
-
+/* Division group wrapper (shown/hidden by JS) */
 .bs-filter-group {
     display: flex;
     align-items: center;
     position: relative;
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.bs-filter-group .bs-filter-select {
-    border-right: none;
-    padding-right: 8px;
-}
-
-.bs-filter-clear {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.4);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 14px 10px 14px 0;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    transition: color 0.15s ease;
-}
-
-.bs-filter-clear:hover {
-    color: var(--accent, #e74c3c);
-}
-
-.bs-filter-clear.hidden {
+.bs-filter-group.hidden {
     display: none;
 }
 
+/* Base select styles */
 .bs-filter-select {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 15px;
-    letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--court-wood);
     background: transparent;
     border: none;
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 14px 16px;
     cursor: pointer;
     white-space: nowrap;
     -webkit-appearance: none;
@@ -107,6 +78,69 @@
     outline: none;
     text-align: center;
     text-align-last: center;
+    transition: color 0.2s ease;
+}
+
+/* Primary selects: bigger, bolder, gold */
+.bs-filter-primary-select {
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: var(--court-wood, #c8a45c);
+    padding: 10px 16px;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bs-filter-primary-select:hover {
+    color: #ddb96e;
+}
+
+/* Division select: subtle, smaller — sits between league and season */
+.bs-filter-subtle-select {
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 10px 16px;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bs-filter-subtle-select:hover {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Secondary selects: smaller, muted */
+.bs-filter-secondary-select {
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.45);
+    padding: 10px 16px;
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.bs-filter-secondary-select:hover {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Clear All button */
+.bs-filter-clear-all {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    background: none;
+    border: none;
+    padding: 14px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s ease;
+}
+
+.bs-filter-clear-all:hover {
+    color: var(--accent, #c9302c);
+}
+
+.bs-filter-clear-all.hidden {
+    display: none;
 }
 
 .bs-filter-select option {
@@ -152,22 +186,33 @@
     border-bottom-color: var(--accent);
 }
 
-/* ── EMPTY STATE ── */
-.bs-empty {
-    text-align: center;
-    padding: 80px 20px;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 16px;
-    background: #0d0d0d;
+/* ── SPOTLIGHT SECTION (live games / loading / empty) ── */
+.bs-spotlight {
+    padding: 150px 20px 30px;
+    background: #111;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.bs-empty.hidden {
+.bs-spotlight #bs-spotlight-msg {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 16px;
+}
+
+.bs-spotlight #bs-spotlight-msg.hidden {
     display: none;
+}
+
+/* Live games use .game-selector from live-game.css */
+.bs-spotlight .game-selector {
+    padding: 0;
+    background: none;
+    justify-content: center;
 }
 
 /* ── GAME CARDS LIST ── */
 .bs-game-list {
-    max-width: 900px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 30px 20px;
     background: #0d0d0d;
@@ -187,49 +232,37 @@
 
 .bs-week-label {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
+    font-size: 20px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.3);
-    margin-bottom: 12px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.bs-week-date-range {
-    font-size: 14px;
-    letter-spacing: 2px;
-    color: rgba(255, 255, 255, 0.25);
+    color: var(--court-wood);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(200, 164, 92, 0.3);
+    text-align: center;
 }
 
 .bs-games-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
 }
 
 .bs-game-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 14px 24px;
+    gap: 0;
+    padding: 0;
     background: #111;
     border: 1px solid rgba(255, 255, 255, 0.07);
     cursor: pointer;
     font-family: 'Bebas Neue', sans-serif;
     letter-spacing: 1px;
     transition: border-color 0.2s ease, background 0.2s ease;
-    flex: 1;
-    min-width: 200px;
-    max-width: 300px;
 }
 
 .bs-game-card:hover {
-    background: #1a1a1a;
+    background: #161616;
     border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -243,6 +276,7 @@
     letter-spacing: 3px;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.4);
+    padding: 8px 14px 0;
 }
 
 .bs-game-card-badge.badge-final {
@@ -272,53 +306,114 @@
     border-color: #4caf50;
 }
 
-.scheduled-score {
-    color: rgba(255, 255, 255, 0.3);
-    font-style: italic;
-}
-
-.bs-league-section {
-    margin-bottom: 16px;
-}
-
-.bs-league-section-label {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 14px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--court-wood);
-    padding: 8px 0 4px;
-    border-bottom: 1px solid rgba(200, 164, 92, 0.15);
-    margin-bottom: 12px;
-}
-
-.bs-game-card-teams {
+/* Team rows */
+.bs-game-card-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    justify-content: space-between;
+    padding: 6px 14px;
+}
+
+/* When no badge (scheduled games), first row needs top padding */
+.bs-game-card-row:first-child {
+    padding-top: 10px;
+}
+
+.bs-game-card-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 0 14px;
 }
 
 .bs-game-card-team {
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    margin-right: 12px;
 }
 
 .bs-game-card-team.winner {
     color: #fff;
 }
 
-.bs-game-card-vs {
-    font-size: 12px;
-    letter-spacing: 2px;
-    color: rgba(255, 255, 255, 0.25);
-}
-
 .bs-game-card-score {
-    font-size: 22px;
+    font-size: 20px;
     letter-spacing: 2px;
     color: #fff;
+    flex-shrink: 0;
+}
+
+.bs-game-card-score.winner {
+    color: #fff;
+}
+
+.bs-game-card-score.scheduled-score {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+/* Last row bottom padding */
+.bs-game-card-row:last-child {
+    padding-bottom: 10px;
+}
+
+/* Time slot sub-groups */
+.bs-time-slot {
+    margin-bottom: 14px;
+}
+
+.bs-time-slot:last-child {
+    margin-bottom: 0;
+}
+
+.bs-time-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 4px 0;
+    margin-bottom: 6px;
+}
+
+.bs-courts-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.bs-court-col {
+    flex: 0 0 auto;
+}
+
+.bs-court-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.bs-league-section {
+    margin-bottom: 20px;
+}
+
+.bs-league-section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-left: 3px solid var(--court-wood);
+    margin-bottom: 12px;
 }
 
 /* ── BOX SCORE DETAIL ── */
@@ -332,13 +427,20 @@
         padding: 180px 16px 40px;
     }
 
-    .bs-filter-inner {
-        padding: 0 12px;
+    .bs-filter-bar {
+        margin-bottom: 14px;
     }
 
-    .bs-filter-select {
+    .bs-filter-primary-select,
+    .bs-filter-subtle-select,
+    .bs-filter-secondary-select {
         font-size: 13px;
-        padding: 12px 10px;
+        padding: 8px 8px;
+    }
+
+    .bs-filter-clear-all {
+        font-size: 11px;
+        padding: 8px 8px;
     }
 
     .bs-week-tab {
@@ -350,14 +452,11 @@
         padding: 20px 12px;
     }
 
-    .bs-game-card {
-        min-width: 0;
-        max-width: none;
-        flex: 1 1 100%;
-        padding: 12px 16px;
+    .bs-games-grid {
+        grid-template-columns: 1fr;
     }
 
-    .bs-game-card-teams {
+    .bs-game-card-team {
         font-size: 14px;
     }
 

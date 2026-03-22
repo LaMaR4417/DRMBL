@@ -8,16 +8,8 @@ var client = new CosmosClient({
 var database = client.database("DRMBL Database");
 var seasonsContainer = database.container("Seasons");
 
-var BOX_SCORES_CONTAINER_ID = "Box Scores";
-var LIVE_GAMES_CONTAINER_ID = "Live Games";
-
-async function getContainer(id) {
-    var { container } = await database.containers.createIfNotExists({
-        id: id,
-        partitionKey: { paths: ["/id"] }
-    });
-    return container;
-}
+var boxScoresContainer = database.container("Box Scores");
+var liveGamesContainer = database.container("Live Games");
 
 module.exports = async function (req, res) {
     if (req.method !== "GET") {
@@ -30,7 +22,6 @@ module.exports = async function (req, res) {
     // ── Single box score fetch ──
     if (boxScoreId) {
         try {
-            var boxScoresContainer = await getContainer(BOX_SCORES_CONTAINER_ID);
             var resp = await boxScoresContainer.item(boxScoreId, boxScoreId).read();
             var doc = resp.resource;
 
@@ -88,6 +79,7 @@ module.exports = async function (req, res) {
                             homeSlot: game.home,
                             awaySlot: game.away,
                             time: game.time || null,
+                            location: game.location || null,
                             week: week.week,
                             weekType: week.type || null,
                             weekNote: week.note || null,
@@ -124,6 +116,30 @@ module.exports = async function (req, res) {
                 }
             }
 
+            // Mode 3: top-level games array (tournament-style — Copa Beta)
+            if (seasonDoc.games && !seasonDoc.weeklySchedule) {
+                for (var g = 0; g < seasonDoc.games.length; g++) {
+                    var game = seasonDoc.games[g];
+                    var homeName = slotNames[game.home] || game.home;
+                    var awayName = slotNames[game.away] || game.away;
+                    allGames.push({
+                        id: game.id || null,
+                        home: homeName,
+                        away: awayName,
+                        homeSlot: game.home,
+                        awaySlot: game.away,
+                        time: game.time || null,
+                        location: game.location || null,
+                        week: null,
+                        weekType: null,
+                        weekNote: null,
+                        weekDate: game.date || null,
+                        round: game.round || null,
+                        status: "scheduled"
+                    });
+                }
+            }
+
             // Collect all game IDs that need lookup
             var gameIds = [];
             for (var i = 0; i < allGames.length; i++) {
@@ -134,8 +150,6 @@ module.exports = async function (req, res) {
             var boxScoreMap = {};
             if (gameIds.length > 0) {
                 try {
-                    var boxScoresContainer = await getContainer(BOX_SCORES_CONTAINER_ID);
-                    // Also fetch any box scores for this season not in the schedule
                     var query = "SELECT c.id, c.team, c.gameInfo, c.teamInfo.home.score.current AS homeScore, c.teamInfo.away.score.current AS awayScore FROM c WHERE c.season = @season";
                     var { resources: boxDocs } = await boxScoresContainer.items
                         .query({ query: query, parameters: [{ name: "@season", value: seasonId }] })
@@ -151,8 +165,7 @@ module.exports = async function (req, res) {
             // Batch lookup: Live Games
             var liveGameMap = {};
             try {
-                var liveContainer = await getContainer(LIVE_GAMES_CONTAINER_ID);
-                var { resources: liveDocs } = await liveContainer.items
+                var { resources: liveDocs } = await liveGamesContainer.items
                     .query("SELECT c.id, c.team, c.gameInfo, c.teamInfo.home.score.current AS homeScore, c.teamInfo.away.score.current AS awayScore FROM c")
                     .fetchAll();
                 for (var l = 0; l < liveDocs.length; l++) {

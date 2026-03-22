@@ -16,16 +16,29 @@ module.exports = async function (req, res) {
 
     try {
         var { resources } = await seasonsContainer.items
-            .query("SELECT c.id, c.league, c.teams, c.weeklySchedule FROM c")
+            .query("SELECT c.id, c.league, c.teams, c.weeklySchedule, c.games FROM c")
             .fetchAll();
 
         var seasons = resources.map(function (doc) {
             var teams = (doc.teams || []).filter(function (t) { return t.teamID; }).map(function (t) {
                 return { name: t.name, slot: t.slot };
             });
-            var dates = (doc.weeklySchedule || []).map(function (w) {
-                return w.date || null;
-            });
+            var dates = [];
+            if (doc.weeklySchedule) {
+                dates = doc.weeklySchedule.map(function (w) { return w.date || null; });
+            } else if (doc.games) {
+                var seen = {};
+                for (var i = 0; i < doc.games.length; i++) {
+                    var d = doc.games[i].date;
+                    if (d) {
+                        var key = d.year + "-" + d.month + "-" + d.date;
+                        if (!seen[key]) {
+                            seen[key] = true;
+                            dates.push(d);
+                        }
+                    }
+                }
+            }
             return {
                 id: doc.id,
                 league: doc.league || null,

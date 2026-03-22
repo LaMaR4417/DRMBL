@@ -23,7 +23,7 @@ html {
 body {
     font-family: 'Inter', sans-serif;
     color: var(--white);
-    background: var(--court-dark);
+    background: #0d0d0d;
 }
 
 /* ── HERO ── */

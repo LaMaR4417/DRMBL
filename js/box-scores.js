@@ -15,6 +15,8 @@
 
     // ── UTILITIES (from live-game.js) ──
 
+    var OPT_PAD = '\u00a0\u00a0\u00a0\u00a0\u00a0'; // 5 non-breaking spaces for option text
+
     function formatClock(totalSeconds) {
         if (totalSeconds < 0) totalSeconds = 0;
         var m = Math.floor(totalSeconds / 60);
@@ -53,11 +55,11 @@
             if (seasons.length > 0) {
                 loadAllGameSummaries();
             } else {
-                showEmpty();
+                showSpotlightMsg();
             }
         })
         .catch(function () {
-            showEmpty();
+            showSpotlightMsg();
         });
     }
 
@@ -81,7 +83,7 @@
 
         if (targetSeasons.length === 0) {
             allGamesData = [];
-            showEmpty();
+            showSpotlightMsg();
             return;
         }
 
@@ -113,11 +115,13 @@
             }
 
             if (allGamesData.length === 0) {
-                showEmpty();
+                showSpotlightMsg();
                 return;
             }
 
             selectedBoxScoreId = null;
+            hideSpotlightMsg();
+            loadLiveGames();
             renderGameCards();
             hideDetail();
         });
@@ -136,14 +140,55 @@
 
     // ── STATE HELPERS ──
 
-    function showEmpty() {
-        els.empty.classList.remove('hidden');
-        els.gameList.classList.add('hidden');
+    function showSpotlightMsg(msg) {
+        els.spotlightMsg.textContent = msg || 'No completed games yet.';
+        els.spotlightMsg.classList.remove('hidden');
+        els.liveGames.classList.add('hidden');
+        els.liveGames.innerHTML = '';
+        els.gameCards.innerHTML = '';
         els.detail.classList.add('hidden');
     }
 
-    function hideEmpty() {
-        els.empty.classList.add('hidden');
+    function hideSpotlightMsg() {
+        els.spotlightMsg.classList.add('hidden');
+    }
+
+    function loadLiveGames() {
+        fetch('/api/live-game')
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (!data || !data.games || data.games.length === 0) {
+                    els.liveGames.classList.add('hidden');
+                    els.liveGames.innerHTML = '';
+                    return;
+                }
+
+                var html = '';
+                for (var i = 0; i < data.games.length; i++) {
+                    var g = data.games[i];
+                    var bs = g.boxScore;
+                    var home = bs.teamInfo.home;
+                    var away = bs.teamInfo.away;
+                    var isFinal = bs.gameInfo.general.status === 'final';
+                    var isActive = bs.gameInfo.state.active;
+                    var statusClass = isFinal ? 'final' : (isActive ? 'live' : 'stopped');
+                    var statusLabel = isFinal ? 'FINAL' : (isActive ? 'LIVE' : 'STOPPED');
+                    var league = bs.league;
+
+                    html += '<button class="game-card" data-game-id="' + g.gameId + '">';
+                    html += '<span class="game-card-status ' + statusClass + '">' + statusLabel + '</span>';
+                    if (league && league.abbreviation) {
+                        html += '<span class="game-card-league">' + league.abbreviation + '</span>';
+                    }
+                    html += '<span class="game-card-teams">' + home.name + ' vs ' + away.name + '</span>';
+                    html += '<span class="game-card-score">' + home.score.current + ' - ' + away.score.current + '</span>';
+                    html += '</button>';
+                }
+
+                els.liveGames.innerHTML = html;
+                els.liveGames.classList.remove('hidden');
+            })
+            .catch(function () {});
     }
 
     function hideDetail() {
@@ -158,7 +203,7 @@
             var l = leagues[i];
             var label = (l.league && l.league.fullName) ? l.league.fullName : l.id;
             var isActive = selectedLeagueId === l.id;
-            html += '<option value="' + l.id + '"' + (isActive ? ' selected' : '') + '>' + label + '</option>';
+            html += '<option value="' + l.id + '"' + (isActive ? ' selected' : '') + '>' + label + OPT_PAD + '</option>';
         }
         els.leagueSelect.innerHTML = html;
     }
@@ -219,7 +264,7 @@
             var divisions = getDivisionsForLeague();
             for (var i = 0; i < divisions.length; i++) {
                 var isActive = selectedDivision === divisions[i];
-                html += '<option value="' + divisions[i] + '"' + (isActive ? ' selected' : '') + '>' + divisions[i] + '</option>';
+                html += '<option value="' + divisions[i] + '"' + (isActive ? ' selected' : '') + '>' + divisions[i] + OPT_PAD + '</option>';
             }
         } else {
             // All leagues — group by league
@@ -238,13 +283,19 @@
                     html += '<optgroup label="' + abbr + '">';
                     for (var d = 0; d < divSet.length; d++) {
                         var isActive = selectedDivision === divSet[d];
-                        html += '<option value="' + divSet[d] + '"' + (isActive ? ' selected' : '') + '>' + divSet[d] + '</option>';
+                        html += '<option value="' + divSet[d] + '"' + (isActive ? ' selected' : '') + '>' + divSet[d] + OPT_PAD + '</option>';
                     }
                     html += '</optgroup>';
                 }
             }
         }
         els.divisionSelect.innerHTML = html;
+
+        // Show division dropdown only when multiple divisions exist
+        if (els.divisionGroup) {
+            var divisions = getDivisionsForLeague();
+            els.divisionGroup.classList.toggle('hidden', divisions.length <= 1);
+        }
     }
 
     // ── RENDER: SEASON DROPDOWN ──
@@ -256,7 +307,7 @@
             // Single league — flat list
             for (var i = 0; i < filtered.length; i++) {
                 var isActive = selectedSeasonId === filtered[i].id;
-                html += '<option value="' + filtered[i].id + '"' + (isActive ? ' selected' : '') + '>' + filtered[i].id + '</option>';
+                html += '<option value="' + filtered[i].id + '"' + (isActive ? ' selected' : '') + '>' + filtered[i].id + OPT_PAD + '</option>';
             }
         } else {
             // All leagues — group by league
@@ -267,7 +318,7 @@
                     html += '<optgroup label="' + abbr + '">';
                     for (var i = 0; i < group.length; i++) {
                         var isActive = selectedSeasonId === group[i].id;
-                        html += '<option value="' + group[i].id + '"' + (isActive ? ' selected' : '') + '>' + group[i].id + '</option>';
+                        html += '<option value="' + group[i].id + '"' + (isActive ? ' selected' : '') + '>' + group[i].id + OPT_PAD + '</option>';
                     }
                     html += '</optgroup>';
                 }
@@ -305,7 +356,7 @@
             var teams = getTeamsForSelection();
             for (var i = 0; i < teams.length; i++) {
                 var isActive = selectedTeam === teams[i];
-                html += '<option value="' + teams[i] + '"' + (isActive ? ' selected' : '') + '>' + teams[i] + '</option>';
+                html += '<option value="' + teams[i] + '"' + (isActive ? ' selected' : '') + '>' + teams[i] + OPT_PAD + '</option>';
             }
         } else {
             // All leagues — group by league
@@ -326,7 +377,7 @@
                     html += '<optgroup label="' + abbr + '">';
                     for (var i = 0; i < teams.length; i++) {
                         var isActive = selectedTeam === teams[i];
-                        html += '<option value="' + teams[i] + '"' + (isActive ? ' selected' : '') + '>' + teams[i] + '</option>';
+                        html += '<option value="' + teams[i] + '"' + (isActive ? ' selected' : '') + '>' + teams[i] + OPT_PAD + '</option>';
                     }
                     html += '</optgroup>';
                 }
@@ -401,7 +452,7 @@
                     html += '<optgroup label="' + abbr + '">';
                     for (var i = 0; i < leagueDates.length; i++) {
                         var isActive = selectedDate === leagueDates[i].value;
-                        html += '<option value="' + leagueDates[i].value + '"' + (isActive ? ' selected' : '') + '>' + leagueDates[i].label + '</option>';
+                        html += '<option value="' + leagueDates[i].value + '"' + (isActive ? ' selected' : '') + '>' + leagueDates[i].label + OPT_PAD + '</option>';
                     }
                     html += '</optgroup>';
                 }
@@ -409,7 +460,7 @@
         } else {
             for (var i = 0; i < dateEntries.length; i++) {
                 var isActive = selectedDate === dateEntries[i].value;
-                html += '<option value="' + dateEntries[i].value + '"' + (isActive ? ' selected' : '') + '>' + dateEntries[i].label + '</option>';
+                html += '<option value="' + dateEntries[i].value + '"' + (isActive ? ' selected' : '') + '>' + dateEntries[i].label + OPT_PAD + '</option>';
             }
         }
 
@@ -491,34 +542,34 @@
         var games = getFilteredGames();
 
         if (games.length === 0) {
-            showEmpty();
+            showSpotlightMsg();
             return;
         }
 
-        hideEmpty();
-        els.gameList.classList.remove('hidden');
+        hideSpotlightMsg();
 
         // Group by week (if available) or date
         var groups = [];
         var groupMap = {};
         for (var i = 0; i < games.length; i++) {
             var game = games[i];
-            var groupKey = game.week != null ? ('week-' + game.week) : ('date-' + gameCardDateValue(game));
+            var dateVal = gameCardDateValue(game);
+            var groupKey = dateVal;
             if (!groupMap[groupKey]) {
-                var label = '';
-                if (game.week != null) {
-                    if (game.weekType === 'playoffs') label = 'Playoffs';
-                    else if (game.weekType === 'seeded') label = 'Week ' + game.week + ' (Seeded)';
-                    else label = 'Week ' + game.week;
-                } else {
-                    label = gameCardDateLabel(game);
-                }
-                var dateRange = game.week != null ? getWeekRange(game.weekDate) : null;
-                groupMap[groupKey] = { key: groupKey, label: label, dateRange: dateRange, games: [] };
+                var label = gameCardDateLabel(game);
+                var dateRange = getWeekRange(game.weekDate);
+                groupMap[groupKey] = { key: groupKey, label: label, dateRange: dateRange, dateVal: dateVal, games: [] };
                 groups.push(groupMap[groupKey]);
             }
             groupMap[groupKey].games.push(game);
         }
+
+        // Sort groups chronologically by date
+        groups.sort(function (a, b) {
+            if (a.dateVal === 'TBD') return 1;
+            if (b.dateVal === 'TBD') return -1;
+            return a.dateVal.localeCompare(b.dateVal);
+        });
 
         // Helper to get league abbreviation for a game
         function getGameLeague(game) {
@@ -547,25 +598,35 @@
             var h = '';
             h += '<div class="' + cardCls + '"' + (game.id ? ' data-id="' + game.id + '"' : '') + '>';
 
+            // Badge row (status only — time is shown as sub-header)
             if (isFinal) {
                 h += '<span class="bs-game-card-badge badge-final">FINAL</span>';
             } else if (isLive) {
                 h += '<span class="bs-game-card-badge badge-live">LIVE</span>';
-            } else {
-                h += '<span class="bs-game-card-badge badge-scheduled">' + (game.time || 'TBD') + '</span>';
             }
 
-            h += '<div class="bs-game-card-teams">';
-            h += '<span class="bs-game-card-team' + (homeIsWinner ? ' winner' : '') + '">' + game.home + '</span>';
-            h += '<span class="bs-game-card-vs">vs</span>';
+            // Away team row
+            h += '<div class="bs-game-card-row">';
             h += '<span class="bs-game-card-team' + (awayIsWinner ? ' winner' : '') + '">' + game.away + '</span>';
+            if (isFinal || isLive) {
+                h += '<span class="bs-game-card-score' + (awayIsWinner ? ' winner' : '') + '">' + game.awayScore + '</span>';
+            } else {
+                h += '<span class="bs-game-card-score scheduled-score">&ndash;</span>';
+            }
             h += '</div>';
 
+            // Divider
+            h += '<div class="bs-game-card-divider"></div>';
+
+            // Home team row
+            h += '<div class="bs-game-card-row">';
+            h += '<span class="bs-game-card-team' + (homeIsWinner ? ' winner' : '') + '">' + game.home + '</span>';
             if (isFinal || isLive) {
-                h += '<span class="bs-game-card-score">' + game.homeScore + ' - ' + game.awayScore + '</span>';
+                h += '<span class="bs-game-card-score' + (homeIsWinner ? ' winner' : '') + '">' + game.homeScore + '</span>';
             } else {
-                h += '<span class="bs-game-card-score scheduled-score">TBD</span>';
+                h += '<span class="bs-game-card-score scheduled-score">&ndash;</span>';
             }
+            h += '</div>';
 
             h += '</div>';
             return h;
@@ -573,11 +634,111 @@
 
         var showLeagueSections = !selectedLeagueId;
 
+        // Sub-group an array of games by time, returning ordered groups
+        function getTimeKey(time) {
+            if (!time) return 'TBD';
+            var parts = time.split(' - ');
+            return parts[0].trim();
+        }
+
+        function parseTimeTo24(timeStr) {
+            if (!timeStr || timeStr === 'TBD') return 9999;
+            var match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+            if (!match) return 9999;
+            var h = parseInt(match[1], 10);
+            var m = parseInt(match[2], 10);
+            var period = match[3].toUpperCase();
+            if (period === 'AM' && h === 12) h = 0;
+            if (period === 'PM' && h !== 12) h += 12;
+            return h * 60 + m;
+        }
+
+        function groupByTime(gamesList) {
+            var timeMap = {};
+            var timeOrder = [];
+            for (var i = 0; i < gamesList.length; i++) {
+                var t = getTimeKey(gamesList[i].time);
+                if (!timeMap[t]) {
+                    timeMap[t] = [];
+                    timeOrder.push(t);
+                }
+                timeMap[t].push(gamesList[i]);
+            }
+            timeOrder.sort(function (a, b) {
+                return parseTimeTo24(a) - parseTimeTo24(b);
+            });
+            return { order: timeOrder, map: timeMap };
+        }
+
+        function getGameLocation(game) {
+            if (game.location) return game.location;
+            if (!game.time) return '';
+            var idx = game.time.indexOf(' - ');
+            return idx !== -1 ? game.time.substring(idx + 3).trim() : '';
+        }
+
+        function renderTimeSlots(gamesList) {
+            var grouped = groupByTime(gamesList);
+            var out = '';
+            for (var t = 0; t < grouped.order.length; t++) {
+                var time = grouped.order[t];
+                var slotGames = grouped.map[time];
+                out += '<div class="bs-time-slot">';
+                out += '<div class="bs-time-label">' + time + '</div>';
+
+                // Sub-group by suffix (e.g. "Court A", "Court B")
+                var suffixMap = {};
+                var suffixOrder = [];
+                for (var i = 0; i < slotGames.length; i++) {
+                    var suffix = getGameLocation(slotGames[i]);
+                    if (!suffixMap[suffix]) {
+                        suffixMap[suffix] = [];
+                        suffixOrder.push(suffix);
+                    }
+                    suffixMap[suffix].push(slotGames[i]);
+                }
+                suffixOrder.sort(function (a, b) {
+                    if (a === '') return -1;
+                    if (b === '') return 1;
+                    return a.localeCompare(b);
+                });
+
+                if (suffixOrder.length === 1 && suffixOrder[0] === '') {
+                    // No suffixes — flat grid
+                    out += '<div class="bs-games-grid">';
+                    for (var i = 0; i < slotGames.length; i++) {
+                        out += renderGameCard(slotGames[i]);
+                    }
+                    out += '</div>';
+                } else {
+                    // Court columns side by side
+                    out += '<div class="bs-courts-row">';
+                    for (var s = 0; s < suffixOrder.length; s++) {
+                        var suffix = suffixOrder[s];
+                        out += '<div class="bs-court-col">';
+                        if (suffix) {
+                            out += '<div class="bs-court-label">' + suffix + '</div>';
+                        }
+                        out += '<div class="bs-games-grid">';
+                        for (var i = 0; i < suffixMap[suffix].length; i++) {
+                            out += renderGameCard(suffixMap[suffix][i]);
+                        }
+                        out += '</div>';
+                        out += '</div>';
+                    }
+                    out += '</div>';
+                }
+
+                out += '</div>';
+            }
+            return out;
+        }
+
         var html = '';
         for (var g = 0; g < groups.length; g++) {
             var group = groups[g];
             html += '<div class="bs-week-group">';
-            html += '<div class="bs-week-label"><span>' + group.label + '</span>' + (group.dateRange ? '<span class="bs-week-date-range">' + group.dateRange + '</span>' : '') + '</div>';
+            html += '<div class="bs-week-label">' + group.label + '</div>';
 
             if (showLeagueSections) {
                 // Sub-group by league within each week/date group
@@ -597,28 +758,20 @@
                     var abbr = leagueOrder[l];
                     html += '<div class="bs-league-section">';
                     html += '<div class="bs-league-section-label">' + abbr + '</div>';
-                    html += '<div class="bs-games-grid">';
-                    for (var i = 0; i < leagueGroups[abbr].length; i++) {
-                        html += renderGameCard(leagueGroups[abbr][i]);
-                    }
-                    html += '</div>';
+                    html += renderTimeSlots(leagueGroups[abbr]);
                     html += '</div>';
                 }
             } else {
-                html += '<div class="bs-games-grid">';
-                for (var i = 0; i < group.games.length; i++) {
-                    html += renderGameCard(group.games[i]);
-                }
-                html += '</div>';
+                html += renderTimeSlots(group.games);
             }
 
             html += '</div>';
         }
 
-        els.gameList.innerHTML = html;
+        els.gameCards.innerHTML = html;
 
         // Attach click handlers (only for final/live games)
-        var cards = els.gameList.querySelectorAll('.bs-game-card[data-id]');
+        var cards = els.gameCards.querySelectorAll('.bs-game-card[data-id]');
         for (var c = 0; c < cards.length; c++) {
             cards[c].addEventListener('click', function () {
                 var id = this.getAttribute('data-id');
@@ -632,7 +785,7 @@
         selectedBoxScoreId = boxScoreId;
 
         // Update card selection
-        var cards = els.gameList.querySelectorAll('.bs-game-card');
+        var cards = els.gameCards.querySelectorAll('.bs-game-card');
         for (var i = 0; i < cards.length; i++) {
             if (cards[i].getAttribute('data-id') === boxScoreId) {
                 cards[i].classList.add('selected');
@@ -837,18 +990,18 @@
     function init() {
         els = {
             leagueSelect: document.getElementById('bs-league-select'),
-            leagueClear: document.getElementById('bs-league-clear'),
             divisionSelect: document.getElementById('bs-division-select'),
-            divisionClear: document.getElementById('bs-division-clear'),
+            divisionGroup: document.getElementById('bs-division-group'),
             seasonSelect: document.getElementById('bs-season-select'),
-            seasonClear: document.getElementById('bs-season-clear'),
             teamSelect: document.getElementById('bs-team-select'),
-            teamClear: document.getElementById('bs-team-clear'),
             dateSelect: document.getElementById('bs-date-select'),
-            dateClear: document.getElementById('bs-date-clear'),
+            clearAll: document.getElementById('bs-clear-all'),
             weekTabs: document.getElementById('bs-week-tabs'),
-            empty: document.getElementById('bs-empty'),
+            spotlight: document.getElementById('bs-spotlight'),
+            spotlightMsg: document.getElementById('bs-spotlight-msg'),
+            liveGames: document.getElementById('bs-live-games'),
             gameList: document.getElementById('bs-game-list'),
+            gameCards: document.getElementById('bs-game-cards'),
             detail: document.getElementById('bs-detail'),
             homeName: document.getElementById('bs-home-name'),
             awayName: document.getElementById('bs-away-name'),
@@ -862,17 +1015,14 @@
             homePlayerStats: document.getElementById('bs-home-player-stats')
         };
 
-        // Helper to show/hide clear buttons
-        function updateClearButtons() {
-            els.leagueClear.classList.toggle('hidden', !selectedLeagueId);
-            els.divisionClear.classList.toggle('hidden', !selectedDivision);
-            els.seasonClear.classList.toggle('hidden', !selectedSeasonId);
-            els.teamClear.classList.toggle('hidden', !selectedTeam);
-            els.dateClear.classList.toggle('hidden', !selectedDate);
+        // Show "Clear All" only when any filter is active
+        function updateClearAllVisibility() {
+            var anyActive = selectedLeagueId || selectedDivision || selectedSeasonId || selectedTeam || selectedDate;
+            els.clearAll.classList.toggle('hidden', !anyActive);
         }
 
-        // Clear button handlers
-        els.leagueClear.addEventListener('click', function () {
+        // Clear All handler — resets everything
+        els.clearAll.addEventListener('click', function () {
             selectedLeagueId = null;
             selectedDivision = null;
             selectedSeasonId = null;
@@ -887,58 +1037,8 @@
             renderSeasonDropdown();
             renderTeamDropdown();
             renderDateDropdown();
-            updateClearButtons();
+            updateClearAllVisibility();
             loadAllGameSummaries();
-        });
-
-        els.divisionClear.addEventListener('click', function () {
-            selectedDivision = null;
-            selectedSeasonId = null;
-            selectedTeam = null;
-            selectedDate = null;
-            selectedWeek = null;
-            selectedBoxScoreId = null;
-            hideDetail();
-            els.divisionSelect.value = '';
-            renderSeasonDropdown();
-            renderTeamDropdown();
-            renderDateDropdown();
-            updateClearButtons();
-            loadAllGameSummaries();
-        });
-
-        els.seasonClear.addEventListener('click', function () {
-            selectedSeasonId = null;
-            selectedTeam = null;
-            selectedDate = null;
-            selectedWeek = null;
-            selectedBoxScoreId = null;
-            hideDetail();
-            els.seasonSelect.value = '';
-            renderTeamDropdown();
-            renderDateDropdown();
-            updateClearButtons();
-            loadAllGameSummaries();
-        });
-
-        els.teamClear.addEventListener('click', function () {
-            selectedTeam = null;
-            selectedWeek = null;
-            selectedBoxScoreId = null;
-            hideDetail();
-            els.teamSelect.value = '';
-            updateClearButtons();
-            renderGameCards();
-        });
-
-        els.dateClear.addEventListener('click', function () {
-            selectedDate = null;
-            selectedWeek = null;
-            selectedBoxScoreId = null;
-            hideDetail();
-            els.dateSelect.value = '';
-            updateClearButtons();
-            renderGameCards();
         });
 
         // League change → resets division, season, team, date
@@ -955,7 +1055,7 @@
             renderSeasonDropdown();
             renderTeamDropdown();
             renderDateDropdown();
-            updateClearButtons();
+            updateClearAllVisibility();
             loadAllGameSummaries();
         });
 
@@ -971,7 +1071,7 @@
             renderSeasonDropdown();
             renderTeamDropdown();
             renderDateDropdown();
-            updateClearButtons();
+            updateClearAllVisibility();
             loadAllGameSummaries();
         });
 
@@ -985,7 +1085,7 @@
             hideDetail();
             renderTeamDropdown();
             renderDateDropdown();
-            updateClearButtons();
+            updateClearAllVisibility();
             loadAllGameSummaries();
         });
 
@@ -995,7 +1095,7 @@
             selectedWeek = null;
             selectedBoxScoreId = null;
             hideDetail();
-            updateClearButtons();
+            updateClearAllVisibility();
             renderGameCards();
         });
 
@@ -1005,7 +1105,7 @@
             selectedWeek = null;
             selectedBoxScoreId = null;
             hideDetail();
-            updateClearButtons();
+            updateClearAllVisibility();
             renderGameCards();
         });
 
