@@ -2,8 +2,7 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/tracker/(.*)", "destination": "/tracker/index.html" },
-    { "source": "/schedule", "destination": "/schedule.html" },
-    { "source": "/schedule/drmbl", "destination": "/schedule.html" },
-    { "source": "/schedule/copa-beta", "destination": "/schedule.html" }
+    { "source": "/schedule/:league", "destination": "/schedule.html" },
+    { "source": "/schedule", "destination": "/schedule.html" }
   ]
 }
