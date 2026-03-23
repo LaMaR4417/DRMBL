@@ -325,6 +325,11 @@
     padding-right: 28px;
 }
 
+.cb-filter-select option {
+    background: #111;
+    color: var(--white);
+}
+
 .cb-filter-select:focus {
     outline: none;
     border-color: var(--accent);
