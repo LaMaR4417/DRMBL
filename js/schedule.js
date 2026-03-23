@@ -140,7 +140,7 @@
                 html += '<p class="week-sponsor">Presented by ' + meta.sponsor + '</p>';
                 if (sp && sp.img) {
                     var spHref = sp.page ? '/' + sp.page : '/sponsor-bio.html?id=' + encodeURIComponent(sp.id);
-                    html += '<a href="' + spHref + '" class="week-sponsor-logo week-sponsor-logo-' + sp.id + '"><img src="/' + sp.img + '" alt="' + sp.name + '"></a>';
+                    html += '<a href="' + spHref + '" class="week-sponsor-logo week-sponsor-logo-' + sp.id + '"><img src="' + sp.img + '" alt="' + sp.name + '"></a>';
                 }
                 html += '</div>';
             } else {
@@ -442,8 +442,9 @@
     ];
 
     // Copa Beta active filters
-    var cbFilters = { division: 'all', category: 'all', team: 'all' };
-    var cbData = CB_FALLBACK;
+    var cbFilters = { division: 'all', category: 'all', team: 'all', court: 'all' };
+    var cbData = [];
+    var cbSkeletonMode = false;
 
     function parseCopaBetaAPI(apiCategories) {
         return apiCategories.map(function (cat) {
@@ -492,25 +493,38 @@
         return result;
     }
 
-    function getCBTeams(data, divFilter, catFilter) {
+    function getCBTeamsGrouped(data, divFilter, catFilter) {
+        var groups = [];
         var seen = {};
-        var result = [];
-        for (var i = 0; i < data.length; i++) {
-            if (divFilter !== 'all' && data[i].division !== divFilter) continue;
-            if (catFilter !== 'all' && data[i].category !== catFilter) continue;
-            for (var t = 0; t < data[i].teams.length; t++) {
-                var name = data[i].teams[t].name;
-                if (name && !seen[name]) { seen[name] = true; result.push(name); }
+        var divOrder = ['Femenil', 'Varonil'];
+        for (var di = 0; di < divOrder.length; di++) {
+            var div = divOrder[di];
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].division !== div) continue;
+                if (divFilter !== 'all' && data[i].division !== divFilter) continue;
+                if (catFilter !== 'all' && data[i].category !== catFilter) continue;
+                var key = div + '|' + data[i].category;
+                if (seen[key]) continue;
+                seen[key] = true;
+                var teamNames = [];
+                for (var t = 0; t < data[i].teams.length; t++) {
+                    var name = data[i].teams[t].name;
+                    if (name) teamNames.push(name);
+                }
+                teamNames.sort();
+                groups.push({ division: div, category: data[i].category, teams: teamNames });
             }
         }
-        return result.sort();
+        return groups;
     }
+
+    var CB_COURTS = ['Court A', 'Court B', 'Court C'];
 
     function buildCBFilterBar() {
         var nav = document.getElementById('week-nav-inner');
         var divisions = getCBDivisions(cbData);
         var categories = getCBCategories(cbData, cbFilters.division);
-        var teams = getCBTeams(cbData, cbFilters.division, cbFilters.category);
+        var teamGroups = getCBTeamsGrouped(cbData, cbFilters.division, cbFilters.category);
 
         var html = '<div class="cb-filters">';
 
@@ -532,12 +546,26 @@
         }
         html += '</select>';
 
-        // Team filter
+        // Court filter
+        html += '<select class="cb-filter-select" id="cb-filter-court">';
+        html += '<option value="all">All Courts</option>';
+        for (var ct = 0; ct < CB_COURTS.length; ct++) {
+            var sel4 = cbFilters.court === CB_COURTS[ct] ? ' selected' : '';
+            html += '<option value="' + CB_COURTS[ct] + '"' + sel4 + '>' + CB_COURTS[ct] + '</option>';
+        }
+        html += '</select>';
+
+        // Team filter (grouped by division + category)
         html += '<select class="cb-filter-select" id="cb-filter-team">';
         html += '<option value="all">All Teams</option>';
-        for (var t = 0; t < teams.length; t++) {
-            var sel3 = cbFilters.team === teams[t] ? ' selected' : '';
-            html += '<option value="' + teams[t] + '"' + sel3 + '>' + teams[t] + '</option>';
+        for (var tg = 0; tg < teamGroups.length; tg++) {
+            var grp = teamGroups[tg];
+            html += '<optgroup label="' + grp.division + ' \u2014 ' + grp.category + '">';
+            for (var t = 0; t < grp.teams.length; t++) {
+                var sel3 = cbFilters.team === grp.teams[t] ? ' selected' : '';
+                html += '<option value="' + grp.teams[t] + '"' + sel3 + '>' + grp.teams[t] + '</option>';
+            }
+            html += '</optgroup>';
         }
         html += '</select>';
 
@@ -555,6 +583,10 @@
             cbFilters.category = this.value;
             cbFilters.team = 'all';
             buildCBFilterBar();
+            buildCBSchedule();
+        });
+        document.getElementById('cb-filter-court').addEventListener('change', function () {
+            cbFilters.court = this.value;
             buildCBSchedule();
         });
         document.getElementById('cb-filter-team').addEventListener('change', function () {
@@ -579,6 +611,9 @@
                 var awayName = isChamp ? game.away : getTeamName(cat.teams, game.away);
                 var homeName = isChamp ? game.home : getTeamName(cat.teams, game.home);
 
+                // Court filter
+                if (cbFilters.court !== 'all' && game.location !== cbFilters.court) continue;
+
                 // Team filter
                 if (cbFilters.team !== 'all' && !isChamp) {
                     if (awayName !== cbFilters.team && homeName !== cbFilters.team) continue;
@@ -587,6 +622,8 @@
                 allGames.push({
                     date: game.date, time: game.time, location: game.location,
                     away: awayName, home: homeName,
+                    awayScore: game.awayScore != null ? game.awayScore : null,
+                    homeScore: game.homeScore != null ? game.homeScore : null,
                     division: cat.division, category: cat.category,
                     group: game.group || null, round: game.round || null,
                     isChamp: isChamp
@@ -607,17 +644,13 @@
             dateMap[key].games.push(allGames[j]);
         }
 
-        // Sort games within each date by time
-        for (var k = 0; k < dateGroups.length; k++) {
-            dateGroups[k].games.sort(function (a, b) {
-                return parseTime(a.time) - parseTime(b.time);
-            });
-        }
-
         if (allGames.length === 0) {
             container.innerHTML = '<div class="schedule-empty">No games match your filters.</div>';
             return;
         }
+
+        // Determine which courts to show
+        var courtsToShow = cbFilters.court !== 'all' ? [cbFilters.court] : CB_COURTS;
 
         var html = '';
         for (var s = 0; s < dateGroups.length; s++) {
@@ -626,37 +659,101 @@
             html += '<div class="week-header">';
             html += '<h2 class="week-title">' + formatDate(dg.date) + '</h2>';
             html += '</div>';
-            html += '<div class="games-grid">';
 
-            for (var m = 0; m < dg.games.length; m++) {
-                var gm = dg.games[m];
-                var cardCls = 'game-card cb-game-card' + (gm.isChamp ? ' game-card-playoff' : '');
-
-                html += '<div class="' + cardCls + '">';
-
-                // Left: time + court
-                html += '<div class="cb-game-info">';
-                html += '<div class="game-time">' + gm.time + '</div>';
-                html += '<div class="cb-game-court">' + (gm.location || '') + '</div>';
-                html += '</div>';
-
-                // Teams
-                html += '<div class="game-team game-team-away">' + gm.away + '</div>';
-                html += '<div class="game-vs">VS</div>';
-                html += '<div class="game-team game-team-home">' + gm.home + '</div>';
-
-                // Right: division/category/group badge
-                html += '<div class="cb-game-meta">';
-                html += '<span class="cb-badge cb-badge-' + gm.division.toLowerCase() + '">' + gm.division + '</span>';
-                html += '<span class="cb-badge-cat">' + gm.category + '</span>';
-                if (gm.group) {
-                    html += '<span class="cb-badge-group">Grp ' + gm.group + '</span>';
+            // Find which courts have games on this date
+            var activeCourts = [];
+            if (cbFilters.court !== 'all') {
+                activeCourts = [cbFilters.court];
+            } else {
+                var courtSeen = {};
+                for (var ac = 0; ac < dg.games.length; ac++) {
+                    var loc = dg.games[ac].location;
+                    if (loc && !courtSeen[loc]) { courtSeen[loc] = true; activeCourts.push(loc); }
                 }
-                if (gm.round) {
-                    var rCls = gm.round === 'Championship' ? ' game-round-championship' : '';
-                    html += '<span class="game-round' + rCls + '">' + gm.round + '</span>';
+                // Sort courts in order A, B, C
+                activeCourts.sort();
+            }
+
+            // Build a map of court -> time -> game
+            var courtTimeMap = {};
+            var allTimes = [];
+            var timesSeen = {};
+            for (var ci = 0; ci < activeCourts.length; ci++) {
+                courtTimeMap[activeCourts[ci]] = {};
+            }
+            for (var cg = 0; cg < dg.games.length; cg++) {
+                var gm = dg.games[cg];
+                if (courtTimeMap[gm.location]) {
+                    courtTimeMap[gm.location][gm.time] = gm;
                 }
-                html += '</div>';
+                if (!timesSeen[gm.time]) {
+                    timesSeen[gm.time] = true;
+                    allTimes.push(gm.time);
+                }
+            }
+            allTimes.sort(function (a, b) { return parseTime(a) - parseTime(b); });
+
+            // Court headers row
+            html += '<div class="cb-courts-grid cb-courts-' + activeCourts.length + '">';
+            for (var ch = 0; ch < activeCourts.length; ch++) {
+                html += '<div class="cb-court-header">' + activeCourts[ch] + '</div>';
+            }
+            html += '</div>';
+
+            // Time slot rows
+            for (var ti = 0; ti < allTimes.length; ti++) {
+                var time = allTimes[ti];
+                html += '<div class="cb-courts-grid cb-courts-' + activeCourts.length + ' cb-time-row">';
+
+                for (var col = 0; col < activeCourts.length; col++) {
+                    var gm = courtTimeMap[activeCourts[col]][time];
+                    if (gm) {
+                        if (cbSkeletonMode) {
+                            html += '<div class="cb-court-card">';
+                            html += '<div class="cb-card-info">';
+                            html += '<div class="cb-card-time">' + gm.time + '</div>';
+                            html += '<div><span class="team-name-loading" style="width:50px"></span></div>';
+                            html += '<div><span class="team-name-loading" style="width:65px"></span></div>';
+                            html += '</div>';
+                            html += '<div class="cb-card-matchup">';
+                            html += '<span class="team-name-loading" style="width:70px"></span>';
+                            html += '<span class="cb-card-vs">vs</span>';
+                            html += '<span class="team-name-loading" style="width:70px"></span>';
+                            html += '</div>';
+                            html += '</div>';
+                        } else {
+                            var cardCls = 'cb-court-card' + (gm.isChamp ? ' cb-court-card-champ' : '');
+                            html += '<div class="' + cardCls + ' cb-div-' + gm.division.toLowerCase() + '">';
+                            html += '<div class="cb-card-info">';
+                            html += '<div class="cb-card-time">' + gm.time + '</div>';
+                            html += '<div class="cb-card-division cb-card-div-' + gm.division.toLowerCase() + '">' + gm.division + '</div>';
+                            html += '<div class="cb-card-label">' + gm.category + '</div>';
+                            if (gm.group) {
+                                html += '<div class="cb-card-label">Group ' + gm.group + '</div>';
+                            }
+                            if (gm.round) {
+                                var rCls = gm.round === 'Championship' ? ' game-round-championship' : '';
+                                html += '<div class="cb-card-round' + rCls + '">' + gm.round + '</div>';
+                            }
+                            html += '</div>';
+                            html += '<div class="cb-card-matchup">';
+                            var hasScore = gm.awayScore != null && gm.homeScore != null;
+                            html += '<span class="cb-card-team">' + gm.away + '</span>';
+                            if (hasScore) {
+                                html += '<span class="cb-card-score">' + gm.awayScore + '</span>';
+                            }
+                            html += '<span class="cb-card-vs">' + (hasScore ? '-' : 'vs') + '</span>';
+                            if (hasScore) {
+                                html += '<span class="cb-card-score">' + gm.homeScore + '</span>';
+                            }
+                            html += '<span class="cb-card-team">' + gm.home + '</span>';
+                            html += '</div>';
+                            html += '</div>';
+                        }
+                    } else {
+                        html += '<div class="cb-court-card cb-court-empty-slot"></div>';
+                    }
+                }
 
                 html += '</div>';
             }
@@ -681,22 +778,32 @@
     }
 
     function loadCopaBeta() {
-        // Render immediately with fallback
-        buildCBFilterBar();
+        // Step 1: Render skeleton with fallback structure
+        cbSkeletonMode = true;
+        cbData = CB_FALLBACK;
         buildCBSchedule();
 
-        // Try API
+        // Step 2: Fetch real data and replace
         fetch('/api/copa-beta')
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data && data.categories && data.categories.length) {
                     cbData = parseCopaBetaAPI(data.categories);
+                    cbSkeletonMode = false;
+                    buildCBFilterBar();
+                    buildCBSchedule();
+                } else {
+                    cbSkeletonMode = false;
                     buildCBFilterBar();
                     buildCBSchedule();
                 }
             })
             .catch(function () {
-                // Fallback already rendered
+                // API unavailable — show fallback with real names
+                cbSkeletonMode = false;
+                cbData = CB_FALLBACK;
+                buildCBFilterBar();
+                buildCBSchedule();
             });
     }
 

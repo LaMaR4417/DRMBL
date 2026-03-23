@@ -330,70 +330,160 @@
     color: var(--white);
 }
 
+.cb-filter-select optgroup {
+    background: #0a0a0a;
+    color: var(--court-wood);
+    font-style: normal;
+    font-weight: bold;
+}
+
 .cb-filter-select:focus {
     outline: none;
     border-color: var(--accent);
 }
 
-/* Copa Beta Game Cards */
-.cb-game-card {
-    grid-template-columns: 100px 1fr auto 1fr 120px;
+/* Copa Beta Court Columns */
+.cb-courts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
-.cb-game-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.cb-courts-2 {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 750px;
 }
 
-.cb-game-court {
+.cb-courts-1 {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+}
+
+.cb-court-header {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, 0.35);
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 12px;
+    color: var(--court-wood);
+    background: rgba(200, 164, 92, 0.08);
+    border: 1px solid rgba(200, 164, 92, 0.15);
+    border-radius: 6px;
 }
 
-.cb-game-meta {
+.cb-time-row {
+    align-items: stretch;
+}
+
+.cb-court-empty-slot {
+    border-left-color: transparent;
+}
+
+.cb-court-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 3px solid transparent;
+    border-radius: 4px;
+}
+
+.cb-card-info {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 3px;
 }
 
-.cb-badge {
+.cb-div-femenil {
+    border-left-color: #ff7eb3;
+}
+
+.cb-div-varonil {
+    border-left-color: #7eb8ff;
+}
+
+.cb-court-card-champ {
+    background: rgba(200, 164, 92, 0.06);
+    border-left-color: var(--accent);
+}
+
+.cb-card-time {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: var(--court-wood);
+}
+
+.cb-card-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.cb-card-division {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: left;
+    margin-bottom: 2px;
+}
+
+.cb-card-div-femenil {
+    color: #ff7eb3;
+}
+
+.cb-card-div-varonil {
+    color: #7eb8ff;
+}
+
+.cb-card-round {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 11px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 3px;
-}
-
-.cb-badge-femenil {
-    color: #ff7eb3;
-    background: rgba(255, 126, 179, 0.12);
-    border: 1px solid rgba(255, 126, 179, 0.25);
-}
-
-.cb-badge-varonil {
-    color: #7eb8ff;
-    background: rgba(126, 184, 255, 0.12);
-    border: 1px solid rgba(126, 184, 255, 0.25);
-}
-
-.cb-badge-cat {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, 0.5);
-}
-
-.cb-badge-group {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 11px;
-    letter-spacing: 1.5px;
     color: var(--court-wood);
 }
+
+.cb-card-round.game-round-championship {
+    color: var(--accent);
+}
+
+.cb-card-matchup {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.cb-card-team {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    font-weight: 400;
+    color: #fff;
+}
+
+.cb-card-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: var(--accent);
+}
+
+.cb-card-vs {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.2);
+}
+
 
 /* Playoff Styles */
 .week-section-playoff .week-title {
@@ -523,21 +613,8 @@
         min-width: 0;
     }
 
-    .cb-game-card {
+    .cb-courts-grid {
         grid-template-columns: 1fr;
-        gap: 6px;
-        text-align: center;
-    }
-
-    .cb-game-info {
-        align-items: center;
-    }
-
-    .cb-game-meta {
-        flex-direction: row;
-        justify-content: center;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px;
+        gap: 12px;
     }
 }
