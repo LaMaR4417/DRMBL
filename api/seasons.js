@@ -14,7 +14,30 @@ module.exports = async function (req, res) {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
+    var league = req.query.league || null;
+
     try {
+        // Copa Beta mode: return all Copa Beta categories
+        if (league === 'copa-beta') {
+            var { resources: cbResources } = await seasonsContainer.items
+                .query("SELECT * FROM c WHERE CONTAINS(c.id, 'Copa Beta - Categoria')")
+                .fetchAll();
+
+            var categories = cbResources.map(function (doc) {
+                return {
+                    id: doc.id,
+                    league: doc.league || null,
+                    teams: doc.teams || [],
+                    games: doc.games || [],
+                    groups: doc.groups || null,
+                    timeline: doc.timeline || null
+                };
+            });
+
+            return res.status(200).json({ categories: categories });
+        }
+
+        // Default: list all seasons
         var { resources } = await seasonsContainer.items
             .query("SELECT c.id, c.league, c.teams, c.weeklySchedule, c.games FROM c")
             .fetchAll();

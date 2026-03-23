@@ -784,7 +784,7 @@
         buildCBSchedule();
 
         // Step 2: Fetch real data and replace
-        fetch('/api/copa-beta')
+        fetch('/api/seasons?league=copa-beta')
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data && data.categories && data.categories.length) {
