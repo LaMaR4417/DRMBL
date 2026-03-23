@@ -4,19 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule - DRMBL</title>
-    <link rel="icon" href="assets/favicon.ico">
-    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/schedule.css">
-    <script src="js/skeleton.js"></script>
+    <link rel="icon" href="/assets/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/schedule.css">
+    <script src="/js/skeleton.js"></script>
 </head>
 <body>
 
     <!-- SCHEDULE HERO -->
     <section class="schedule-hero">
-        <h1 class="schedule-hero-title">Schedule</h1>
-        <p class="schedule-hero-sub">Spring 2026 &mdash; 10 Regular Season Weeks + Playoff Sunday</p>
+        <div class="league-switcher" id="league-switcher">
+            <a href="/schedule/drmbl" class="league-btn" data-league="drmbl">
+                <img src="/PSDs/DRMBL-Logo.png" alt="DRMBL" class="league-logo-img">
+            </a>
+            <a href="/schedule/copa-beta" class="league-btn" data-league="copa-beta">
+                <img src="/PSDs/Beta-Logo.png" alt="Copa Beta" class="league-logo-img">
+            </a>
+        </div>
     </section>
 
     <!-- WEEK NAVIGATION -->
@@ -36,6 +42,6 @@
         &copy; 2026 Del Rio Men's Basketball League
     </footer>
 
-    <script src="js/schedule.js"></script>
+    <script src="/js/schedule.js"></script>
 </body>
 </html>

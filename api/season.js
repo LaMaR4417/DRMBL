@@ -29,7 +29,9 @@ module.exports = async function (req, res) {
             id: seasonDoc.id,
             league: seasonDoc.league || null,
             teams: seasonDoc.teams,
-            weeklySchedule: seasonDoc.weeklySchedule || null
+            weeklySchedule: seasonDoc.weeklySchedule || null,
+            games: seasonDoc.games || null,
+            groups: seasonDoc.groups || null
         });
 
     } catch (err) {
