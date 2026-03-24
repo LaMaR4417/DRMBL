@@ -7,40 +7,48 @@
     background: #0a0602;
 }
 
-.standings-hero-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(36px, 8vw, 64px);
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
+/* League Switcher (mirrors schedule page) */
+.league-switcher {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 32px;
 }
 
-.standings-hero-sub {
-    font-size: 15px;
-    color: rgba(255, 255, 255, 0.5);
-    max-width: 600px;
-    margin: 0 auto;
-    line-height: 1.6;
+.league-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: border-color 0.3s ease, transform 0.3s ease, background 0.3s ease,
+                box-shadow 0.3s ease, opacity 0.3s ease;
+    text-decoration: none;
+    opacity: 0.4;
+    overflow: hidden;
 }
 
-/* Pre-season Banner */
-.standings-banner {
-    text-align: center;
-    padding: 16px 20px;
-    background: rgba(200, 164, 92, 0.08);
-    border-bottom: 1px solid rgba(200, 164, 92, 0.15);
+.league-btn:hover {
+    opacity: 0.7;
+    transform: scale(1.05);
 }
 
-.standings-banner p {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--court-wood);
+.league-btn.active {
+    opacity: 1;
+    border-color: var(--accent);
+    transform: scale(1.15);
+    box-shadow: 0 0 20px rgba(200, 164, 92, 0.3), 0 0 40px rgba(200, 164, 92, 0.1);
 }
 
-.standings-banner.hidden {
-    display: none;
+.league-logo-img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
 }
 
 /* Standings Section */
@@ -48,6 +56,8 @@
     padding: 60px 20px;
     background: #0d0d0d;
 }
+
+/* ── DRMBL STANDINGS ── */
 
 /* Table Container */
 .standings-table-wrap {
@@ -144,6 +154,166 @@
     color: rgba(255, 255, 255, 0.25);
 }
 
+/* ── SHIMMER LOADING ── */
+
+.standings-shimmer-row td {
+    pointer-events: none;
+}
+
+.shimmer-block {
+    display: inline-block;
+    height: 14px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 75%);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite;
+}
+
+.shimmer-rank {
+    width: 20px;
+}
+
+.shimmer-team {
+    width: 120px;
+}
+
+.shimmer-stat {
+    width: 24px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── FILTER BAR ── */
+
+.standings-filter-nav {
+    position: sticky;
+    top: 53px;
+    z-index: 90;
+    background: #111;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 12px 20px;
+}
+
+.cb-filters {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cb-filter-select {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--white);
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.cb-filter-select option {
+    background: #111;
+    color: var(--white);
+}
+
+.cb-filter-select optgroup {
+    background: #0a0a0a;
+    color: var(--court-wood);
+}
+
+.cb-filter-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* ── COPA BETA STANDINGS ── */
+
+.standings-division {
+    max-width: 900px;
+    margin: 0 auto 60px;
+}
+
+.standings-division:last-child {
+    margin-bottom: 0;
+}
+
+.division-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(200, 164, 92, 0.2);
+}
+
+.category-section {
+    margin-bottom: 40px;
+}
+
+.category-section:last-child {
+    margin-bottom: 0;
+}
+
+.category-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 16px;
+    padding-left: 4px;
+}
+
+/* Groups within a category */
+.groups-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.group-section {
+    min-width: 0;
+}
+
+.group-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 10px;
+    padding-left: 4px;
+}
+
+/* Pre-season Banner */
+.standings-banner {
+    text-align: center;
+    padding: 16px 20px;
+    background: rgba(200, 164, 92, 0.08);
+    border-bottom: 1px solid rgba(200, 164, 92, 0.15);
+}
+
+.standings-banner p {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+}
+
+.standings-banner.hidden {
+    display: none;
+}
+
 /* Empty / Error states */
 .standings-empty {
     text-align: center;
@@ -156,6 +326,20 @@
 @media (max-width: 600px) {
     .standings-hero {
         padding: 180px 16px 40px;
+    }
+
+    .league-switcher {
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .league-btn {
+        width: 80px;
+        height: 80px;
+    }
+
+    .league-btn.active {
+        transform: scale(1.1);
     }
 
     .standings-section {
@@ -181,5 +365,37 @@
     .standings-table thead th.col-l,
     .standings-table thead th.col-diff {
         width: 45px;
+    }
+
+    .division-header {
+        font-size: 26px;
+        letter-spacing: 3px;
+        margin-bottom: 24px;
+    }
+
+    .category-header {
+        font-size: 17px;
+    }
+
+    .shimmer-team {
+        width: 80px;
+    }
+
+    .standings-filter-nav {
+        padding: 10px 12px;
+    }
+
+    .cb-filters {
+        gap: 8px;
+    }
+
+    .cb-filter-select {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    .groups-container {
+        grid-template-columns: 1fr;
+        gap: 28px;
     }
 }
