@@ -50,7 +50,9 @@ export default function HomeScreen() {
     dispatch({
       type: 'RESTORE_GAME',
       settings: ts.settings,
+      selectedLeague: ts.selectedLeague || null,
       selectedSeason: ts.selectedSeason,
+      selectedGame: ts.selectedGame || null,
       homeTeam: ts.homeTeam,
       awayTeam: ts.awayTeam,
       boxScore: game.boxScore,

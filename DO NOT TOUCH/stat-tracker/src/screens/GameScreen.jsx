@@ -91,7 +91,7 @@ export default function GameScreen() {
   const initialSynced = useRef(false);
 
   // Build metadata to persist alongside box score for resume support
-  const syncMeta = { settings: game.settings, selectedSeason: game.selectedSeason, homeTeam: game.homeTeam, awayTeam: game.awayTeam };
+  const syncMeta = { settings: game.settings, selectedLeague: game.selectedLeague, selectedSeason: game.selectedSeason, selectedGame: game.selectedGame, homeTeam: game.homeTeam, awayTeam: game.awayTeam };
 
   // One-time sync when GameScreen first mounts with a box score
   useEffect(() => {
@@ -262,7 +262,7 @@ export default function GameScreen() {
     if (!bs || bs.gameInfo.general.status !== 'final') return;
     setSaveStatus('saving');
 
-    saveEndGame(bs, game.homeTeam.teamID, game.awayTeam.teamID, game.homeTeam.slot, game.awayTeam.slot)
+    saveEndGame(bs, game.homeTeam.teamID, game.awayTeam.teamID, game.homeTeam.slot, game.awayTeam.slot, game.selectedSeason?.id)
       .then(() => setSaveStatus('saved'))
       .catch((err) => { setSaveStatus('error'); setSaveError(err.message); });
   }, [saveStatus, bs?.gameInfo?.general?.status]);

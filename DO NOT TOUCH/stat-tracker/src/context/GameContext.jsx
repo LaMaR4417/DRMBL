@@ -8,15 +8,22 @@ const GameDispatchContext = createContext(null);
 
 const initialState = {
   // Pre-game setup step tracking
-  setupStep: 0, // 0=home, 1=settings, 2=teams, 3=attendance, 4=numbers, 5=starters, 6=tipoff
+  // 0=home, 1=league, 2=season, 3=game-select, 4=settings, 5=attendance, 6=tipoff, 7=game
+  setupStep: 0,
 
-  // Game settings (loaded from API at step 1, null until then)
+  // Game settings (loaded from API at step 4, null until then)
   settings: null,
 
-  // Selected season/league: { id, league: { fullName, abbreviation } }
+  // Selected league: { id, league: { fullName, divisions } }
+  selectedLeague: null,
+
+  // Selected season (full season object from API, includes teams/games/standings)
   selectedSeason: null,
 
-  // Team selections — set during team pick, roster loaded async from API
+  // Selected scheduled game from the season (null = custom matchup)
+  selectedGame: null,
+
+  // Team selections — set during game pick or custom matchup, roster loaded async from API
   // { teamID, name, slot, roster: [...] | null }
   homeTeam: null,
   awayTeam: null,
@@ -74,10 +81,70 @@ function gameReducer(state, action) {
     case 'SET_SETTINGS':
       return { ...state, settings: action.settings };
 
+    case 'SET_LEAGUE':
+      return {
+        ...state,
+        selectedLeague: action.league,
+        selectedSeason: null,
+        selectedGame: null,
+        homeTeam: null,
+        awayTeam: null,
+        homeAttendance: new Set(),
+        awayAttendance: new Set(),
+        homeNumberOverrides: {},
+        awayNumberOverrides: {},
+        homeStarters: new Set(),
+        awayStarters: new Set(),
+        homeCaptain: null,
+        awayCaptain: null,
+      };
+
     case 'SET_SEASON':
       return {
         ...state,
-        selectedSeason: { id: action.id, league: action.league },
+        selectedSeason: action.season,
+        selectedGame: null,
+        homeTeam: null,
+        awayTeam: null,
+        homeAttendance: new Set(),
+        awayAttendance: new Set(),
+        homeNumberOverrides: {},
+        awayNumberOverrides: {},
+        homeStarters: new Set(),
+        awayStarters: new Set(),
+        homeCaptain: null,
+        awayCaptain: null,
+      };
+
+    case 'SET_GAME': {
+      const season = state.selectedSeason;
+      const game = action.game;
+      // Resolve team info from season teams using slot letters
+      const teams = season?.teams || [];
+      const homeSlot = game.home;
+      const awaySlot = game.away;
+      const homeInfo = teams.find((t) => t.slot === homeSlot);
+      const awayInfo = teams.find((t) => t.slot === awaySlot);
+      return {
+        ...state,
+        selectedGame: game,
+        homeTeam: homeInfo ? { teamID: homeInfo.teamID, name: homeInfo.name, slot: homeSlot, roster: null } : null,
+        awayTeam: awayInfo ? { teamID: awayInfo.teamID, name: awayInfo.name, slot: awaySlot, roster: null } : null,
+        homeAttendance: new Set(),
+        awayAttendance: new Set(),
+        homeNumberOverrides: {},
+        awayNumberOverrides: {},
+        homeStarters: new Set(),
+        awayStarters: new Set(),
+        homeCaptain: null,
+        awayCaptain: null,
+      };
+    }
+
+    case 'CLEAR_GAME':
+      return {
+        ...state,
+        selectedGame: null,
         homeTeam: null,
         awayTeam: null,
         homeAttendance: new Set(),
@@ -616,7 +683,9 @@ function gameReducer(state, action) {
         ...initialState,
         setupStep: 7,
         settings: action.settings,
+        selectedLeague: action.selectedLeague || null,
         selectedSeason: action.selectedSeason,
+        selectedGame: action.selectedGame || null,
         homeTeam: action.homeTeam,
         awayTeam: action.awayTeam,
         boxScore: action.boxScore,
@@ -651,7 +720,9 @@ export function GameProvider({ children }) {
     try {
       const snapshot = {
         settings: state.settings,
+        selectedLeague: state.selectedLeague,
         selectedSeason: state.selectedSeason,
+        selectedGame: state.selectedGame,
         homeTeam: state.homeTeam,
         awayTeam: state.awayTeam,
         boxScore: state.boxScore,

@@ -2,13 +2,15 @@ import { GameProvider, useGame } from './context/GameContext';
 import { LanguageProvider } from './context/LanguageContext';
 import LangToggle from './components/LangToggle';
 import HomeScreen from './screens/HomeScreen';
+import LeagueSelectScreen from './screens/LeagueSelectScreen';
+import SeasonSelectScreen from './screens/SeasonSelectScreen';
+import GameSelectScreen from './screens/GameSelectScreen';
 import GameSettingsScreen from './screens/GameSettingsScreen';
-import TeamSelectScreen from './screens/TeamSelectScreen';
 import AttendanceScreen from './screens/AttendanceScreen';
-import AssignNumbersScreen from './screens/AssignNumbersScreen';
-import PickStartersScreen from './screens/PickStartersScreen';
 import TipOffScreen from './screens/TipOffScreen';
 import GameScreen from './screens/GameScreen';
+
+// Flow: 0=Home → 1=League → 2=Season → 3=Game Select → 4=Settings → 5=Attendance → 6=Tip-Off → 7=Game
 
 function AppContent() {
   const game = useGame();
@@ -17,15 +19,15 @@ function AppContent() {
     case 0:
       return <HomeScreen />;
     case 1:
-      return <GameSettingsScreen />;
+      return <LeagueSelectScreen />;
     case 2:
-      return <TeamSelectScreen />;
+      return <SeasonSelectScreen />;
     case 3:
-      return <AttendanceScreen />;
+      return <GameSelectScreen />;
     case 4:
-      return <AssignNumbersScreen />;
+      return <GameSettingsScreen />;
     case 5:
-      return <PickStartersScreen />;
+      return <AttendanceScreen />;
     case 6:
       return <TipOffScreen />;
     case 7:

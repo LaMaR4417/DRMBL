@@ -1,5 +1,12 @@
 // API helper for fetching season and team data from the DRMBL backend
 
+export async function fetchLeagues() {
+  const res = await fetch('/api/leagues');
+  if (!res.ok) throw new Error('Failed to load leagues');
+  const data = await res.json();
+  return data.leagues || [];
+}
+
 export async function fetchSeasons() {
   const res = await fetch('/api/seasons');
   if (!res.ok) throw new Error('Failed to load seasons');
@@ -50,7 +57,9 @@ export function syncLiveGame(boxScore, meta) {
       boxScore,
       trackerState: meta ? {
         settings: meta.settings,
+        selectedLeague: meta.selectedLeague || null,
         selectedSeason: meta.selectedSeason,
+        selectedGame: meta.selectedGame || null,
         homeTeam: meta.homeTeam,
         awayTeam: meta.awayTeam,
       } : null,
@@ -58,11 +67,11 @@ export function syncLiveGame(boxScore, meta) {
   }).catch(() => {});
 }
 
-export async function saveEndGame(boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot) {
+export async function saveEndGame(boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId) {
   const res = await fetch('/api/end-game', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot }),
+    body: JSON.stringify({ boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));

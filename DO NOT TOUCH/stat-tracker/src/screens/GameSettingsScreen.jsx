@@ -93,7 +93,7 @@ export default function GameSettingsScreen() {
     return (
       <div className="screen settings-screen">
         <div className="screen-header">
-          <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
+          <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 3 })}>
             {t('common', 'back')}
           </button>
           <h2>{t('settings', 'screenTitle')}</h2>
@@ -108,7 +108,7 @@ export default function GameSettingsScreen() {
     return (
       <div className="screen settings-screen">
         <div className="screen-header">
-          <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
+          <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 3 })}>
             {t('common', 'back')}
           </button>
           <h2>{t('settings', 'screenTitle')}</h2>
@@ -129,7 +129,7 @@ export default function GameSettingsScreen() {
   return (
     <div className="screen settings-screen">
       <div className="screen-header">
-        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
+        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 3 })}>
           {t('common', 'back')}
         </button>
         <h2>{t('settings', 'screenTitle')}</h2>
@@ -644,9 +644,9 @@ export default function GameSettingsScreen() {
       <div className="screen-footer">
         <button
           className="btn btn-primary btn-large"
-          onClick={() => dispatch({ type: 'SET_STEP', step: 2 })}
+          onClick={() => dispatch({ type: 'SET_STEP', step: 5 })}
         >
-          {t('settings', 'nextPickTeams')}
+          {t('settings', 'nextAttendance')}
         </button>
       </div>
     </div>

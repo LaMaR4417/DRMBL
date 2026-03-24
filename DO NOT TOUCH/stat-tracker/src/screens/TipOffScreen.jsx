@@ -34,7 +34,7 @@ export default function TipOffScreen() {
           if (tipWinner) {
             setTipWinner(null);
           } else {
-            dispatch({ type: 'SET_STEP', step: 3 });
+            dispatch({ type: 'SET_STEP', step: 5 });
           }
         }}>
           {t('common', 'back')}

@@ -9,7 +9,6 @@ var database = client.database("DRMBL Database");
 var seasonsContainer = database.container("Seasons");
 var teamsContainer = database.container("Teams");
 
-var SEASON_ID = "Spring - Mens - 2026";
 var BOX_SCORES_CONTAINER_ID = "Box Scores";
 var PLAYERS_CONTAINER_ID = "Players";
 var LIVE_GAMES_CONTAINER_ID = "Live Games";
@@ -172,7 +171,7 @@ function computeAverages(totals, gamesPlayed) {
     return a;
 }
 
-function buildNewPlayerDoc(player, teamName, gameEntry, gameStats) {
+function buildNewPlayerDoc(player, teamName, gameEntry, gameStats, seasonId) {
     var parts = player.playerID.split(" - ");
     var dobStr = parts.length > 1 ? parts[parts.length - 1] : "";
     var dob = { year: null, month: null, date: null };
@@ -208,7 +207,7 @@ function buildNewPlayerDoc(player, teamName, gameEntry, gameStats) {
             },
             seasons: {
                 current: {
-                    season: SEASON_ID,
+                    season: seasonId,
                     gamesPlayed: 1,
                     games: [gameEntry],
                     averages: computeAverages(totals, 1),
@@ -220,22 +219,22 @@ function buildNewPlayerDoc(player, teamName, gameEntry, gameStats) {
     };
 }
 
-function updateExistingPlayer(playerDoc, player, teamName, gameEntry, gameStats) {
+function updateExistingPlayer(playerDoc, player, teamName, gameEntry, gameStats, seasonId) {
     playerDoc.teams.current.name = teamName;
     playerDoc.teams.current.number = player.number;
 
     // Season rotation: if current season differs, push to past
     var current = playerDoc.stats.seasons.current;
-    if (current.season && current.season !== SEASON_ID) {
+    if (current.season && current.season !== seasonId) {
         if (!playerDoc.stats.seasons.past) playerDoc.stats.seasons.past = [];
         playerDoc.stats.seasons.past.push(JSON.parse(JSON.stringify(current)));
-        current.season = SEASON_ID;
+        current.season = seasonId;
         current.gamesPlayed = 0;
         current.games = [];
         current.totals = buildEmptyTotals();
         current.averages = buildEmptyTotals();
     }
-    if (!current.season) current.season = SEASON_ID;
+    if (!current.season) current.season = seasonId;
 
     // Update season stats
     current.gamesPlayed = (current.gamesPlayed || 0) + 1;
@@ -270,7 +269,10 @@ module.exports = async function (req, res) {
     var awayTeamID = body.awayTeamID;
     var homeSlot = body.homeSlot || null;
     var awaySlot = body.awaySlot || null;
-    var seasonId = body.seasonId || SEASON_ID;
+    var seasonId = body.seasonId;
+    if (!seasonId) {
+        return res.status(400).json({ error: "Missing required field: seasonId" });
+    }
     var errors = [];
 
     var homeScore = boxScore.teamInfo.home.score.current;
@@ -303,29 +305,28 @@ module.exports = async function (req, res) {
 
         if (seasonDoc) {
             var updated = false;
+            var winnerName = boxScore.teamInfo[winnerSide].name;
+            var loserName = boxScore.teamInfo[loserSide].name;
+
+            // Helper to write result fields on a matched game object
+            function writeGameResult(gameObj) {
+                gameObj.winner = winnerName;
+                gameObj.loser = loserName;
+                gameObj.homeScore = homeScore;
+                gameObj.awayScore = awayScore;
+                gameObj.boxScoreID = boxScoreID;
+                gameObj.completion = true;
+            }
 
             // Mode 1: weeklySchedule (predetermined — DRMBL)
             if (seasonDoc.weeklySchedule && homeSlot && awaySlot) {
-                var gameResult = {
-                    boxScoreID: boxScoreID,
-                    winner: {
-                        team: boxScore.teamInfo[winnerSide].name,
-                        slot: winnerSide === "home" ? homeSlot : awaySlot,
-                        score: boxScore.teamInfo[winnerSide].score.current
-                    },
-                    loser: {
-                        team: boxScore.teamInfo[loserSide].name,
-                        slot: loserSide === "home" ? homeSlot : awaySlot,
-                        score: boxScore.teamInfo[loserSide].score.current
-                    }
-                };
-
                 for (var w = 0; w < seasonDoc.weeklySchedule.length && !updated; w++) {
                     var week = seasonDoc.weeklySchedule[w];
                     if (!week.games) continue;
                     for (var g = 0; g < week.games.length; g++) {
-                        if (week.games[g].home === homeSlot && week.games[g].away === awaySlot && !week.games[g].result) {
-                            week.games[g].result = gameResult;
+                        var wg = week.games[g];
+                        if (wg.home === homeSlot && wg.away === awaySlot && !wg.winner) {
+                            writeGameResult(wg);
                             updated = true;
                             break;
                         }
@@ -333,7 +334,19 @@ module.exports = async function (req, res) {
                 }
             }
 
-            // Mode 2: schedule (on-the-fly — LOMBA)
+            // Mode 2: games array (Copa Beta, LOMBA predetermined)
+            if (!updated && seasonDoc.games) {
+                for (var gi = 0; gi < seasonDoc.games.length; gi++) {
+                    var sg = seasonDoc.games[gi];
+                    if (sg.home === homeSlot && sg.away === awaySlot && !sg.winner) {
+                        writeGameResult(sg);
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+
+            // Mode 3: on-the-fly schedule (LOMBA fallback)
             if (!updated) {
                 if (!seasonDoc.schedule) seasonDoc.schedule = [];
 
@@ -353,10 +366,13 @@ module.exports = async function (req, res) {
                 var scheduleEntry = {
                     home: boxScore.teamInfo.home.name,
                     away: boxScore.teamInfo.away.name,
-                    id: boxScoreID
+                    id: boxScoreID,
+                    winner: winnerName,
+                    loser: loserName,
+                    homeScore: homeScore,
+                    awayScore: awayScore
                 };
 
-                // Find existing date group or create new one
                 var dateFound = false;
                 if (gameDateObj) {
                     for (var d = 0; d < seasonDoc.schedule.length; d++) {
@@ -379,6 +395,59 @@ module.exports = async function (req, res) {
                 updated = true;
             }
 
+            // Recompute standings from all completed games
+            if (updated && seasonDoc.standings) {
+                var standingsMap = {};
+                var teams = seasonDoc.teams || [];
+                for (var ti = 0; ti < teams.length; ti++) {
+                    var t = teams[ti];
+                    if (t.teamID) {
+                        standingsMap[t.slot] = { slot: t.slot, name: t.name, wins: 0, losses: 0, pointDiff: 0 };
+                    }
+                }
+
+                // Gather all completed games from whichever schedule format exists
+                var allGames = [];
+                if (seasonDoc.weeklySchedule) {
+                    for (var wi = 0; wi < seasonDoc.weeklySchedule.length; wi++) {
+                        var wk = seasonDoc.weeklySchedule[wi];
+                        if (wk.games) allGames = allGames.concat(wk.games);
+                    }
+                }
+                if (seasonDoc.games) {
+                    allGames = allGames.concat(seasonDoc.games);
+                }
+
+                for (var ai = 0; ai < allGames.length; ai++) {
+                    var ag = allGames[ai];
+                    if (!ag.winner || ag.winner === "") continue;
+                    var hSlot = ag.home;
+                    var aSlot = ag.away;
+                    var hEntry = standingsMap[hSlot];
+                    var aEntry = standingsMap[aSlot];
+                    if (!hEntry || !aEntry) continue;
+                    var hs = ag.homeScore || 0;
+                    var as = ag.awayScore || 0;
+                    if (ag.winner === hEntry.name) {
+                        hEntry.wins++;
+                        aEntry.losses++;
+                    } else {
+                        aEntry.wins++;
+                        hEntry.losses++;
+                    }
+                    hEntry.pointDiff += (hs - as);
+                    aEntry.pointDiff += (as - hs);
+                }
+
+                // Sort: wins desc, then pointDiff desc
+                var standingsArr = Object.values(standingsMap);
+                standingsArr.sort(function (a, b) {
+                    if (b.wins !== a.wins) return b.wins - a.wins;
+                    return b.pointDiff - a.pointDiff;
+                });
+                seasonDoc.standings = standingsArr;
+            }
+
             if (updated) {
                 await seasonsContainer.item(seasonId, seasonId).replace(seasonDoc);
             } else {
@@ -390,7 +459,10 @@ module.exports = async function (req, res) {
         errors.push("Season update failed: " + err.message);
     }
 
-    // ── C. Update team records (IMPORTANT) ──
+    // ── C. Update team records (skip for simple tracker) ──
+    var isSimple = boxScore.type === "simple";
+
+    if (!isSimple) {
     async function updateTeamRecord(teamID, isWinner, ownScore, oppScore) {
         try {
             var teamResp = await teamsContainer.item(teamID, teamID).read();
@@ -399,7 +471,7 @@ module.exports = async function (req, res) {
 
             var seasonEntry = null;
             for (var s = 0; s < teamDoc.seasons.length; s++) {
-                if (teamDoc.seasons[s].id === SEASON_ID) { seasonEntry = teamDoc.seasons[s]; break; }
+                if (teamDoc.seasons[s].id === seasonId) { seasonEntry = teamDoc.seasons[s]; break; }
             }
             if (!seasonEntry) { errors.push("Season entry not found for team: " + teamID); return; }
 
@@ -477,10 +549,10 @@ module.exports = async function (req, res) {
             }
 
             if (isNew) {
-                playerDoc = buildNewPlayerDoc(player, teamName, gameEntry, gameStats);
+                playerDoc = buildNewPlayerDoc(player, teamName, gameEntry, gameStats, seasonId);
                 await playersContainer.items.create(playerDoc);
             } else {
-                updateExistingPlayer(playerDoc, player, teamName, gameEntry, gameStats);
+                updateExistingPlayer(playerDoc, player, teamName, gameEntry, gameStats, seasonId);
                 await playersContainer.item(player.playerID, player.playerID).replace(playerDoc);
             }
         } catch (err) {
@@ -500,6 +572,7 @@ module.exports = async function (req, res) {
         }
     }
     await Promise.allSettled(playerPromises);
+    } // end if (!isSimple)
 
     // ── E. Remove from Live Games container ──
     var liveGameId = body.gameId || (boxScore && boxScore.gameId);

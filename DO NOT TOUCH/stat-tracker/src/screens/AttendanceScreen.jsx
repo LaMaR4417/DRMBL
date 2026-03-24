@@ -217,7 +217,7 @@ export default function AttendanceScreen() {
   return (
     <div className="screen attendance-screen">
       <div className="screen-header">
-        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 2 })}>
+        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 4 })}>
           {t('common', 'back')}
         </button>
         <h2>{t('attendance', 'screenTitle')}</h2>

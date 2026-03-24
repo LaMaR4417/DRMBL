@@ -605,6 +605,265 @@ body {
   font-style: italic;
 }
 
+/* ===== LEAGUE SELECT SCREEN ===== */
+.league-select-screen {
+  background: var(--bg-page);
+}
+
+.league-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px;
+  overflow-y: auto;
+  align-items: center;
+}
+
+.btn-league {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 40px;
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.btn-league:hover {
+  border-color: var(--court-wood);
+  background: rgba(193, 154, 107, 0.08);
+}
+
+.league-abbr {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 6px;
+  color: var(--court-wood);
+  line-height: 1;
+}
+
+.league-name {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+/* ===== SEASON SELECT SCREEN ===== */
+.season-select-screen {
+  background: var(--bg-page);
+}
+
+.season-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.btn-season-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  text-align: left;
+}
+
+.btn-season-card:hover {
+  border-color: var(--court-wood);
+  background: rgba(193, 154, 107, 0.08);
+}
+
+.season-card-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--white);
+}
+
+.season-card-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+/* ===== GAME SELECT SCREEN ===== */
+.game-select-screen {
+  background: var(--bg-page);
+}
+
+.game-select-mode-toggle {
+  display: flex;
+  gap: 0;
+  padding: 12px 20px;
+  justify-content: center;
+}
+
+.btn-mode {
+  padding: 10px 28px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-mode:first-child {
+  border-radius: 6px 0 0 6px;
+  border-right: none;
+}
+
+.btn-mode:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.btn-mode:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.btn-mode.active {
+  border-color: var(--court-wood);
+  background: rgba(193, 154, 107, 0.12);
+  color: var(--white);
+}
+
+.scheduled-games-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 20px;
+  overflow-y: auto;
+}
+
+.scheduled-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scheduled-date-header {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 3px;
+  color: var(--court-wood);
+  text-transform: uppercase;
+  padding: 8px 4px 4px;
+  border-bottom: 1px solid rgba(200, 164, 92, 0.2);
+  margin-top: 4px;
+}
+
+.scheduled-date-group:first-child .scheduled-date-header {
+  margin-top: 0;
+}
+
+.btn-scheduled-game {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  text-align: left;
+}
+
+.btn-scheduled-game:hover:not(:disabled) {
+  border-color: var(--court-wood);
+}
+
+.btn-scheduled-game.selected {
+  border-color: var(--accent);
+  background: rgba(201, 48, 44, 0.1);
+}
+
+.btn-scheduled-game.played {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.btn-scheduled-game.disabled:not(.played) {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.scheduled-game-matchup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.scheduled-game-away {
+  flex: 1;
+  text-align: right;
+  color: var(--white);
+}
+
+.scheduled-game-vs {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+}
+
+.scheduled-game-home {
+  flex: 1;
+  text-align: left;
+  color: var(--white);
+}
+
+.scheduled-game-info {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.scheduled-game-time {
+  font-weight: 500;
+}
+
+.scheduled-game-location {
+  opacity: 0.7;
+}
+
+.scheduled-game-round {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2px;
+  color: var(--court-wood);
+}
+
+.scheduled-game-week {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.scheduled-game-result {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+}
+
 /* ===== TEAM SELECT SCREEN ===== */
 .team-select-screen {
   background: var(--bg-page);
@@ -2719,6 +2978,22 @@ body {
   .tipoff-hint { font-size: 13px; }
 }
 
+/* ---------- New screens: tablet adjustments (≤768px) ---------- */
+@media (max-width: 768px) {
+  .league-list { padding: 20px 16px; }
+  .btn-league { padding: 20px 32px; }
+  .league-abbr { font-size: 30px; }
+
+  .season-list { padding: 16px; }
+  .btn-season-card { padding: 14px 16px; }
+
+  .scheduled-games-list { padding: 10px 16px; }
+  .btn-scheduled-game { padding: 12px 14px; }
+  .scheduled-game-matchup { font-size: 14px; }
+
+  .btn-mode { padding: 8px 22px; font-size: 14px; }
+}
+
 /* ---------- iPad Mini portrait / small tablets (≤768px) ---------- */
 @media (max-width: 768px) {
   /* -- Shared -- */
@@ -2791,6 +3066,24 @@ body {
 
 /* ---------- Phone (≤480px) ---------- */
 @media (max-width: 480px) {
+  /* -- New screens -- */
+  .league-list { padding: 16px 12px; gap: 10px; }
+  .btn-league { padding: 18px 20px; }
+  .league-abbr { font-size: 26px; letter-spacing: 4px; }
+  .league-name { font-size: 12px; }
+
+  .season-list { padding: 12px; gap: 8px; }
+  .btn-season-card { padding: 12px 14px; }
+  .season-card-name { font-size: 14px; }
+
+  .game-select-mode-toggle { padding: 10px 12px; }
+  .btn-mode { padding: 8px 18px; font-size: 13px; letter-spacing: 2px; }
+
+  .scheduled-games-list { padding: 8px 12px; gap: 6px; }
+  .btn-scheduled-game { padding: 10px 12px; }
+  .scheduled-game-matchup { font-size: 13px; gap: 8px; }
+  .scheduled-game-info { font-size: 11px; gap: 8px; }
+
   /* -- Shared -- */
   .screen-header { padding: 6px 8px; }
   .screen-header h2 { font-size: 16px; letter-spacing: 1.5px; }

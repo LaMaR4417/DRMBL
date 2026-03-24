@@ -9,6 +9,30 @@ var seasonsContainer = client
     .database("DRMBL Database")
     .container("Seasons");
 
+function parseTime(timeStr) {
+    if (!timeStr) return 0;
+    var match = timeStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+    if (!match) return 0;
+    var h = parseInt(match[1]);
+    var m = parseInt(match[2]);
+    var period = match[3].toUpperCase();
+    if (period === "PM" && h !== 12) h += 12;
+    if (period === "AM" && h === 12) h = 0;
+    return h * 60 + m;
+}
+
+function sortGamesByDate(games) {
+    if (!games || !Array.isArray(games)) return games;
+    return games.slice().sort(function (a, b) {
+        var ad = a.date || {};
+        var bd = b.date || {};
+        if ((ad.year || 0) !== (bd.year || 0)) return (ad.year || 0) - (bd.year || 0);
+        if ((ad.month || 0) !== (bd.month || 0)) return (ad.month || 0) - (bd.month || 0);
+        if ((ad.date || 0) !== (bd.date || 0)) return (ad.date || 0) - (bd.date || 0);
+        return parseTime(a.time) - parseTime(b.time);
+    });
+}
+
 module.exports = async function (req, res) {
     if (req.method !== "GET") {
         return res.status(405).json({ error: "Method not allowed" });
@@ -30,7 +54,8 @@ module.exports = async function (req, res) {
                     teams: doc.teams || [],
                     games: doc.games || [],
                     groups: doc.groups || null,
-                    timeline: doc.timeline || null
+                    timeline: doc.timeline || null,
+                    standings: doc.standings || []
                 };
             });
 
@@ -39,12 +64,12 @@ module.exports = async function (req, res) {
 
         // Default: list all seasons
         var { resources } = await seasonsContainer.items
-            .query("SELECT c.id, c.league, c.teams, c.weeklySchedule, c.games FROM c")
+            .query("SELECT c.id, c.league, c.teams, c.weeklySchedule, c.games, c.standings FROM c")
             .fetchAll();
 
         var seasons = resources.map(function (doc) {
             var teams = (doc.teams || []).filter(function (t) { return t.teamID; }).map(function (t) {
-                return { name: t.name, slot: t.slot };
+                return { name: t.name, slot: t.slot, teamID: t.teamID };
             });
             var dates = [];
             if (doc.weeklySchedule) {
@@ -67,7 +92,10 @@ module.exports = async function (req, res) {
                 league: doc.league || null,
                 teamCount: teams.length,
                 teams: teams,
-                dates: dates
+                dates: dates,
+                standings: doc.standings || [],
+                weeklySchedule: doc.weeklySchedule || null,
+                games: sortGamesByDate(doc.games || null)
             };
         });
 

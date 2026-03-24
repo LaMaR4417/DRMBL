@@ -25,13 +25,37 @@ export const en = {
     stopped: 'STOPPED',
   },
 
+  leagueSelect: {
+    screenTitle: 'Select League',
+    loading: 'Loading leagues...',
+    noLeagues: 'No leagues available.',
+  },
+
+  seasonSelect: {
+    screenTitle: 'Select Season',
+    loading: 'Loading seasons...',
+    noSeasons: 'No seasons available for this league.',
+    teams: 'teams',
+  },
+
+  gameSelect: {
+    screenTitle: 'Select Game',
+    scheduled: 'Scheduled',
+    custom: 'Custom',
+    noGames: 'No scheduled games.',
+    inGame: 'IN GAME',
+    failedRosters: 'Failed to load rosters.',
+    loadingRosters: 'Loading Rosters...',
+    nextSettings: 'Next: Game Settings',
+  },
+
   settings: {
     screenTitle: 'Game Settings',
     preset: 'Preset',
     presetPlaceholder: 'Preset name...',
     loadingPresets: 'Loading presets...',
     failedSavePreset: 'Failed to save preset.',
-    nextPickTeams: 'Next: Pick Teams',
+    nextAttendance: 'Next: Check Attendance',
 
     periodsTitle: 'Periods',
     format: 'Format',

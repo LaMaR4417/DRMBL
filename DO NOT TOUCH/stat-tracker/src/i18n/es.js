@@ -25,13 +25,37 @@ export const es = {
     stopped: 'DETENIDO',
   },
 
+  leagueSelect: {
+    screenTitle: 'Seleccionar Liga',
+    loading: 'Cargando ligas...',
+    noLeagues: 'No hay ligas disponibles.',
+  },
+
+  seasonSelect: {
+    screenTitle: 'Seleccionar Temporada',
+    loading: 'Cargando temporadas...',
+    noSeasons: 'No hay temporadas para esta liga.',
+    teams: 'equipos',
+  },
+
+  gameSelect: {
+    screenTitle: 'Seleccionar Juego',
+    scheduled: 'Programado',
+    custom: 'Personalizado',
+    noGames: 'No hay juegos programados.',
+    inGame: 'EN JUEGO',
+    failedRosters: 'Error al cargar plantillas.',
+    loadingRosters: 'Cargando Plantillas...',
+    nextSettings: 'Siguiente: Configuración',
+  },
+
   settings: {
     screenTitle: 'Configuración',
     preset: 'Modos Predeterminados',
     presetPlaceholder: 'Nombre del modo...',
     loadingPresets: 'Cargando modos...',
     failedSavePreset: 'Error al guardar modo.',
-    nextPickTeams: 'Siguiente: Elegir Equipos',
+    nextAttendance: 'Siguiente: Asistencia',
 
     periodsTitle: 'Periodos',
     format: 'Formato',
