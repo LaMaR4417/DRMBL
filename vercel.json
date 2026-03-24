@@ -1,7 +1,6 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/tracker/(.*)", "destination": "/tracker/index.html" },
-    { "source": "/schedule/:path*", "destination": "/schedule/index.html" }
+    { "source": "/tracker/(.*)", "destination": "/tracker/index.html" }
   ]
 }
