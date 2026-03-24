@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<a href="' + b + 'index.html" class="nav-link nav-primary">Home</a>' +
             '<a href="' + b + 'index.html#info" class="nav-link nav-secondary">Join the League</a>' +
             '<a href="' + b + 'sponsor.html#current-sponsors" class="nav-link nav-secondary">Our Sponsors</a>' +
-            '<a href="' + b + 'schedule.html" class="nav-link nav-secondary">Schedule</a>' +
+            '<a href="' + b + 'schedule" class="nav-link nav-secondary">Schedule</a>' +
             '<a href="' + b + 'live-game.html" class="nav-link nav-secondary">Live Game</a>' +
             '<a href="' + b + 'standings.html" class="nav-link nav-secondary">Standings</a>' +
             '<a href="' + b + 'stats.html" class="nav-link nav-secondary">Stats</a>' +
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<a href="' + b + 'index.html" class="nav-link">Home</a>' +
             '<a href="' + b + 'index.html#info" class="nav-link">Join the League</a>' +
             '<a href="' + b + 'sponsor.html#current-sponsors" class="nav-link">Our Sponsors</a>' +
-            '<a href="' + b + 'schedule.html" class="nav-link">Schedule</a>' +
+            '<a href="' + b + 'schedule" class="nav-link">Schedule</a>' +
             '<a href="' + b + 'live-game.html" class="nav-link">Live Game</a>' +
             '<a href="' + b + 'standings.html" class="nav-link">Standings</a>' +
             '<a href="' + b + 'stats.html" class="nav-link">Stats</a>' +
