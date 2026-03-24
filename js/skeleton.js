@@ -167,11 +167,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sp) {
             if (sp.bgColor) div.style.backgroundColor = sp.bgColor;
             var a = document.createElement('a');
-            a.href = sp.page ? sp.page : 'sponsor-bio.html?id=' + encodeURIComponent(sp.id);
+            a.href = sp.page ? basePrefix + sp.page : basePrefix + 'sponsor-bio.html?id=' + encodeURIComponent(sp.id);
             a.className = 'sponsor-slot-link';
             if (sp.img) {
                 var img = document.createElement('img');
-                img.src = sp.img;
+                img.src = basePrefix + sp.img;
                 img.alt = sp.name;
                 a.appendChild(img);
             } else {
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
             div.appendChild(a);
         } else {
             var ad = document.createElement('a');
-            ad.href = 'sponsor.html';
+            ad.href = basePrefix + 'sponsor.html';
             ad.className = 'sponsor-slot-link';
             ad.textContent = 'BECOME A SPONSOR';
             div.appendChild(ad);
