@@ -395,7 +395,7 @@ module.exports = async function (req, res) {
                 updated = true;
             }
 
-            // Recompute standings from all completed games
+            // Recompute standings from REGULAR SEASON games only
             if (updated && seasonDoc.standings) {
                 var standingsMap = {};
                 var teams = seasonDoc.teams || [];
@@ -406,20 +406,23 @@ module.exports = async function (req, res) {
                     }
                 }
 
-                // Gather all completed games from whichever schedule format exists
-                var allGames = [];
+                // Gather ONLY regular season games (exclude seeded/playoffs/rounds)
+                var regularGames = [];
                 if (seasonDoc.weeklySchedule) {
                     for (var wi = 0; wi < seasonDoc.weeklySchedule.length; wi++) {
                         var wk = seasonDoc.weeklySchedule[wi];
-                        if (wk.games) allGames = allGames.concat(wk.games);
+                        if (wk.type === "seeded" || wk.type === "playoffs") continue;
+                        if (wk.games) regularGames = regularGames.concat(wk.games);
                     }
                 }
                 if (seasonDoc.games) {
-                    allGames = allGames.concat(seasonDoc.games);
+                    for (var rgi = 0; rgi < seasonDoc.games.length; rgi++) {
+                        if (!seasonDoc.games[rgi].round) regularGames.push(seasonDoc.games[rgi]);
+                    }
                 }
 
-                for (var ai = 0; ai < allGames.length; ai++) {
-                    var ag = allGames[ai];
+                for (var ai = 0; ai < regularGames.length; ai++) {
+                    var ag = regularGames[ai];
                     if (!ag.winner || ag.winner === "") continue;
                     var hSlot = ag.home;
                     var aSlot = ag.away;
@@ -446,6 +449,112 @@ module.exports = async function (req, res) {
                     return b.pointDiff - a.pointDiff;
                 });
                 seasonDoc.standings = standingsArr;
+
+                // ── Resolve seed placeholders in upcoming games ──
+                // Build slot-by-seed lookup: standings[0] = #1 Seed, etc.
+                var seedToSlot = {};
+                var seedToName = {};
+                for (var si = 0; si < standingsArr.length; si++) {
+                    seedToSlot["#" + (si + 1) + " Seed"] = standingsArr[si].slot;
+                    seedToName["#" + (si + 1) + " Seed"] = standingsArr[si].name;
+                }
+
+                // Build grouped seed lookup for Copa Beta: #1A Seed, #2B Seed, etc.
+                if (seasonDoc.groups) {
+                    var groupKeys = Object.keys(seasonDoc.groups);
+                    for (var gki = 0; gki < groupKeys.length; gki++) {
+                        var gKey = groupKeys[gki];
+                        var groupSlots = seasonDoc.groups[gKey];
+                        // Filter standings to only teams in this group, preserving rank order
+                        var groupStandings = [];
+                        for (var gsi = 0; gsi < standingsArr.length; gsi++) {
+                            if (groupSlots.indexOf(standingsArr[gsi].slot) !== -1) {
+                                groupStandings.push(standingsArr[gsi]);
+                            }
+                        }
+                        for (var gri = 0; gri < groupStandings.length; gri++) {
+                            var groupSeedKey = "#" + (gri + 1) + gKey + " Seed";
+                            seedToSlot[groupSeedKey] = groupStandings[gri].slot;
+                            seedToName[groupSeedKey] = groupStandings[gri].name;
+                        }
+                    }
+                }
+
+                // Gather ALL games (including playoffs) for seed + winner/loser resolution
+                var allGames = [];
+                if (seasonDoc.weeklySchedule) {
+                    for (var awi = 0; awi < seasonDoc.weeklySchedule.length; awi++) {
+                        var awk = seasonDoc.weeklySchedule[awi];
+                        if (awk.games) {
+                            for (var agi = 0; agi < awk.games.length; agi++) {
+                                allGames.push(awk.games[agi]);
+                            }
+                        }
+                    }
+                }
+                if (seasonDoc.games) {
+                    for (var agi2 = 0; agi2 < seasonDoc.games.length; agi2++) {
+                        allGames.push(seasonDoc.games[agi2]);
+                    }
+                }
+
+                // Build a map of round labels to their results (for Winner/Loser resolution)
+                // At this point, completed playoff games should already have resolved slots
+                var roundResults = {};
+                for (var ri = 0; ri < allGames.length; ri++) {
+                    var rg = allGames[ri];
+                    if (rg.round && rg.completion && rg.winner) {
+                        // Determine winner/loser slots by matching winner name to home/away
+                        var homeIsWinnerRound = standingsMap[rg.home] && standingsMap[rg.home].name === rg.winner;
+                        roundResults[rg.round] = {
+                            winner: rg.winner,
+                            loser: rg.loser,
+                            winnerSlot: homeIsWinnerRound ? rg.home : rg.away,
+                            loserSlot: homeIsWinnerRound ? rg.away : rg.home
+                        };
+                    }
+                }
+
+                // Resolve placeholders in all unplayed games
+                for (var pi = 0; pi < allGames.length; pi++) {
+                    var pg = allGames[pi];
+                    if (pg.completion) continue; // already played, skip
+
+                    // Resolve #N Seed patterns
+                    if (seedToSlot[pg.home]) {
+                        pg.home = seedToSlot[pg.home];
+                    }
+                    if (seedToSlot[pg.away]) {
+                        pg.away = seedToSlot[pg.away];
+                    }
+
+                    // Resolve "Winner X" / "Loser X" patterns
+                    var winnerMatch = pg.home.match(/^(Winner|Loser)\s+(.+)$/i);
+                    if (winnerMatch) {
+                        var refRound = winnerMatch[2];
+                        var isWinnerRef = winnerMatch[1].toLowerCase() === "winner";
+                        if (roundResults[refRound]) {
+                            pg.home = isWinnerRef ? roundResults[refRound].winnerSlot : roundResults[refRound].loserSlot;
+                        }
+                    }
+                    var awayWinnerMatch = pg.away.match(/^(Winner|Loser)\s+(.+)$/i);
+                    if (awayWinnerMatch) {
+                        var refRound2 = awayWinnerMatch[2];
+                        var isWinnerRef2 = awayWinnerMatch[1].toLowerCase() === "winner";
+                        if (roundResults[refRound2]) {
+                            pg.away = isWinnerRef2 ? roundResults[refRound2].winnerSlot : roundResults[refRound2].loserSlot;
+                        }
+                    }
+
+                    // Also update the game ID to reflect resolved teams
+                    if (pg.home && pg.away && standingsMap[pg.home] && standingsMap[pg.away]) {
+                        var homeName = standingsMap[pg.home].name;
+                        var awayName = standingsMap[pg.away].name;
+                        var dateStr = pg.date ? (pg.date.month + "/" + pg.date.date + "/" + pg.date.year) : "TBD";
+                        var roundStr = pg.round ? " - " + pg.round : "";
+                        pg.id = awayName + " vs. " + homeName + roundStr + " - " + dateStr;
+                    }
+                }
             }
 
             if (updated) {

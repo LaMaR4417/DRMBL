@@ -342,6 +342,25 @@
     border-color: var(--accent);
 }
 
+.cb-filter-clear {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    border-radius: 4px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.cb-filter-clear:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.4);
+}
+
 /* Copa Beta Court Columns */
 .cb-courts-grid {
     display: grid;
@@ -615,6 +634,12 @@
         font-size: 12px;
         padding: 6px 10px;
         width: 100%;
+    }
+
+    .cb-filter-clear {
+        grid-column: 1 / -1;
+        font-size: 12px;
+        padding: 6px 10px;
     }
 
     .cb-courts-grid {

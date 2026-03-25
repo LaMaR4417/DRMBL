@@ -490,6 +490,7 @@
             if (divFilter !== 'all' && data[i].division !== divFilter) continue;
             if (!seen[data[i].category]) { seen[data[i].category] = true; result.push(data[i].category); }
         }
+        result.sort();
         return result;
     }
 
@@ -569,8 +570,25 @@
         }
         html += '</select>';
 
+        // Clear filters button
+        var hasActiveFilter = cbFilters.division !== 'all' || cbFilters.category !== 'all' || cbFilters.court !== 'all' || cbFilters.team !== 'all';
+        if (hasActiveFilter) {
+            html += '<button type="button" class="cb-filter-clear" id="cb-filter-clear">&times; Clear</button>';
+        }
+
         html += '</div>';
         nav.innerHTML = html;
+
+        if (hasActiveFilter) {
+            document.getElementById('cb-filter-clear').addEventListener('click', function () {
+                cbFilters.division = 'all';
+                cbFilters.category = 'all';
+                cbFilters.court = 'all';
+                cbFilters.team = 'all';
+                buildCBFilterBar();
+                buildCBSchedule();
+            });
+        }
 
         document.getElementById('cb-filter-division').addEventListener('change', function () {
             cbFilters.division = this.value;
@@ -587,10 +605,12 @@
         });
         document.getElementById('cb-filter-court').addEventListener('change', function () {
             cbFilters.court = this.value;
+            buildCBFilterBar();
             buildCBSchedule();
         });
         document.getElementById('cb-filter-team').addEventListener('change', function () {
             cbFilters.team = this.value;
+            buildCBFilterBar();
             buildCBSchedule();
         });
     }

@@ -232,6 +232,25 @@
     border-color: var(--accent);
 }
 
+.cb-filter-clear {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    border-radius: 4px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.cb-filter-clear:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.4);
+}
+
 /* ── COPA BETA STANDINGS ── */
 
 .standings-division {
@@ -322,6 +341,147 @@
     font-size: 16px;
 }
 
+/* ── PLAYOFF BRACKET ── */
+
+.bracket-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(200, 164, 92, 0.15);
+}
+
+.bracket-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.bracket-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+
+.bracket-layout.bracket-final-only {
+    justify-content: center;
+}
+
+.bracket-layout.bracket-bye {
+    justify-content: center;
+}
+
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bracket-round-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.bracket-matchup {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    min-width: 200px;
+}
+
+.bracket-completed {
+    border-color: rgba(200, 164, 92, 0.2);
+}
+
+.bracket-team {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bracket-team:last-child {
+    border-bottom: none;
+}
+
+.bracket-team-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.bracket-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.4);
+    min-width: 24px;
+    text-align: right;
+}
+
+.bracket-winner .bracket-team-name {
+    color: var(--court-wood);
+}
+
+.bracket-winner .bracket-score {
+    color: var(--court-wood);
+}
+
+/* Connector lines between semis and final */
+.bracket-connectors {
+    display: flex;
+    flex-direction: column;
+    width: 32px;
+    align-self: stretch;
+    position: relative;
+}
+
+.bracket-connector-top,
+.bracket-connector-bot {
+    flex: 1;
+    position: relative;
+}
+
+.bracket-connector-top::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 50%;
+    border-top: 1px solid rgba(200, 164, 92, 0.25);
+    border-right: 1px solid rgba(200, 164, 92, 0.25);
+}
+
+.bracket-connector-bot::after {
+    content: '';
+    position: absolute;
+    bottom: 50%;
+    left: 0;
+    right: 0;
+    height: 50%;
+    border-bottom: 1px solid rgba(200, 164, 92, 0.25);
+    border-right: 1px solid rgba(200, 164, 92, 0.25);
+}
+
+/* Single connector for bye format */
+.bracket-connector-single {
+    width: 32px;
+    border-top: 1px solid rgba(200, 164, 92, 0.25);
+    align-self: center;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 600px) {
     .standings-hero {
@@ -394,8 +554,41 @@
         padding: 6px 10px;
     }
 
+    .cb-filter-clear {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
     .groups-container {
         grid-template-columns: 1fr;
         gap: 28px;
+    }
+
+    .bracket-layout {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .bracket-matchup {
+        min-width: 180px;
+    }
+
+    .bracket-connectors {
+        width: 1px;
+        height: 24px;
+        flex-direction: row;
+        background: rgba(200, 164, 92, 0.25);
+    }
+
+    .bracket-connector-top::after,
+    .bracket-connector-bot::after {
+        display: none;
+    }
+
+    .bracket-connector-single {
+        width: 1px;
+        height: 24px;
+        border-top: none;
+        border-left: 1px solid rgba(200, 164, 92, 0.25);
     }
 }
