@@ -710,6 +710,7 @@
                     if (gm) {
                         if (cbSkeletonMode) {
                             html += '<div class="cb-court-card">';
+                            html += '<div class="cb-card-court">' + activeCourts[col] + '</div>';
                             html += '<div class="cb-card-info">';
                             html += '<div class="cb-card-time">' + gm.time + '</div>';
                             html += '<div><span class="team-name-loading" style="width:50px"></span></div>';
@@ -724,6 +725,7 @@
                         } else {
                             var cardCls = 'cb-court-card' + (gm.isChamp ? ' cb-court-card-champ' : '');
                             html += '<div class="' + cardCls + ' cb-div-' + gm.division.toLowerCase() + '">';
+                            html += '<div class="cb-card-court">' + activeCourts[col] + '</div>';
                             html += '<div class="cb-card-info">';
                             html += '<div class="cb-card-time">' + gm.time + '</div>';
                             html += '<div class="cb-card-division cb-card-div-' + gm.division.toLowerCase() + '">' + gm.division + '</div>';

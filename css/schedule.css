@@ -394,6 +394,10 @@
     border-radius: 4px;
 }
 
+.cb-card-court {
+    display: none;
+}
+
 .cb-card-info {
     display: flex;
     flex-direction: column;
@@ -601,7 +605,8 @@
 
     /* Copa Beta mobile */
     .cb-filters {
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
         padding: 8px 12px;
     }
@@ -609,12 +614,31 @@
     .cb-filter-select {
         font-size: 12px;
         padding: 6px 10px;
-        flex: 1;
-        min-width: 0;
+        width: 100%;
     }
 
     .cb-courts-grid {
         grid-template-columns: 1fr;
         gap: 12px;
+    }
+
+    .cb-court-header {
+        display: none;
+    }
+
+    .cb-card-court {
+        display: block;
+        grid-column: 1 / -1;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 13px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        text-align: center;
+        color: var(--court-wood);
+        background: rgba(200, 164, 92, 0.1);
+        border-bottom: 1px solid rgba(200, 164, 92, 0.2);
+        padding: 8px 0;
+        margin: -10px -14px 10px -14px;
+        border-radius: 3px 3px 0 0;
     }
 }
