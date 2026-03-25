@@ -171,8 +171,7 @@
         },
         {
             division: 'Femenil', category: '2013-2014', groups: null, games: [
-                { round: 'Semi 1', home: '#4 Seed', away: '#1 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Semi 2', home: '#3 Seed', away: '#2 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
+                { round: 'Semi', home: '#3 Seed', away: '#2 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
                 { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
             ],
             standings: [
@@ -403,8 +402,20 @@
     // ── Seed resolution ──
     // Parses seed strings like "#1 Seed", "#2A Seed", "#1B Seed"
     // and resolves to actual team name from standings/groups
+    function resolveSlot(slotStr, standings) {
+        if (!slotStr || slotStr.length > 2) return null;
+        for (var i = 0; i < standings.length; i++) {
+            if (standings[i].slot === slotStr) return standings[i].name;
+        }
+        return null;
+    }
+
     function resolveSeed(seedStr, standings, groups) {
         if (!seedStr || seedStr === 'TBD') return 'TBD';
+
+        // Try slot letter first (e.g. "A", "B")
+        var slotName = resolveSlot(seedStr, standings);
+        if (slotName) return slotName;
 
         // Match patterns: "#1 Seed", "#1A Seed", "#2B Seed", "#4 Seed"
         var match = seedStr.match(/^#(\d+)([A-Z])?\s+Seed$/i);
@@ -446,12 +457,28 @@
         return playoffs;
     }
 
-    function buildMatchupCard(game, standings, groups) {
-        var homeDisplay = game.winner ? game.home : resolveSeed(game.home, standings, groups);
-        var awayDisplay = game.winner ? game.away : resolveSeed(game.away, standings, groups);
+    function buildByeCard(teamName) {
+        var html = '<div class="bracket-matchup bracket-bye-card">';
+        html += '<div class="bracket-team bracket-winner">';
+        html += '<span class="bracket-team-name">' + teamName + '</span>';
+        html += '</div>';
+        html += '<div class="bracket-team bracket-bye-slot">';
+        html += '<span class="bracket-team-name bracket-bye-label">BYE</span>';
+        html += '</div>';
+        html += '</div>';
+        return html;
+    }
+
+    function buildMatchupCard(game, standings, groups, overrideTeams) {
+        var homeDisplay = overrideTeams ? overrideTeams.home : resolveSeed(game.home, standings, groups);
+        var awayDisplay = overrideTeams ? overrideTeams.away : resolveSeed(game.away, standings, groups);
         var completed = game.completion && game.winner;
 
-        var html = '<div class="bracket-matchup' + (completed ? ' bracket-completed' : '') + '">';
+        var html = '<div class="bracket-matchup' + (completed ? ' bracket-completed' : '') + '" data-away="' + awayDisplay + '" data-home="' + homeDisplay + '">';
+
+        if (completed) {
+            html += '<div class="bracket-final-badge">FINAL</div>';
+        }
 
         // Away team (top line)
         var awayIsWinner = completed && game.winner === awayDisplay;
@@ -496,37 +523,96 @@
             return a.round.localeCompare(b.round);
         });
 
+        // Detect unresolvable seeds → convert those semis to byes
+        // A seed is unresolvable if resolveSeed returns a string still matching #N Seed
+        var seedPattern = /^#\d+[A-Z]?\s+Seed$/i;
+        var byeTeams = [];    // teams that get a bye (their opponent doesn't exist)
+        var realSemis = [];   // semis where both teams exist
+
+        for (var si = 0; si < semis.length; si++) {
+            var s = semis[si];
+            var homeResolved = resolveSeed(s.home, standings, groups);
+            var awayResolved = resolveSeed(s.away, standings, groups);
+            var homeIsSeed = seedPattern.test(homeResolved);
+            var awayIsSeed = seedPattern.test(awayResolved);
+
+            if (homeIsSeed && !awayIsSeed) {
+                // Home team doesn't exist, away gets bye
+                byeTeams.push(awayResolved);
+            } else if (awayIsSeed && !homeIsSeed) {
+                // Away team doesn't exist, home gets bye
+                byeTeams.push(homeResolved);
+            } else if (homeIsSeed && awayIsSeed) {
+                // Both don't exist — skip entirely
+            } else {
+                realSemis.push(s);
+            }
+        }
+
+        // If only 1 real semi exists and no byes detected, infer bye for #1 seed
+        // This handles cases where the data only has a #2 vs #3 semi (no #1 vs #4 game exists)
+        if (byeTeams.length === 0 && realSemis.length === 1 && !groups) {
+            // Check that #1 seed isn't already in the semi
+            var firstSeed = resolveSeed('#1 Seed', standings, groups);
+            var semiHome = resolveSeed(realSemis[0].home, standings, groups);
+            var semiAway = resolveSeed(realSemis[0].away, standings, groups);
+            if (firstSeed !== semiHome && firstSeed !== semiAway) {
+                byeTeams.push(firstSeed);
+            }
+        }
+
         var html = '<div class="bracket-section">';
         html += '<h4 class="bracket-title">Playoffs</h4>';
 
-        if (semis.length === 0 && championship) {
+        // Resolve championship teams from semi winners (use realSemis + byeTeams)
+        var champTeams = null;
+        if (championship && !championship.completion) {
+            var champHome = 'TBD';
+            var champAway = 'TBD';
+
+            if (byeTeams.length > 0 && realSemis.length === 1) {
+                // Bye format derived from 2 semis where one had missing team
+                champHome = byeTeams[0];
+                champAway = realSemis[0].winner || 'TBD';
+            } else if (byeTeams.length === 0 && realSemis.length === 1 && semis.length === 1) {
+                // Original bye format (only 1 semi in data, e.g. Universitario)
+                champHome = resolveSeed('#1 Seed', standings, groups);
+                champAway = realSemis[0].winner || 'TBD';
+            } else if (realSemis.length >= 2) {
+                champAway = realSemis[0].winner || 'TBD';
+                champHome = realSemis[1].winner || 'TBD';
+            }
+
+            champTeams = { home: champHome, away: champAway };
+        }
+
+        // Count total bracket entries (byes + real semis)
+        var totalSemiSlots = byeTeams.length + realSemis.length;
+
+        if (totalSemiSlots === 0 && championship) {
             // Only a championship (no semis)
             html += '<div class="bracket-layout bracket-final-only">';
             html += '<div class="bracket-round bracket-round-final">';
             html += '<div class="bracket-round-label">Championship</div>';
-            html += buildMatchupCard(championship, standings, groups);
+            html += buildMatchupCard(championship, standings, groups, champTeams);
             html += '</div>';
             html += '</div>';
-        } else if (semis.length === 1 && championship) {
-            // One semi + championship (bye format, e.g. Universitario)
-            html += '<div class="bracket-layout bracket-bye">';
+        } else if (totalSemiSlots >= 1 && championship) {
+            var hasByes = byeTeams.length > 0;
+            var semiLabel = realSemis.length === 1 && byeTeams.length <= 1 ? 'Semi-Final' : 'Semi-Finals';
+
+            html += '<div class="bracket-layout' + (hasByes ? ' bracket-bye' : '') + '">';
             html += '<div class="bracket-round bracket-round-semis">';
-            html += '<div class="bracket-round-label">Semi-Final</div>';
-            html += buildMatchupCard(semis[0], standings, groups);
-            html += '</div>';
-            html += '<div class="bracket-connector bracket-connector-single"></div>';
-            html += '<div class="bracket-round bracket-round-final">';
-            html += '<div class="bracket-round-label">Championship</div>';
-            html += buildMatchupCard(championship, standings, groups);
-            html += '</div>';
-            html += '</div>';
-        } else if (semis.length >= 2 && championship) {
-            // Two semis + championship (standard)
-            html += '<div class="bracket-layout">';
-            html += '<div class="bracket-round bracket-round-semis">';
-            html += '<div class="bracket-round-label">Semi-Finals</div>';
-            html += buildMatchupCard(semis[0], standings, groups);
-            html += buildMatchupCard(semis[1], standings, groups);
+            html += '<div class="bracket-round-label">' + semiLabel + '</div>';
+
+            // Render bye cards first, then real semis
+            for (var bi = 0; bi < byeTeams.length; bi++) {
+                html += buildByeCard(byeTeams[bi]);
+            }
+            for (var ri = 0; ri < realSemis.length; ri++) {
+                html += buildMatchupCard(realSemis[ri], standings, groups);
+            }
+
             html += '</div>';
             html += '<div class="bracket-connectors">';
             html += '<div class="bracket-connector-top"></div>';
@@ -534,7 +620,7 @@
             html += '</div>';
             html += '<div class="bracket-round bracket-round-final">';
             html += '<div class="bracket-round-label">Championship</div>';
-            html += buildMatchupCard(championship, standings, groups);
+            html += buildMatchupCard(championship, standings, groups, champTeams);
             html += '</div>';
             html += '</div>';
         }
@@ -679,12 +765,136 @@
                 }
                 buildCBFilterBar();
                 renderCopaBeta(cbData);
+                startLivePolling();
             })
             .catch(function () {
                 cbData = CB_FALLBACK;
                 buildCBFilterBar();
                 renderCopaBeta(cbData);
+                startLivePolling();
             });
+    }
+
+    // ── Live game polling for brackets ──
+
+    var liveGames = {};
+    var liveTimer = null;
+
+    function liveKey(away, home) {
+        return away + '~' + home;
+    }
+
+    function formatClock(seconds) {
+        if (seconds == null) return '';
+        var m = Math.floor(seconds / 60);
+        var s = seconds % 60;
+        return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function fetchLiveGames() {
+        return fetch('/api/live-game')
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                var map = {};
+                var games = data.games || [];
+                for (var i = 0; i < games.length; i++) {
+                    var g = games[i];
+                    if (!g.boxScore || !g.boxScore.teamInfo) continue;
+                    var bs = g.boxScore;
+                    var status = bs.gameInfo && bs.gameInfo.general ? bs.gameInfo.general.status : '';
+                    if (status === 'final') continue;
+                    var away = bs.teamInfo.away.name;
+                    var home = bs.teamInfo.home.name;
+                    var quarter = bs.gameInfo && bs.gameInfo.state ? bs.gameInfo.state.currentQuarter : null;
+                    var clock = bs.gameInfo && bs.gameInfo.state && bs.gameInfo.state.clock ? bs.gameInfo.state.clock.timeLeft : null;
+                    map[liveKey(away, home)] = {
+                        awayScore: bs.teamInfo.away.score.current,
+                        homeScore: bs.teamInfo.home.score.current,
+                        quarter: quarter,
+                        clock: clock
+                    };
+                }
+                liveGames = map;
+                return map;
+            })
+            .catch(function () { return {}; });
+    }
+
+    function updateLiveBrackets() {
+        var cards = document.querySelectorAll('.bracket-matchup[data-away][data-home]');
+        for (var i = 0; i < cards.length; i++) {
+            var card = cards[i];
+            var key = liveKey(card.getAttribute('data-away'), card.getAttribute('data-home'));
+            var live = liveGames[key];
+            var badgeEl = card.querySelector('.bracket-live-badge');
+
+            if (live) {
+                card.classList.add('bracket-live');
+
+                // Add LIVE badge if not present
+                if (!badgeEl) {
+                    var badge = document.createElement('div');
+                    badge.className = 'bracket-live-badge';
+                    badge.textContent = 'LIVE';
+                    card.insertBefore(badge, card.firstChild);
+                }
+
+                // Update scores on each team line
+                var teamEls = card.querySelectorAll('.bracket-team');
+                var scores = [live.awayScore, live.homeScore];
+                for (var t = 0; t < teamEls.length && t < 2; t++) {
+                    var scoreEl = teamEls[t].querySelector('.bracket-score');
+                    if (!scoreEl) {
+                        scoreEl = document.createElement('span');
+                        scoreEl.className = 'bracket-score bracket-live-score';
+                        teamEls[t].appendChild(scoreEl);
+                    }
+                    scoreEl.textContent = scores[t];
+                    scoreEl.classList.add('bracket-live-score');
+                }
+
+                // Update or add quarter/clock info
+                var infoEl = card.querySelector('.bracket-live-info');
+                var qLabel = live.quarter ? 'Q' + live.quarter : '';
+                var clockLabel = live.clock != null ? formatClock(live.clock) : '';
+                var liveInfo = qLabel + (clockLabel ? ' ' + clockLabel : '');
+                if (!infoEl) {
+                    infoEl = document.createElement('div');
+                    infoEl.className = 'bracket-live-info';
+                    card.appendChild(infoEl);
+                }
+                infoEl.textContent = liveInfo;
+            } else if (card.classList.contains('bracket-live')) {
+                // Game was live but no longer — transition to FINAL
+                if (badgeEl) badgeEl.remove();
+                var oldInfo = card.querySelector('.bracket-live-info');
+                if (oldInfo) oldInfo.remove();
+                card.classList.remove('bracket-live');
+                card.classList.add('bracket-completed');
+
+                // Grab last known scores before removing live score elements
+                var liveScoreEls = card.querySelectorAll('.bracket-live-score');
+                var lastScores = [];
+                for (var ls = 0; ls < liveScoreEls.length; ls++) {
+                    lastScores.push(liveScoreEls[ls].textContent);
+                    liveScoreEls[ls].classList.remove('bracket-live-score');
+                }
+
+                // Add FINAL badge
+                var finalBadge = document.createElement('div');
+                finalBadge.className = 'bracket-final-badge';
+                finalBadge.textContent = 'FINAL';
+                card.insertBefore(finalBadge, card.firstChild);
+            }
+        }
+    }
+
+    function startLivePolling() {
+        if (liveTimer) return;
+        fetchLiveGames().then(function () { updateLiveBrackets(); });
+        liveTimer = setInterval(function () {
+            fetchLiveGames().then(function () { updateLiveBrackets(); });
+        }, 20000);
     }
 
     // ── Init ──

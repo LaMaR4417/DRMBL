@@ -438,6 +438,66 @@
     color: var(--court-wood);
 }
 
+/* Live game indicator */
+.bracket-live {
+    border-color: #e53935;
+    background: rgba(229, 57, 53, 0.06);
+}
+
+.bracket-live-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #fff;
+    background: #e53935;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-align: center;
+    animation: bracket-live-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bracket-live-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.bracket-live-score {
+    color: #fff !important;
+}
+
+.bracket-final-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--court-wood);
+    text-align: center;
+    padding: 2px 8px 0;
+}
+
+.bracket-live-info {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: center;
+    padding: 2px 8px 4px;
+}
+
+/* Bye card */
+.bracket-bye-card {
+    border-style: dashed;
+    border-color: rgba(200, 164, 92, 0.15);
+}
+
+.bracket-bye-slot {
+    opacity: 0.35;
+}
+
+.bracket-bye-label {
+    font-style: italic;
+    letter-spacing: 3px;
+}
+
 /* Connector lines between semis and final */
 .bracket-connectors {
     display: flex;

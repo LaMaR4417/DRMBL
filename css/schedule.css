@@ -507,6 +507,46 @@
     color: rgba(255, 255, 255, 0.2);
 }
 
+.cb-card-final {
+    color: var(--court-wood);
+    font-size: 9px;
+    letter-spacing: 2px;
+}
+
+/* Live game indicator */
+.cb-card-live {
+    border-left-color: #e53935;
+    background: rgba(229, 57, 53, 0.06);
+}
+
+.cb-live-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #fff;
+    background: #e53935;
+    padding: 1px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 2px;
+    animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.cb-live-score {
+    color: #fff;
+    font-size: 16px;
+}
+
+.cb-live-info {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 10px;
+}
+
 
 /* Playoff Styles */
 .week-section-playoff .week-title {

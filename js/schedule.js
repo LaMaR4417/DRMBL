@@ -443,6 +443,125 @@
 
     // Copa Beta active filters
     var cbFilters = { division: 'all', category: 'all', team: 'all', court: 'all' };
+    var cbLiveGames = {};  // keyed by "away~home" team names
+    var cbLiveTimer = null;
+
+    function liveKey(away, home) {
+        return away + '~' + home;
+    }
+
+    function fetchLiveGames() {
+        return fetch('/api/live-game')
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                var map = {};
+                var games = data.games || [];
+                for (var i = 0; i < games.length; i++) {
+                    var g = games[i];
+                    if (!g.boxScore || !g.boxScore.teamInfo) continue;
+                    var bs = g.boxScore;
+                    var status = bs.gameInfo && bs.gameInfo.general ? bs.gameInfo.general.status : '';
+                    if (status === 'final') continue; // skip finished games
+                    var away = bs.teamInfo.away.name;
+                    var home = bs.teamInfo.home.name;
+                    var quarter = bs.gameInfo && bs.gameInfo.state ? bs.gameInfo.state.currentQuarter : null;
+                    var clock = bs.gameInfo && bs.gameInfo.state && bs.gameInfo.state.clock ? bs.gameInfo.state.clock.timeLeft : null;
+                    map[liveKey(away, home)] = {
+                        awayScore: bs.teamInfo.away.score.current,
+                        homeScore: bs.teamInfo.home.score.current,
+                        quarter: quarter,
+                        clock: clock
+                    };
+                }
+                cbLiveGames = map;
+                return map;
+            })
+            .catch(function () { return {}; });
+    }
+
+    function formatClock(seconds) {
+        if (seconds == null) return '';
+        var m = Math.floor(seconds / 60);
+        var s = seconds % 60;
+        return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function updateLiveCards() {
+        var cards = document.querySelectorAll('.cb-court-card[data-away][data-home]');
+        for (var i = 0; i < cards.length; i++) {
+            var card = cards[i];
+            var key = liveKey(card.getAttribute('data-away'), card.getAttribute('data-home'));
+            var live = cbLiveGames[key];
+            var matchupEl = card.querySelector('.cb-card-matchup');
+            var badgeEl = card.querySelector('.cb-live-badge');
+            var infoEl = card.querySelector('.cb-card-info');
+
+            if (live) {
+                // Add LIVE badge if not present
+                if (!badgeEl && infoEl) {
+                    var badge = document.createElement('div');
+                    badge.className = 'cb-live-badge';
+                    badge.textContent = 'LIVE';
+                    infoEl.insertBefore(badge, infoEl.firstChild);
+                }
+                // Add live class to card
+                card.classList.add('cb-card-live');
+
+                // Update matchup with live scores
+                if (matchupEl) {
+                    var away = card.getAttribute('data-away');
+                    var home = card.getAttribute('data-home');
+                    var qLabel = live.quarter ? 'Q' + live.quarter : '';
+                    var clockLabel = live.clock != null ? formatClock(live.clock) : '';
+                    var liveInfo = qLabel + (clockLabel ? ' ' + clockLabel : '');
+
+                    matchupEl.innerHTML =
+                        '<span class="cb-card-team">' + away + '</span>' +
+                        '<span class="cb-card-score cb-live-score">' + live.awayScore + '</span>' +
+                        '<span class="cb-card-vs cb-live-info">' + liveInfo + '</span>' +
+                        '<span class="cb-card-score cb-live-score">' + live.homeScore + '</span>' +
+                        '<span class="cb-card-team">' + home + '</span>';
+                }
+            } else if (card.classList.contains('cb-card-live')) {
+                // Game was live but no longer — restore with FINAL
+                if (badgeEl) badgeEl.remove();
+                card.classList.remove('cb-card-live');
+
+                if (matchupEl) {
+                    var away = card.getAttribute('data-away');
+                    var home = card.getAttribute('data-home');
+                    // Re-fetch schedule scores from the card's original data
+                    // Show FINAL since the game must have ended
+                    var oldScores = matchupEl.querySelectorAll('.cb-live-score');
+                    var aScore = oldScores.length > 0 ? oldScores[0].textContent : '';
+                    var hScore = oldScores.length > 1 ? oldScores[1].textContent : '';
+                    matchupEl.innerHTML =
+                        '<span class="cb-card-team">' + away + '</span>' +
+                        '<span class="cb-card-score">' + aScore + '</span>' +
+                        '<span class="cb-card-vs cb-card-final">FINAL</span>' +
+                        '<span class="cb-card-score">' + hScore + '</span>' +
+                        '<span class="cb-card-team">' + home + '</span>';
+                }
+            }
+        }
+    }
+
+    function startLivePolling() {
+        if (cbLiveTimer) return;
+        // Initial fetch
+        fetchLiveGames().then(function () { updateLiveCards(); });
+        // Poll every 20 seconds
+        cbLiveTimer = setInterval(function () {
+            fetchLiveGames().then(function () { updateLiveCards(); });
+        }, 20000);
+    }
+
+    function stopLivePolling() {
+        if (cbLiveTimer) {
+            clearInterval(cbLiveTimer);
+            cbLiveTimer = null;
+        }
+    }
     var cbData = [];
     var cbSkeletonMode = false;
 
@@ -463,7 +582,11 @@
                     date: g.date, time: g.time,
                     location: courtMatch ? courtMatch[1] : loc,
                     away: g.away, home: g.home,
-                    group: g.group || null, round: g.round || null
+                    group: g.group || null, round: g.round || null,
+                    homeScore: g.homeScore != null ? g.homeScore : null,
+                    awayScore: g.awayScore != null ? g.awayScore : null,
+                    winner: g.winner || null,
+                    completion: g.completion || false
                 };
             });
             return {
@@ -744,7 +867,7 @@
                             html += '</div>';
                         } else {
                             var cardCls = 'cb-court-card' + (gm.isChamp ? ' cb-court-card-champ' : '');
-                            html += '<div class="' + cardCls + ' cb-div-' + gm.division.toLowerCase() + '">';
+                            html += '<div class="' + cardCls + ' cb-div-' + gm.division.toLowerCase() + '" data-away="' + gm.away + '" data-home="' + gm.home + '">';
                             html += '<div class="cb-card-court">' + activeCourts[col] + '</div>';
                             html += '<div class="cb-card-info">';
                             html += '<div class="cb-card-time">' + gm.time + '</div>';
@@ -764,7 +887,7 @@
                             if (hasScore) {
                                 html += '<span class="cb-card-score">' + gm.awayScore + '</span>';
                             }
-                            html += '<span class="cb-card-vs">' + (hasScore ? '-' : 'vs') + '</span>';
+                            html += '<span class="cb-card-vs' + (hasScore ? ' cb-card-final' : '') + '">' + (hasScore ? 'FINAL' : 'vs') + '</span>';
                             if (hasScore) {
                                 html += '<span class="cb-card-score">' + gm.homeScore + '</span>';
                             }
@@ -819,6 +942,7 @@
                     buildCBFilterBar();
                     buildCBSchedule();
                 }
+                startLivePolling();
             })
             .catch(function () {
                 // API unavailable — show fallback with real names
@@ -826,6 +950,7 @@
                 cbData = CB_FALLBACK;
                 buildCBFilterBar();
                 buildCBSchedule();
+                startLivePolling();
             });
     }
 
