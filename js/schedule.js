@@ -301,146 +301,7 @@
 
     // ── COPA BETA ──────────────────────────────────────────
 
-    // Fallback data for all Copa Beta categories
-    var CB_FALLBACK = [
-        {
-            id: '2009-2010-femenil', division: 'Femenil', category: '2009-2010',
-            teams: [
-                { slot: 'A', name: 'Ballers' }, { slot: 'B', name: 'Linces' },
-                { slot: 'C', name: "Tota's Team" }, { slot: 'D', name: 'Genesis Dream' }
-            ],
-            groups: null,
-            games: [
-                { date: { year: 2026, month: 3, date: 28 }, time: '9:00 AM', location: 'Court A', away: 'B', home: 'C' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '11:00 AM', location: 'Court C', away: 'C', home: 'D' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '1:00 PM', location: 'Court A', away: 'D', home: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '5:00 PM', location: 'Court C', away: 'A', home: 'B' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '4:00 PM', location: 'Court B', away: '#2 Seed', home: '#1 Seed', round: 'Championship' }
-            ]
-        },
-        {
-            id: '2013-2014-femenil', division: 'Femenil', category: '2013-2014',
-            teams: [
-                { slot: 'A', name: 'Linces' }, { slot: 'B', name: 'Spurs Acuna' },
-                { slot: 'C', name: 'Spurs Monclova' }, { slot: 'D', name: 'Alfa y Omega' }
-            ],
-            groups: null,
-            games: [
-                { date: { year: 2026, month: 3, date: 28 }, time: '9:00 AM', location: 'Court C', away: 'A', home: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '10:00 AM', location: 'Court C', away: 'C', home: 'D' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '12:00 PM', location: 'Court C', away: 'B', home: 'D' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '2:00 PM', location: 'Court C', away: 'A', home: 'C' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '12:00 PM', location: 'Court B', away: '#2 Seed', home: '#1 Seed', round: 'Championship' }
-            ]
-        },
-        {
-            id: '2009-2010-varonil', division: 'Varonil', category: '2009-2010',
-            teams: [
-                { slot: 'A', name: 'Betas' }, { slot: 'B', name: 'Leones' },
-                { slot: 'C', name: 'Carneros' }, { slot: 'D', name: 'Sigmas' },
-                { slot: 'E', name: 'Ballers' }, { slot: 'F', name: "Tota's Boys" },
-                { slot: 'G', name: 'Sonics' }
-            ],
-            groups: { A: ['D', 'A', 'B', 'G'], B: ['F', 'C', 'E'] },
-            games: [
-                { date: { year: 2026, month: 3, date: 28 }, time: '5:00 PM', location: 'Court A', away: 'A', home: 'B', group: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '6:00 PM', location: 'Court A', away: 'C', home: 'E', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '8:00 PM', location: 'Court A', away: 'F', home: 'C', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '8:00 PM', location: 'Court B', away: 'B', home: 'G', group: 'A' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '9:00 AM', location: 'Court A', away: 'D', home: 'A', group: 'A' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '11:00 AM', location: 'Court A', away: 'G', home: 'D', group: 'A' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '1:00 PM', location: 'Court A', away: 'E', home: 'F', group: 'B' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '3:00 PM', location: 'Court A', away: '#2 Seed', home: '#1 Seed', round: 'Championship' }
-            ]
-        },
-        {
-            id: '2011-2012-varonil', division: 'Varonil', category: '2011-2012',
-            teams: [
-                { slot: 'A', name: 'Ballers' }, { slot: 'B', name: 'Centauros' },
-                { slot: 'C', name: 'Titanes' }, { slot: 'D', name: 'Alfa y Omega' },
-                { slot: 'E', name: 'Betas' }, { slot: 'F', name: "Tota's Boys" }
-            ],
-            groups: { A: ['B', 'E', 'F'], B: ['D', 'C', 'A'] },
-            games: [
-                { date: { year: 2026, month: 3, date: 28 }, time: '10:00 AM', location: 'Court A', away: 'E', home: 'F', group: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '2:00 PM', location: 'Court A', away: 'D', home: 'C', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '3:00 PM', location: 'Court C', away: 'B', home: 'E', group: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '4:00 PM', location: 'Court C', away: 'A', home: 'D', group: 'B' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '10:00 AM', location: 'Court A', away: 'C', home: 'A', group: 'B' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '11:00 AM', location: 'Court B', away: 'F', home: 'B', group: 'A' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '3:00 PM', location: 'Court B', away: '#2 Seed', home: '#1 Seed', round: 'Championship' }
-            ]
-        },
-        {
-            id: '2013-2014-varonil', division: 'Varonil', category: '2013-2014',
-            teams: [
-                { slot: 'A', name: 'Betas' }, { slot: 'B', name: 'Leones' },
-                { slot: 'C', name: 'Spurs Monclova' }, { slot: 'D', name: 'Alfa y Omega' }
-            ],
-            groups: null,
-            games: [
-                { date: { year: 2026, month: 3, date: 28 }, time: '11:00 AM', location: 'Court B', away: 'A', home: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '12:00 PM', location: 'Court A', away: 'C', home: 'D' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '6:00 PM', location: 'Court C', away: 'B', home: 'D' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '7:00 PM', location: 'Court C', away: 'A', home: 'C' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '2:00 PM', location: 'Court B', away: '#2 Seed', home: '#1 Seed', round: 'Championship' }
-            ]
-        },
-        {
-            id: '2015-2016-varonil', division: 'Varonil', category: '2015-2016',
-            teams: [
-                { slot: 'A', name: 'Ballers' }, { slot: 'B', name: 'Betas' },
-                { slot: 'C', name: 'Centauros' }, { slot: 'D', name: 'Leones' },
-                { slot: 'E', name: 'Nets' }, { slot: 'F', name: 'Alfa y Omega' }
-            ],
-            groups: { A: ['A', 'B', 'C'], B: ['D', 'E', 'F'] },
-            games: [
-                { date: { year: 2026, month: 3, date: 28 }, time: '8:00 AM', location: 'Court A', away: 'A', home: 'B', group: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '8:00 AM', location: 'Court B', away: 'D', home: 'E', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '9:00 AM', location: 'Court B', away: 'E', home: 'F', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '1:00 PM', location: 'Court B', away: 'B', home: 'C', group: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '3:00 PM', location: 'Court B', away: 'F', home: 'D', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '7:00 PM', location: 'Court A', away: 'C', home: 'A', group: 'A' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '8:00 AM', location: 'Court A', away: '#2 Seed', home: '#1 Seed', round: 'Championship' }
-            ]
-        },
-        {
-            id: '2017-2018-varonil', division: 'Varonil', category: '2017-2018',
-            teams: [
-                { slot: 'A', name: 'Betas' }, { slot: 'B', name: 'Centauros' },
-                { slot: 'C', name: 'Eagle Pass' }, { slot: 'D', name: 'Nets' },
-                { slot: 'E', name: 'Spurs Acuna' }, { slot: 'F', name: 'Alfa y Omega' }
-            ],
-            groups: { A: ['A', 'B', 'C'], B: ['D', 'E', 'F'] },
-            games: [
-                { date: { year: 2026, month: 3, date: 28 }, time: '8:00 AM', location: 'Court C', away: 'A', home: 'B', group: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '9:00 AM', location: 'Court C', away: 'D', home: 'E', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '11:00 AM', location: 'Court A', away: 'E', home: 'F', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '12:00 PM', location: 'Court B', away: 'B', home: 'C', group: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '1:00 PM', location: 'Court C', away: 'F', home: 'D', group: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '6:00 PM', location: 'Court B', away: 'C', home: 'A', group: 'A' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '9:00 AM', location: 'Court B', away: '#2 Seed', home: '#1 Seed', round: 'Championship' }
-            ]
-        },
-        {
-            id: 'universitario-varonil', division: 'Varonil', category: 'Universitario',
-            teams: [
-                { slot: 'A', name: 'Del Rio' }, { slot: 'B', name: 'Lakers' },
-                { slot: 'C', name: 'Halcones' }, { slot: 'D', name: 'Selectivo' },
-                { slot: 'E', name: 'Tec NM Toros' }
-            ],
-            groups: null,
-            games: [
-                { date: { year: 2026, month: 3, date: 28 }, time: '10:00 AM', location: 'Court B', away: 'A', home: 'B' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '2:00 PM', location: 'Court B', away: 'C', home: 'D' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '4:00 PM', location: 'Court B', away: 'E', home: 'A' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '5:00 PM', location: 'Court B', away: 'B', home: 'C' },
-                { date: { year: 2026, month: 3, date: 28 }, time: '7:00 PM', location: 'Court B', away: 'D', home: 'E' },
-                { date: { year: 2026, month: 3, date: 29 }, time: '11:00 AM', location: 'Court A', away: '#2 Seed', home: '#1 Seed', round: 'Championship' }
-            ]
-        }
-    ];
-
+    // No hardcoded fallback — Copa Beta data comes entirely from API
     // Copa Beta active filters
     var cbFilters = { division: 'all', category: 'all', team: 'all', court: 'all' };
     var cbLiveGames = {};  // keyed by "away~home" team names
@@ -925,32 +786,28 @@
     function loadCopaBeta() {
         // Step 1: Render skeleton with fallback structure
         cbSkeletonMode = true;
-        cbData = CB_FALLBACK;
+        cbData = [];
         buildCBSchedule();
 
-        // Step 2: Fetch real data and replace
+        // Fetch real data from API
         fetch('/api/seasons?league=copa-beta')
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data && data.categories && data.categories.length) {
                     cbData = parseCopaBetaAPI(data.categories);
-                    cbSkeletonMode = false;
-                    buildCBFilterBar();
-                    buildCBSchedule();
                 } else {
-                    cbSkeletonMode = false;
-                    buildCBFilterBar();
-                    buildCBSchedule();
+                    cbData = [];
                 }
-                startLivePolling();
-            })
-            .catch(function () {
-                // API unavailable — show fallback with real names
                 cbSkeletonMode = false;
-                cbData = CB_FALLBACK;
                 buildCBFilterBar();
                 buildCBSchedule();
                 startLivePolling();
+            })
+            .catch(function () {
+                cbSkeletonMode = false;
+                cbData = [];
+                var wrap = document.getElementById('schedule-content');
+                if (wrap) wrap.innerHTML = '<div class="schedule-empty">Unable to load schedule. Please try again later.</div>';
             });
     }
 

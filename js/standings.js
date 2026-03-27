@@ -154,129 +154,6 @@
 
     // ── COPA BETA ──────────────────────────────────────
 
-    var CB_FALLBACK = [
-        {
-            division: 'Femenil', category: '2009-2010', groups: null, games: [
-                { round: 'Semi 1', home: '#4 Seed', away: '#1 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Semi 2', home: '#3 Seed', away: '#2 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
-            ],
-            standings: [
-                { slot: 'A', name: 'Ballers', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'B', name: 'Linces', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'C', name: "Tota's Team", wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'D', name: 'Genesis Dream', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'E', name: 'Leones', wins: 0, losses: 0, pointDiff: 0 }
-            ]
-        },
-        {
-            division: 'Femenil', category: '2013-2014', groups: null, games: [
-                { round: 'Semi', home: '#3 Seed', away: '#2 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
-            ],
-            standings: [
-                { slot: 'A', name: 'Linces', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'B', name: 'Spurs Acuna', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'C', name: 'Spurs Monclova', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'D', name: 'Alfa y Omega', wins: 0, losses: 0, pointDiff: 0 }
-            ]
-        },
-        {
-            division: 'Varonil', category: '2009-2010',
-            groups: { A: ['D', 'A', 'B', 'G', 'I'], B: ['F', 'C', 'E', 'H'] }, games: [
-                { round: 'Semi 1', home: '#2B Seed', away: '#1A Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Semi 2', home: '#2A Seed', away: '#1B Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
-            ],
-            standings: [
-                { slot: 'A', name: 'Betas', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'B', name: 'Leones', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'C', name: 'Carneros', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'D', name: 'Sigmas', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'E', name: 'Ballers', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'F', name: 'West Gold', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'G', name: 'Sonics', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'H', name: 'Selectivo', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'I', name: 'Lakers', wins: 0, losses: 0, pointDiff: 0 }
-            ]
-        },
-        {
-            division: 'Varonil', category: '2011-2012',
-            groups: { A: ['B', 'E', 'F'], B: ['D', 'C', 'A'] }, games: [
-                { round: 'Semi 1', home: '#2B Seed', away: '#1A Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Semi 2', home: '#2A Seed', away: '#1B Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
-            ],
-            standings: [
-                { slot: 'A', name: 'Ballers', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'B', name: 'Centauros', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'C', name: 'Titanes', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'D', name: 'Alfa y Omega', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'E', name: 'Betas', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'F', name: "Tota's Boys", wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'G', name: 'Leones', wins: 0, losses: 0, pointDiff: 0 }
-            ]
-        },
-        {
-            division: 'Varonil', category: '2013-2014', groups: null, games: [
-                { round: 'Semi 1', home: '#4 Seed', away: '#1 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Semi 2', home: '#3 Seed', away: '#2 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
-            ],
-            standings: [
-                { slot: 'A', name: 'Betas', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'B', name: 'Leones', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'C', name: 'Spurs Monclova', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'D', name: 'Alfa y Omega', wins: 0, losses: 0, pointDiff: 0 }
-            ]
-        },
-        {
-            division: 'Varonil', category: '2015-2016',
-            groups: { A: ['F', 'A', 'C'], B: ['B', 'D', 'E'] }, games: [
-                { round: 'Semi 1', home: '#2B Seed', away: '#1A Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Semi 2', home: '#2A Seed', away: '#1B Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
-            ],
-            standings: [
-                { slot: 'A', name: 'Ballers', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'B', name: 'Betas', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'C', name: 'Centauros', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'D', name: 'Leones', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'E', name: 'Nets', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'F', name: 'Alfa y Omega', wins: 0, losses: 0, pointDiff: 0 }
-            ]
-        },
-        {
-            division: 'Varonil', category: '2017-2018',
-            groups: { A: ['A', 'B', 'C'], B: ['D', 'E', 'F'] }, games: [
-                { round: 'Semi 1', home: '#2B Seed', away: '#1A Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Semi 2', home: '#2A Seed', away: '#1B Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
-            ],
-            standings: [
-                { slot: 'A', name: 'Betas', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'B', name: 'Centauros', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'C', name: 'Eagle Pass', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'D', name: 'Nets', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'E', name: 'Spurs Acuna', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'F', name: 'Alfa y Omega', wins: 0, losses: 0, pointDiff: 0 }
-            ]
-        },
-        {
-            division: 'Varonil', category: 'Universitario', groups: null, games: [
-                { round: 'Semi', home: '#3 Seed', away: '#2 Seed', winner: '', homeScore: null, awayScore: null, completion: false },
-                { round: 'Championship', home: 'TBD', away: 'TBD', winner: '', homeScore: null, awayScore: null, completion: false }
-            ],
-            standings: [
-                { slot: 'A', name: 'Del Rio', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'B', name: 'Lakers', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'C', name: 'Halcones', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'D', name: 'Selectivo', wins: 0, losses: 0, pointDiff: 0 },
-                { slot: 'E', name: 'Tec NM Toros', wins: 0, losses: 0, pointDiff: 0 }
-            ]
-        }
-    ];
-
     // Copa Beta active filters
     var cbFilters = { division: 'all', category: 'all' };
     var cbData = [];
@@ -632,33 +509,13 @@
     function showCopaBetaShimmer() {
         var container = document.getElementById('standings-content');
         var html = '';
-
-        // Shimmer for Femenil (2 categories, no groups)
-        html += '<div class="standings-division">';
-        html += '<h2 class="division-header">Femenil</h2>';
-        html += '<div class="category-section">';
-        html += '<h3 class="category-header">2009-2010</h3>';
-        html += buildShimmerTable(5);
-        html += '</div>';
-        html += '<div class="category-section">';
-        html += '<h3 class="category-header">2013-2014</h3>';
-        html += buildShimmerTable(4);
-        html += '</div>';
-        html += '</div>';
-
-        // Shimmer for Varonil (6 categories, some with groups)
-        html += '<div class="standings-division">';
-        html += '<h2 class="division-header">Varonil</h2>';
-        var varonilCounts = [4, 4, 4, 3, 3, 5];
-        var varonilLabels = ['2009-2010', '2011-2012', '2013-2014', '2015-2016', '2017-2018', 'Universitario'];
-        for (var i = 0; i < varonilCounts.length; i++) {
+        // Generic shimmer — just show a few placeholder tables
+        for (var i = 0; i < 3; i++) {
             html += '<div class="category-section">';
-            html += '<h3 class="category-header">' + varonilLabels[i] + '</h3>';
-            html += buildShimmerTable(varonilCounts[i]);
+            html += '<h3 class="category-header"><span class="shimmer-block" style="width:120px;height:18px;display:inline-block"></span></h3>';
+            html += buildShimmerTable(4);
             html += '</div>';
         }
-        html += '</div>';
-
         container.innerHTML = html;
     }
 
@@ -761,17 +618,16 @@
                 if (data && data.categories && data.categories.length > 0) {
                     cbData = parseCopaBetaAPI(data.categories);
                 } else {
-                    cbData = CB_FALLBACK;
+                    cbData = [];
                 }
                 buildCBFilterBar();
                 renderCopaBeta(cbData);
                 startLivePolling();
             })
             .catch(function () {
-                cbData = CB_FALLBACK;
-                buildCBFilterBar();
-                renderCopaBeta(cbData);
-                startLivePolling();
+                cbData = [];
+                var container = document.getElementById('standings-content');
+                container.innerHTML = '<div class="standings-empty">Unable to load standings. Please try again later.</div>';
             });
     }
 
