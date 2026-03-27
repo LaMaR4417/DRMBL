@@ -57,7 +57,7 @@ module.exports = async function (req, res) {
             }
 
             var { resources: cbResources } = await seasonsContainer.items
-                .query("SELECT * FROM c WHERE CONTAINS(c.id, 'Copa Beta - Categoria')")
+                .query("SELECT * FROM c WHERE STARTSWITH(c.id, 'Copa Beta -')")
                 .fetchAll();
 
             var categories = cbResources.map(function (doc) {
