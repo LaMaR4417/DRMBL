@@ -41,8 +41,21 @@ module.exports = async function (req, res) {
     var league = req.query.league || null;
 
     try {
-        // Copa Beta mode: return all Copa Beta categories
+        // Copa Beta mode: return league info + all Copa Beta categories
         if (league === 'copa-beta') {
+            var leaguesContainer = client
+                .database("DRMBL Database")
+                .container("Leagues");
+
+            var { resources: leagueResources } = await leaguesContainer.items
+                .query("SELECT * FROM c WHERE c.id = 'Copa Beta'")
+                .fetchAll();
+
+            var leagueInfo = null;
+            if (leagueResources.length > 0) {
+                leagueInfo = leagueResources[0].league || null;
+            }
+
             var { resources: cbResources } = await seasonsContainer.items
                 .query("SELECT * FROM c WHERE CONTAINS(c.id, 'Copa Beta - Categoria')")
                 .fetchAll();
@@ -59,7 +72,7 @@ module.exports = async function (req, res) {
                 };
             });
 
-            return res.status(200).json({ categories: categories });
+            return res.status(200).json({ leagueInfo: leagueInfo, categories: categories });
         }
 
         // Default: list all seasons

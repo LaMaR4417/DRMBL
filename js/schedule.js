@@ -425,6 +425,7 @@
     }
     var cbData = [];
     var cbSkeletonMode = false;
+    var cbLeagueDivisions = null;
 
     function parseCopaBetaAPI(apiCategories) {
         return apiCategories.map(function (cat) {
@@ -432,8 +433,15 @@
             var division = '';
             var category = '';
             if (div) {
-                if (div.femenil && div.femenil.length) { division = 'Femenil'; category = div.femenil[0]; }
-                else if (div.varonil && div.varonil.length) { division = 'Varonil'; category = div.varonil[0]; }
+                var divKeys = Object.keys(div);
+                for (var dk = 0; dk < divKeys.length; dk++) {
+                    var key = divKeys[dk];
+                    if (div[key] && div[key].length) {
+                        division = key.charAt(0).toUpperCase() + key.slice(1);
+                        category = div[key][0];
+                        break;
+                    }
+                }
             }
             // Strip location division info — just keep court
             var games = (cat.games || []).map(function (g) {
@@ -458,30 +466,50 @@
         });
     }
 
-    function getCBDivisions(data) {
-        var seen = {};
-        var result = [];
-        for (var i = 0; i < data.length; i++) {
-            if (!seen[data[i].division]) { seen[data[i].division] = true; result.push(data[i].division); }
+    function getCBDivisions() {
+        if (cbLeagueDivisions) {
+            var result = [];
+            var keys = Object.keys(cbLeagueDivisions);
+            for (var i = 0; i < keys.length; i++) {
+                result.push(keys[i].charAt(0).toUpperCase() + keys[i].slice(1));
+            }
+            return result;
         }
-        return result;
+        var seen = {};
+        var fallback = [];
+        for (var j = 0; j < cbData.length; j++) {
+            if (!seen[cbData[j].division]) { seen[cbData[j].division] = true; fallback.push(cbData[j].division); }
+        }
+        return fallback;
     }
 
-    function getCBCategories(data, divFilter) {
-        var seen = {};
-        var result = [];
-        for (var i = 0; i < data.length; i++) {
-            if (divFilter !== 'all' && data[i].division !== divFilter) continue;
-            if (!seen[data[i].category]) { seen[data[i].category] = true; result.push(data[i].category); }
+    function getCBCategories(divFilter) {
+        if (cbLeagueDivisions) {
+            var result = [];
+            var keys = Object.keys(cbLeagueDivisions);
+            for (var i = 0; i < keys.length; i++) {
+                var divName = keys[i].charAt(0).toUpperCase() + keys[i].slice(1);
+                if (divFilter !== 'all' && divName !== divFilter) continue;
+                var cats = cbLeagueDivisions[keys[i]];
+                for (var c = 0; c < cats.length; c++) {
+                    result.push(cats[c]);
+                }
+            }
+            return result;
         }
-        result.sort();
-        return result;
+        var seen = {};
+        var fallback = [];
+        for (var j = 0; j < cbData.length; j++) {
+            if (divFilter !== 'all' && cbData[j].division !== divFilter) continue;
+            if (!seen[cbData[j].category]) { seen[cbData[j].category] = true; fallback.push(cbData[j].category); }
+        }
+        return fallback;
     }
 
     function getCBTeamsGrouped(data, divFilter, catFilter) {
         var groups = [];
         var seen = {};
-        var divOrder = ['Femenil', 'Varonil'];
+        var divOrder = getCBDivisions();
         for (var di = 0; di < divOrder.length; di++) {
             var div = divOrder[di];
             for (var i = 0; i < data.length; i++) {
@@ -507,8 +535,8 @@
 
     function buildCBFilterBar() {
         var nav = document.getElementById('week-nav-inner');
-        var divisions = getCBDivisions(cbData);
-        var categories = getCBCategories(cbData, cbFilters.division);
+        var divisions = getCBDivisions();
+        var categories = getCBCategories(cbFilters.division);
         var teamGroups = getCBTeamsGrouped(cbData, cbFilters.division, cbFilters.category);
 
         var html = '<div class="cb-filters">';
@@ -793,6 +821,9 @@
         fetch('/api/seasons?league=copa-beta')
             .then(function (res) { return res.json(); })
             .then(function (data) {
+                if (data && data.leagueInfo && data.leagueInfo.divisions) {
+                    cbLeagueDivisions = data.leagueInfo.divisions;
+                }
                 if (data && data.categories && data.categories.length) {
                     cbData = parseCopaBetaAPI(data.categories);
                 } else {
