@@ -307,10 +307,6 @@
     var cbLiveGames = {};  // keyed by "away~home" team names
     var cbLiveTimer = null;
 
-    function liveKey(away, home) {
-        return away + '~' + home;
-    }
-
     function fetchLiveGames() {
         return fetch('/api/live-game')
             .then(function (res) { return res.json(); })
@@ -327,12 +323,20 @@
                     var home = bs.teamInfo.home.name;
                     var quarter = bs.gameInfo && bs.gameInfo.state ? bs.gameInfo.state.currentQuarter : null;
                     var clock = bs.gameInfo && bs.gameInfo.state && bs.gameInfo.state.clock ? bs.gameInfo.state.clock.timeLeft : null;
-                    map[liveKey(away, home)] = {
+                    // Use scheduleGameId as key for unique matching across divisions
+                    var scheduleGameId = g.trackerState && g.trackerState.selectedGame ? g.trackerState.selectedGame.id : null;
+                    var liveEntry = {
                         awayScore: bs.teamInfo.away.score.current,
                         homeScore: bs.teamInfo.home.score.current,
                         quarter: quarter,
                         clock: clock
                     };
+                    if (scheduleGameId) {
+                        map[scheduleGameId] = liveEntry;
+                    } else {
+                        // Fallback for older live games without scheduleGameId
+                        map[away + '~' + home] = liveEntry;
+                    }
                 }
                 cbLiveGames = map;
                 return map;
@@ -351,8 +355,13 @@
         var cards = document.querySelectorAll('.cb-court-card[data-away][data-home]');
         for (var i = 0; i < cards.length; i++) {
             var card = cards[i];
-            var key = liveKey(card.getAttribute('data-away'), card.getAttribute('data-home'));
-            var live = cbLiveGames[key];
+            var gameId = card.getAttribute('data-game-id');
+            // Match by scheduleGameId first, fallback to team name key
+            var live = gameId ? cbLiveGames[gameId] : null;
+            if (!live) {
+                var fallbackKey = card.getAttribute('data-away') + '~' + card.getAttribute('data-home');
+                live = cbLiveGames[fallbackKey];
+            }
             var matchupEl = card.querySelector('.cb-card-matchup');
             var badgeEl = card.querySelector('.cb-live-badge');
             var infoEl = card.querySelector('.cb-card-info');
@@ -658,7 +667,8 @@
                     homeScore: game.homeScore != null ? game.homeScore : null,
                     division: cat.division, category: cat.category,
                     group: game.group || null, round: game.round || null,
-                    isChamp: isChamp
+                    isChamp: isChamp,
+                    gameId: game.id || null
                 });
             }
         }
@@ -782,7 +792,7 @@
                             html += '</div>';
                         } else {
                             var cardCls = 'cb-court-card' + (gm.isChamp ? ' cb-court-card-champ' : '');
-                            html += '<div class="' + cardCls + ' cb-div-' + gm.division.toLowerCase() + '" data-away="' + gm.away + '" data-home="' + gm.home + '">';
+                            html += '<div class="' + cardCls + ' cb-div-' + gm.division.toLowerCase() + '" data-away="' + gm.away + '" data-home="' + gm.home + '"' + (gm.gameId ? ' data-game-id="' + gm.gameId + '"' : '') + '>';
                             html += '<div class="cb-card-court">' + activeCourts[col] + '</div>';
                             html += '<div class="cb-card-info">';
                             html += '<div class="cb-card-time">' + gm.time + '</div>';
