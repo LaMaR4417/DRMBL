@@ -677,6 +677,32 @@
         }
 
         if (allGames.length === 0) {
+            if (cbSkeletonMode) {
+                // Show shimmer placeholder while loading
+                var shimHtml = '';
+                for (var sh = 0; sh < 2; sh++) {
+                    shimHtml += '<section class="week-section cb-day-section">';
+                    shimHtml += '<div class="week-header"><h2 class="week-title"><span class="team-name-loading" style="width:140px;height:20px"></span></h2></div>';
+                    shimHtml += '<div class="cb-courts-grid cb-courts-3">';
+                    for (var sc = 0; sc < 3; sc++) {
+                        shimHtml += '<div class="cb-court-card">';
+                        shimHtml += '<div class="cb-card-info">';
+                        shimHtml += '<div><span class="team-name-loading" style="width:50px"></span></div>';
+                        shimHtml += '<div><span class="team-name-loading" style="width:65px"></span></div>';
+                        shimHtml += '</div>';
+                        shimHtml += '<div class="cb-card-matchup">';
+                        shimHtml += '<span class="team-name-loading" style="width:70px"></span>';
+                        shimHtml += '<span class="cb-card-vs">vs</span>';
+                        shimHtml += '<span class="team-name-loading" style="width:70px"></span>';
+                        shimHtml += '</div>';
+                        shimHtml += '</div>';
+                    }
+                    shimHtml += '</div>';
+                    shimHtml += '</section>';
+                }
+                container.innerHTML = shimHtml;
+                return;
+            }
             container.innerHTML = '<div class="schedule-empty">No games match your filters.</div>';
             return;
         }
