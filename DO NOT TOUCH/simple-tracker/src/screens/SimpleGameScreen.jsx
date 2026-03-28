@@ -131,7 +131,7 @@ export default function SimpleGameScreen() {
   function handleConfirmSubmit() {
     setSaveStatus('saving');
     const bs = buildBoxScore('final');
-    saveEndGame(bs, game.homeTeam?.teamID, game.awayTeam?.teamID, game.homeTeam?.slot, game.awayTeam?.slot, game.selectedSeason?.id)
+    saveEndGame(bs, game.homeTeam?.teamID, game.awayTeam?.teamID, game.homeTeam?.slot, game.awayTeam?.slot, game.selectedSeason?.id, game.selectedGame?.id)
       .then(() => {
         setSaveStatus('saved');
         setPhase('submitted');

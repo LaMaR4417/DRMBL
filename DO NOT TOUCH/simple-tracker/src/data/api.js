@@ -36,11 +36,11 @@ export async function deleteLiveGame(gameId) {
   }
 }
 
-export async function saveEndGame(boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId) {
+export async function saveEndGame(boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId, scheduleGameId) {
   const res = await fetch('/api/end-game', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId }),
+    body: JSON.stringify({ boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId, scheduleGameId }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));

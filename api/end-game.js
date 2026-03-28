@@ -269,6 +269,7 @@ module.exports = async function (req, res) {
     var awayTeamID = body.awayTeamID;
     var homeSlot = body.homeSlot || null;
     var awaySlot = body.awaySlot || null;
+    var scheduleGameId = body.scheduleGameId || null;
     var seasonId = body.seasonId;
     if (!seasonId) {
         return res.status(400).json({ error: "Missing required field: seasonId" });
@@ -325,7 +326,12 @@ module.exports = async function (req, res) {
                     if (!week.games) continue;
                     for (var g = 0; g < week.games.length; g++) {
                         var wg = week.games[g];
-                        if (wg.home === homeSlot && wg.away === awaySlot && !wg.winner) {
+                        // Match by game ID if provided, otherwise fall back to slot matching
+                        if (scheduleGameId && wg.id === scheduleGameId && !wg.completion) {
+                            writeGameResult(wg);
+                            updated = true;
+                            break;
+                        } else if (!scheduleGameId && wg.home === homeSlot && wg.away === awaySlot && !wg.winner) {
                             writeGameResult(wg);
                             updated = true;
                             break;
@@ -338,7 +344,12 @@ module.exports = async function (req, res) {
             if (!updated && seasonDoc.games) {
                 for (var gi = 0; gi < seasonDoc.games.length; gi++) {
                     var sg = seasonDoc.games[gi];
-                    if (sg.home === homeSlot && sg.away === awaySlot && !sg.winner) {
+                    // Match by game ID if provided, otherwise fall back to slot matching
+                    if (scheduleGameId && sg.id === scheduleGameId && !sg.completion) {
+                        writeGameResult(sg);
+                        updated = true;
+                        break;
+                    } else if (!scheduleGameId && sg.home === homeSlot && sg.away === awaySlot && !sg.winner) {
                         writeGameResult(sg);
                         updated = true;
                         break;
