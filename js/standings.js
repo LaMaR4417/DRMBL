@@ -155,7 +155,7 @@
     // ── COPA BETA ──────────────────────────────────────
 
     // Copa Beta active filters
-    var cbFilters = { division: 'all', category: 'all' };
+    var cbFilters = { division: 'all', category: 'all', team: 'all' };
     var cbData = [];
     var cbLeagueDivisions = null; // from League document: { femenil: [...], varonil: [...] }
 
@@ -180,7 +180,8 @@
                 category: category,
                 groups: cat.groups || null,
                 standings: cat.standings || [],
-                games: cat.games || []
+                games: cat.games || [],
+                teams: cat.teams || []
             };
         });
     }
@@ -226,12 +227,48 @@
         return fallback;
     }
 
+    function getCBTeamsGrouped(data, divFilter, catFilter) {
+        var groups = [];
+        var seen = {};
+        var divOrder = getCBDivisions();
+        for (var di = 0; di < divOrder.length; di++) {
+            var div = divOrder[di];
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].division !== div) continue;
+                if (divFilter !== 'all' && data[i].division !== divFilter) continue;
+                if (catFilter !== 'all' && data[i].category !== catFilter) continue;
+                var key = div + '|' + data[i].category;
+                if (seen[key]) continue;
+                seen[key] = true;
+                var teamNames = [];
+                for (var t = 0; t < data[i].teams.length; t++) {
+                    var name = data[i].teams[t].name;
+                    if (name) teamNames.push(name);
+                }
+                teamNames.sort();
+                groups.push({ division: div, category: data[i].category, teams: teamNames });
+            }
+        }
+        return groups;
+    }
+
+    // Find which division a team belongs to
+    function findTeamDivision(teamName) {
+        for (var i = 0; i < cbData.length; i++) {
+            for (var t = 0; t < cbData[i].teams.length; t++) {
+                if (cbData[i].teams[t].name === teamName) return cbData[i].division;
+            }
+        }
+        return null;
+    }
+
     function buildCBFilterBar() {
         var filterWrap = document.getElementById('standings-filters');
         if (!filterWrap) return;
 
         var divisions = getCBDivisions();
         var categories = getCBCategories(cbFilters.division);
+        var teamGroups = getCBTeamsGrouped(cbData, cbFilters.division, cbFilters.category);
 
         var html = '<div class="cb-filters">';
 
@@ -253,8 +290,24 @@
         }
         html += '</select>';
 
+        // Team filter (grouped by division + category) — hidden when category is active
+        if (cbFilters.category === 'all') {
+            html += '<select class="cb-filter-select" id="cb-filter-team">';
+            html += '<option value="all">All Teams</option>';
+            for (var tg = 0; tg < teamGroups.length; tg++) {
+                var grp = teamGroups[tg];
+                html += '<optgroup label="' + grp.division + ' \u2014 ' + grp.category + '">';
+                for (var t = 0; t < grp.teams.length; t++) {
+                    var sel3 = cbFilters.team === grp.teams[t] ? ' selected' : '';
+                    html += '<option value="' + grp.teams[t] + '"' + sel3 + '>' + grp.teams[t] + '</option>';
+                }
+                html += '</optgroup>';
+            }
+            html += '</select>';
+        }
+
         // Clear filters button
-        var hasActiveFilter = cbFilters.division !== 'all' || cbFilters.category !== 'all';
+        var hasActiveFilter = cbFilters.division !== 'all' || cbFilters.category !== 'all' || cbFilters.team !== 'all';
         if (hasActiveFilter) {
             html += '<button type="button" class="cb-filter-clear" id="cb-filter-clear">&times; Clear</button>';
         }
@@ -266,6 +319,7 @@
             document.getElementById('cb-filter-clear').addEventListener('click', function () {
                 cbFilters.division = 'all';
                 cbFilters.category = 'all';
+                cbFilters.team = 'all';
                 buildCBFilterBar();
                 renderCopaBeta(cbData);
             });
@@ -274,11 +328,28 @@
         document.getElementById('cb-filter-division').addEventListener('change', function () {
             cbFilters.division = this.value;
             cbFilters.category = 'all';
+            cbFilters.team = 'all';
             buildCBFilterBar();
             renderCopaBeta(cbData);
         });
         document.getElementById('cb-filter-category').addEventListener('change', function () {
             cbFilters.category = this.value;
+            cbFilters.team = 'all';
+            buildCBFilterBar();
+            renderCopaBeta(cbData);
+        });
+        var teamEl = document.getElementById('cb-filter-team');
+        if (teamEl) teamEl.addEventListener('change', function () {
+            cbFilters.team = this.value;
+            // When a team is selected, auto-filter to their division
+            if (this.value !== 'all') {
+                var teamDiv = findTeamDivision(this.value);
+                if (teamDiv) {
+                    cbFilters.division = teamDiv;
+                    cbFilters.category = 'all';
+                }
+            }
+            buildCBFilterBar();
             renderCopaBeta(cbData);
         });
     }
