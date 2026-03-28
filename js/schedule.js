@@ -457,6 +457,7 @@
                 var loc = g.location || '';
                 var courtMatch = loc.match(/^(Court\s+\w+)/i);
                 return {
+                    id: g.id || null,
                     date: g.date, time: g.time,
                     location: courtMatch ? courtMatch[1] : loc,
                     away: g.away, home: g.home,
