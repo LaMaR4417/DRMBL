@@ -70,10 +70,12 @@ export default function GameSelectScreen() {
       const busy = new Set();
       for (const g of live) {
         if (g.boxScore?.gameInfo?.general?.status === 'final') continue;
+        const liveSeason = g.trackerState?.selectedSeason?.id || '';
         const h = g.boxScore?.teamInfo?.home?.name;
         const a = g.boxScore?.teamInfo?.away?.name;
-        if (h) busy.add(h);
-        if (a) busy.add(a);
+        // Key by season+team so same-named teams in different divisions aren't blocked
+        if (h) busy.add(liveSeason + '~' + h);
+        if (a) busy.add(liveSeason + '~' + a);
       }
       setInGameTeams(busy);
     }).catch(() => {});
@@ -131,8 +133,9 @@ export default function GameSelectScreen() {
                 const awayName = resolveSlot(g.away);
                 const resolvable = isResolvable(g);
                 const isSelected = game.selectedGame?.id === g.id;
-                const homeInGame = inGameTeams.has(homeName);
-                const awayInGame = inGameTeams.has(awayName);
+                const curSeason = season?.id || '';
+                const homeInGame = inGameTeams.has(curSeason + '~' + homeName);
+                const awayInGame = inGameTeams.has(curSeason + '~' + awayName);
                 const disabled = !resolvable || homeInGame || awayInGame;
                 return (
                   <button key={g.id || i}
@@ -168,7 +171,7 @@ export default function GameSelectScreen() {
                 if (!t.teamID) return null;
                 const sel = game.homeTeam?.teamID === t.teamID;
                 const other = game.awayTeam?.teamID === t.teamID;
-                const busy = inGameTeams.has(t.name);
+                const busy = inGameTeams.has((season?.id || '') + '~' + t.name);
                 return (
                   <button key={t.teamID}
                     className={`btn btn-team ${sel ? 'selected' : ''} ${other || busy ? 'disabled' : ''}`}
@@ -189,7 +192,7 @@ export default function GameSelectScreen() {
                 if (!t.teamID) return null;
                 const sel = game.awayTeam?.teamID === t.teamID;
                 const other = game.homeTeam?.teamID === t.teamID;
-                const busy = inGameTeams.has(t.name);
+                const busy = inGameTeams.has((season?.id || '') + '~' + t.name);
                 return (
                   <button key={t.teamID}
                     className={`btn btn-team ${sel ? 'selected' : ''} ${other || busy ? 'disabled' : ''}`}
