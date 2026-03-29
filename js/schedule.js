@@ -650,8 +650,10 @@
             for (var g = 0; g < cat.games.length; g++) {
                 var game = cat.games[g];
                 var isChamp = !!game.round;
-                var awayName = isChamp ? game.away : getTeamName(cat.teams, game.away);
-                var homeName = isChamp ? game.home : getTeamName(cat.teams, game.home);
+                var awayResolved = getTeamName(cat.teams, game.away);
+                var homeResolved = getTeamName(cat.teams, game.home);
+                var awayName = awayResolved || game.away;
+                var homeName = homeResolved || game.home;
 
                 // Court filter
                 if (cbFilters.court !== 'all' && game.location !== cbFilters.court) continue;
