@@ -401,6 +401,19 @@
     border-left-color: transparent;
 }
 
+.cb-court-prep-slot {
+    border-left-color: rgba(255, 255, 255, 0.1);
+    opacity: 0.6;
+}
+
+.cb-card-prep-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+}
+
 .cb-court-card {
     display: grid;
     grid-template-columns: auto 1fr;

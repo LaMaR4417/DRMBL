@@ -824,7 +824,16 @@
                             html += '</div>';
                         }
                     } else {
-                        html += '<div class="cb-court-card cb-court-empty-slot"></div>';
+                        // Special label for Court B Sunday 10am
+                        if (activeCourts[col] === 'Court B' && time === '10:00 AM' && dg.date && dg.date.date === 29) {
+                            html += '<div class="cb-court-card cb-court-prep-slot">';
+                            html += '<div class="cb-card-court">Court B</div>';
+                            html += '<div class="cb-card-info"><div class="cb-card-time">10:00 AM</div></div>';
+                            html += '<div class="cb-card-matchup"><span class="cb-card-prep-label">Preparaci\u00f3n de Cancha</span></div>';
+                            html += '</div>';
+                        } else {
+                            html += '<div class="cb-court-card cb-court-empty-slot"></div>';
+                        }
                     }
                 }
 
