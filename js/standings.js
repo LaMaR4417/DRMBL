@@ -3,6 +3,7 @@
     function getLeagueFromPath() {
         var path = window.location.pathname.replace(/\/+$/, '');
         if (path.indexOf('/standings/copa-beta') !== -1) return 'copa-beta';
+        if (path.indexOf('/standings/lomba') !== -1) return 'lomba';
         return 'drmbl';
     }
 
@@ -860,6 +861,489 @@
         }, 20000);
     }
 
+    // ── LOMBA ──────────────────────────────────────────
+
+    var lombaLeagueData = null;
+    var lombaSeasonsData = null;
+    var lombaFilters = { gender: 'all', division: 'all' };
+
+    function buildLOMBAShimmerTable(rowCount) {
+        var html = '<div class="standings-table-wrap">';
+        html += '<table class="standings-table lomba-table">';
+        html += '<thead><tr>';
+        html += '<th class="col-rank">#</th>';
+        html += '<th class="col-team">Team</th>';
+        html += '<th class="col-pts">PTS</th>';
+        html += '<th class="col-w">W</th>';
+        html += '<th class="col-l">L</th>';
+        html += '<th class="col-f">FF</th>';
+        html += '<th class="col-diff">+/-</th>';
+        html += '</tr></thead><tbody>';
+        for (var i = 0; i < rowCount; i++) {
+            html += '<tr class="standings-shimmer-row">';
+            html += '<td class="col-rank"><span class="shimmer-block shimmer-rank"></span></td>';
+            html += '<td class="col-team"><span class="shimmer-block shimmer-team"></span></td>';
+            html += '<td class="col-pts"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-w"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-l"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-f"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-diff"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        return html;
+    }
+
+    function showLOMBAShimmer() {
+        var el = document.getElementById('standings-content');
+        var genders = ['Varonil', 'Femenil'];
+        var divsPerGender = [3, 2];
+        var html = '';
+        for (var g = 0; g < genders.length; g++) {
+            html += '<div class="lomba-gender-block">';
+            html += '<h2 class="division-header">' + genders[g] + '</h2>';
+            for (var d = 0; d < divsPerGender[g]; d++) {
+                html += '<div class="category-section">';
+                html += '<h3 class="category-header"><span class="shimmer-block" style="width:140px;height:18px;display:inline-block"></span></h3>';
+                html += buildLOMBAShimmerTable(8);
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        el.innerHTML = html;
+    }
+
+    function computeLOMBAStandings(season) {
+        var schedule = season.schedule || [];
+        var teams = season.teams || [];
+
+        var statsMap = {};
+        for (var t = 0; t < teams.length; t++) {
+            statsMap[teams[t].name] = { name: teams[t].name, wins: 0, losses: 0, forfeitsGiven: 0, forfeitsReceived: 0, pointDiff: 0, pts: 0 };
+        }
+
+        for (var s = 0; s < schedule.length; s++) {
+            var games = schedule[s].games || [];
+            for (var g = 0; g < games.length; g++) {
+                var game = games[g];
+                var home = game.home;
+                var away = game.away;
+                var homeScore = game.homeScore || 0;
+                var awayScore = game.awayScore || 0;
+                var isForfeit = game.forfeit === true;
+
+                if (!statsMap[home]) statsMap[home] = { name: home, wins: 0, losses: 0, forfeitsGiven: 0, forfeitsReceived: 0, pointDiff: 0, pts: 0 };
+                if (!statsMap[away]) statsMap[away] = { name: away, wins: 0, losses: 0, forfeitsGiven: 0, forfeitsReceived: 0, pointDiff: 0, pts: 0 };
+
+                statsMap[home].pointDiff += (homeScore - awayScore);
+                statsMap[away].pointDiff += (awayScore - homeScore);
+
+                if (game.winner === 'home') {
+                    statsMap[home].wins++;
+                    statsMap[home].pts += 3;
+                    statsMap[away].losses++;
+                    if (isForfeit) {
+                        statsMap[away].forfeitsGiven++;
+                        // 0 pts for forfeit loss
+                    } else {
+                        statsMap[away].pts += 1;
+                    }
+                } else if (game.winner === 'away') {
+                    statsMap[away].wins++;
+                    statsMap[away].pts += 3;
+                    statsMap[home].losses++;
+                    if (isForfeit) {
+                        statsMap[home].forfeitsGiven++;
+                        // 0 pts for forfeit loss
+                    } else {
+                        statsMap[home].pts += 1;
+                    }
+                }
+
+                // Track forfeits received (wins by forfeit)
+                if (isForfeit) {
+                    if (game.winner === 'home') statsMap[home].forfeitsReceived++;
+                    else if (game.winner === 'away') statsMap[away].forfeitsReceived++;
+                }
+            }
+        }
+
+        var standings = [];
+        for (var key in statsMap) {
+            standings.push(statsMap[key]);
+        }
+        // Sort by points, then wins, then point differential
+        standings.sort(function (a, b) {
+            if (b.pts !== a.pts) return b.pts - a.pts;
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            return b.pointDiff - a.pointDiff;
+        });
+
+        return standings;
+    }
+
+    function buildLOMBAStandingsTable(standings, playoffCutoff) {
+        var html = '<div class="standings-table-wrap">';
+        html += '<table class="standings-table lomba-table">';
+        html += '<thead><tr>';
+        html += '<th class="col-rank">#</th>';
+        html += '<th class="col-team">Team</th>';
+        html += '<th class="col-pts">PTS</th>';
+        html += '<th class="col-w">W</th>';
+        html += '<th class="col-l">L</th>';
+        html += '<th class="col-f">FF</th>';
+        html += '<th class="col-diff">+/-</th>';
+        html += '</tr></thead>';
+        html += '<tbody>';
+
+        for (var i = 0; i < standings.length; i++) {
+            var team = standings[i];
+            var rank = i + 1;
+            var isPlayoff = playoffCutoff && rank <= playoffCutoff;
+
+            var rowCls = '';
+            if (isPlayoff) rowCls += ' playoff-team';
+
+            var pd = team.pointDiff || 0;
+            var diffDisplay = '--';
+            var diffCls = 'col-diff';
+            if (team.wins > 0 || team.losses > 0 || pd !== 0) {
+                diffDisplay = pd > 0 ? '+' + pd : '' + pd;
+                if (pd > 0) diffCls += ' positive';
+                else if (pd < 0) diffCls += ' negative';
+            }
+
+            html += '<tr class="' + rowCls.trim() + '">';
+            html += '<td class="col-rank">' + rank + '</td>';
+            html += '<td class="col-team">' + team.name + '</td>';
+            html += '<td class="col-pts">' + team.pts + '</td>';
+            html += '<td class="col-w">' + team.wins + '</td>';
+            html += '<td class="col-l">' + team.losses + '</td>';
+            html += '<td class="col-f">' + team.forfeitsGiven + '</td>';
+            html += '<td class="' + diffCls + '">' + diffDisplay + '</td>';
+            html += '</tr>';
+        }
+
+        html += '</tbody></table></div>';
+        return html;
+    }
+
+    function getLOMBAGenders() {
+        if (!lombaLeagueData || !lombaLeagueData.league || !lombaLeagueData.league.seasons) return [];
+        var genders = {};
+        var seasons = lombaLeagueData.league.seasons;
+        for (var i = 0; i < seasons.length; i++) {
+            var divs = seasons[i].data.divisions;
+            for (var g in divs) {
+                genders[g] = true;
+            }
+        }
+        return Object.keys(genders);
+    }
+
+    function getLOMBADivisions(gender) {
+        if (!lombaLeagueData || !lombaLeagueData.league || !lombaLeagueData.league.seasons) return [];
+        var divs = [];
+        var seasons = lombaLeagueData.league.seasons;
+        for (var i = 0; i < seasons.length; i++) {
+            var genderDivs = seasons[i].data.divisions;
+            if (gender === 'all') {
+                for (var g in genderDivs) {
+                    for (var d = 0; d < genderDivs[g].length; d++) {
+                        if (divs.indexOf(genderDivs[g][d]) === -1) divs.push(genderDivs[g][d]);
+                    }
+                }
+            } else if (genderDivs[gender]) {
+                for (var d2 = 0; d2 < genderDivs[gender].length; d2++) {
+                    if (divs.indexOf(genderDivs[gender][d2]) === -1) divs.push(genderDivs[gender][d2]);
+                }
+            }
+        }
+        return divs;
+    }
+
+    function buildLOMBAFilterBar() {
+        var filterWrap = document.getElementById('standings-filters');
+        if (!filterWrap) return;
+
+        var genders = getLOMBAGenders();
+        var divisions = getLOMBADivisions(lombaFilters.gender);
+
+        var html = '<div class="cb-filters">';
+
+        // Gender filter
+        html += '<select class="cb-filter-select" id="lomba-filter-gender">';
+        html += '<option value="all">All Categories</option>';
+        for (var g = 0; g < genders.length; g++) {
+            var label = genders[g].charAt(0).toUpperCase() + genders[g].slice(1);
+            var sel = lombaFilters.gender === genders[g] ? ' selected' : '';
+            html += '<option value="' + genders[g] + '"' + sel + '>' + label + '</option>';
+        }
+        html += '</select>';
+
+        // Division filter
+        html += '<select class="cb-filter-select" id="lomba-filter-division">';
+        html += '<option value="all">All Divisions</option>';
+        for (var d = 0; d < divisions.length; d++) {
+            var sel2 = lombaFilters.division === divisions[d] ? ' selected' : '';
+            html += '<option value="' + divisions[d] + '"' + sel2 + '>' + divisions[d] + '</option>';
+        }
+        html += '</select>';
+
+        // Clear button
+        var hasFilter = lombaFilters.gender !== 'all' || lombaFilters.division !== 'all';
+        if (hasFilter) {
+            html += '<button type="button" class="cb-filter-clear" id="lomba-filter-clear">&times; Clear</button>';
+        }
+
+        html += '</div>';
+        filterWrap.innerHTML = html;
+
+        // Event listeners
+        document.getElementById('lomba-filter-gender').addEventListener('change', function () {
+            lombaFilters.gender = this.value;
+            lombaFilters.division = 'all';
+            buildLOMBAFilterBar();
+            renderLOMBA();
+        });
+        document.getElementById('lomba-filter-division').addEventListener('change', function () {
+            lombaFilters.division = this.value;
+            buildLOMBAFilterBar();
+            renderLOMBA();
+        });
+        if (hasFilter) {
+            document.getElementById('lomba-filter-clear').addEventListener('click', function () {
+                lombaFilters.gender = 'all';
+                lombaFilters.division = 'all';
+                buildLOMBAFilterBar();
+                renderLOMBA();
+            });
+        }
+    }
+
+    function buildLOMBAPlayoffPicture(standings) {
+        var cutoff = Math.min(8, standings.length);
+        if (cutoff < 2) return '';
+
+        var qualifiers = standings.slice(0, cutoff);
+
+        // QF matchups: #1v#8, #4v#5, #2v#7, #3v#6
+        // Arranged so winners of top half meet in SF, bottom half meet in SF
+        var qfTop = [
+            { seed1: 1, seed2: 8 },
+            { seed1: 4, seed2: 5 }
+        ];
+        var qfBot = [
+            { seed1: 2, seed2: 7 },
+            { seed1: 3, seed2: 6 }
+        ];
+
+        function teamName(seed) {
+            return qualifiers[seed - 1] ? qualifiers[seed - 1].name : 'TBD';
+        }
+
+        function buildSlot(seed, name, pos, side, score) {
+            var scoreHtml = '<span class="lbk-score">' + (score !== undefined && score !== null ? score : '') + '</span>';
+            if (side === 'right') {
+                return '<div class="lbk-slot ' + pos + '">' +
+                    scoreHtml +
+                    '<span class="lbk-name">' + name + '</span>' +
+                    '<span class="lbk-seed">#' + seed + '</span>' +
+                    '</div>';
+            }
+            return '<div class="lbk-slot ' + pos + '">' +
+                '<span class="lbk-seed">#' + seed + '</span>' +
+                '<span class="lbk-name">' + name + '</span>' +
+                scoreHtml +
+                '</div>';
+        }
+
+        function buildMatchup(m, cls, side) {
+            return '<div class="lbk-matchup ' + (cls || '') + '">' +
+                buildSlot(m.seed1, teamName(m.seed1), 'top', side) +
+                buildSlot(m.seed2, teamName(m.seed2), 'bot', side) +
+                '</div>';
+        }
+
+        function buildTBDMatchup(cls, side) {
+            var slot1, slot2;
+            if (side === 'right') {
+                slot1 = '<div class="lbk-slot top"><span class="lbk-score"></span><span class="lbk-name lbk-tbd">TBD</span></div>';
+                slot2 = '<div class="lbk-slot bot"><span class="lbk-score"></span><span class="lbk-name lbk-tbd">TBD</span></div>';
+            } else {
+                slot1 = '<div class="lbk-slot top"><span class="lbk-name lbk-tbd">TBD</span><span class="lbk-score"></span></div>';
+                slot2 = '<div class="lbk-slot bot"><span class="lbk-name lbk-tbd">TBD</span><span class="lbk-score"></span></div>';
+            }
+            return '<div class="lbk-matchup ' + (cls || '') + '">' + slot1 + slot2 + '</div>';
+        }
+
+        var html = '<div class="lomba-playoff-picture">';
+        html += '<h4 class="lbk-title">Playoff Picture</h4>';
+
+        html += '<div class="lbk-bracket">';
+
+        // ── Left side (QF top → SF top) ──
+        html += '<div class="lbk-side lbk-left">';
+
+        // QF round
+        html += '<div class="lbk-round lbk-qf">';
+        html += '<div class="lbk-round-label">Quarter-Finals</div>';
+        for (var i = 0; i < qfTop.length; i++) {
+            html += buildMatchup(qfTop[i], '', 'left');
+        }
+        html += '</div>';
+
+        // Connector
+        html += '<div class="lbk-connector lbk-conn-2"></div>';
+
+        // SF round
+        html += '<div class="lbk-round lbk-sf">';
+        html += '<div class="lbk-round-label">Semi-Final</div>';
+        html += buildTBDMatchup('', 'left');
+        html += '</div>';
+
+        html += '</div>'; // end left side
+
+        // ── Championship ──
+        html += '<div class="lbk-center">';
+        html += '<div class="lbk-connector-h"></div>';
+        html += '<div class="lbk-round lbk-final">';
+        html += '<div class="lbk-round-label">Championship</div>';
+        html += buildTBDMatchup('lbk-champ');
+        html += '</div>';
+        html += '<div class="lbk-connector-h"></div>';
+        html += '</div>';
+
+        // ── Right side: SF (next to champ) → connector → QF (outside) ──
+        html += '<div class="lbk-side lbk-right">';
+
+        html += '<div class="lbk-round lbk-sf">';
+        html += '<div class="lbk-round-label">Semi-Final</div>';
+        html += buildTBDMatchup('', 'right');
+        html += '</div>';
+
+        html += '<div class="lbk-connector lbk-conn-2"></div>';
+
+        html += '<div class="lbk-round lbk-qf">';
+        html += '<div class="lbk-round-label">Quarter-Finals</div>';
+        for (var j = 0; j < qfBot.length; j++) {
+            html += buildMatchup(qfBot[j], '', 'right');
+        }
+        html += '</div>';
+
+        html += '</div>'; // end right side
+
+        html += '</div>'; // end bracket
+        html += '</div>'; // end playoff picture
+        return html;
+    }
+
+    function renderLOMBA() {
+        var el = document.getElementById('standings-content');
+        var html = '';
+
+        var leagueSeasons = (lombaLeagueData && lombaLeagueData.league && lombaLeagueData.league.seasons) || [];
+
+        for (var ls = 0; ls < leagueSeasons.length; ls++) {
+            var seasonName = leagueSeasons[ls].name;
+            var divisions = leagueSeasons[ls].data.divisions;
+
+            var genders = Object.keys(divisions);
+            var hasContent = false;
+
+            var seasonHtml = '';
+
+            for (var gi = 0; gi < genders.length; gi++) {
+                var gender = genders[gi];
+
+                // Filter by gender
+                if (lombaFilters.gender !== 'all' && lombaFilters.gender !== gender) continue;
+
+                var genderLabel = gender.charAt(0).toUpperCase() + gender.slice(1);
+                var divList = divisions[gender];
+
+                var genderHtml = '';
+                var genderHasContent = false;
+
+                for (var di = 0; di < divList.length; di++) {
+                    var divName = divList[di];
+
+                    // Filter by division
+                    if (lombaFilters.division !== 'all' && lombaFilters.division !== divName) continue;
+
+                    var genderKey = 'league.seasons.data.divisions.' + gender;
+
+                    // Find matching season
+                    var matchSeason = null;
+                    for (var si = 0; si < lombaSeasonsData.length; si++) {
+                        var s = lombaSeasonsData[si];
+                        if (s.league && s.league.season &&
+                            s.league.season['league.seasons.name'] === seasonName &&
+                            s.league.season[genderKey] === divName) {
+                            matchSeason = s;
+                            break;
+                        }
+                    }
+
+                    genderHtml += '<div class="category-section">';
+                    genderHtml += '<h3 class="category-header">' + divName + '</h3>';
+
+                    if (matchSeason && matchSeason.teams && matchSeason.teams.length > 0) {
+                        var standings = computeLOMBAStandings(matchSeason);
+                        var playoffCut = Math.min(8, standings.length);
+                        genderHtml += buildLOMBAStandingsTable(standings, playoffCut);
+                        genderHtml += buildLOMBAPlayoffPicture(standings);
+                    } else {
+                        genderHtml += '<p class="empty-standings">No teams registered yet.</p>';
+                    }
+
+                    genderHtml += '</div>';
+                    genderHasContent = true;
+                }
+
+                if (genderHasContent) {
+                    seasonHtml += '<div class="lomba-gender-block">';
+                    seasonHtml += '<h2 class="division-header">' + genderLabel + '</h2>';
+                    seasonHtml += genderHtml;
+                    seasonHtml += '</div>';
+                    hasContent = true;
+                }
+            }
+
+            if (hasContent) {
+                html += seasonHtml;
+            }
+        }
+
+        if (!html) {
+            html = '<p class="empty-standings">No standings match the selected filters.</p>';
+        }
+
+        el.innerHTML = html;
+    }
+
+    function loadLOMBA() {
+        showLOMBAShimmer();
+
+        fetch('/api/lomba?action=league')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                lombaLeagueData = data;
+                return fetch('/api/lomba?action=seasons');
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                lombaSeasonsData = data;
+                buildLOMBAFilterBar();
+                renderLOMBA();
+            })
+            .catch(function (err) {
+                console.error('LOMBA standings error:', err);
+                var el = document.getElementById('standings-content');
+                el.innerHTML = '<p class="empty-standings">Unable to load standings. Please try again later.</p>';
+            });
+    }
+
     // ── Init ──
 
     function init() {
@@ -867,6 +1351,8 @@
 
         if (CURRENT_LEAGUE === 'copa-beta') {
             loadCopaBeta();
+        } else if (CURRENT_LEAGUE === 'lomba') {
+            loadLOMBA();
         } else {
             loadDRMBL();
         }

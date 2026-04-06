@@ -51,6 +51,16 @@
     object-fit: contain;
 }
 
+.league-btn[data-league="lomba"] {
+    background: #fff;
+}
+
+.league-btn[data-league="lomba"] .league-logo-img {
+    width: 90%;
+    height: 90%;
+    object-fit: cover;
+}
+
 /* Standings Section */
 .standings-section {
     padding: 60px 20px;
@@ -651,4 +661,264 @@
         border-top: none;
         border-left: 1px solid rgba(200, 164, 92, 0.25);
     }
+}
+
+/* ── LOMBA ── */
+.lomba-gender-block {
+    margin-bottom: 48px;
+}
+
+.lomba-gender-block .category-header {
+    text-align: center;
+    padding-left: 0;
+    font-size: 24px;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* LOMBA Table */
+.lomba-table .col-pts {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: #c8a45c;
+    text-align: center;
+    width: 50px;
+}
+
+.lomba-table .col-f {
+    text-align: center;
+    width: 40px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.lomba-table thead .col-pts,
+.lomba-table thead .col-f {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+}
+
+/* LOMBA Playoff Bracket */
+.lomba-playoff-picture {
+    margin-top: 32px;
+    margin-bottom: 16px;
+}
+
+.lbk-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #c8a45c;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.lbk-bracket {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    overflow-x: auto;
+    padding: 8px 0;
+}
+
+.lbk-side {
+    display: flex;
+    align-items: center;
+}
+
+.lbk-right {
+    flex-direction: row;
+}
+
+.lbk-round {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+}
+
+.lbk-qf {
+    gap: 12px;
+}
+
+.lbk-round-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.lbk-matchup {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 130px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.lbk-champ {
+    border-color: #c8a45c;
+    background: rgba(200, 164, 92, 0.06);
+}
+
+.lbk-slot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.lbk-slot.top {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lbk-seed {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: #c8a45c;
+    min-width: 24px;
+}
+
+.lbk-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lbk-tbd {
+    color: rgba(255, 255, 255, 0.2);
+    font-style: italic;
+}
+
+.lbk-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.85);
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Right side: text aligns right, seed on right */
+.lbk-right .lbk-slot {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.lbk-right .lbk-name {
+    text-align: right;
+}
+
+/* Connectors */
+.lbk-connector {
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.lbk-conn-2 {
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.lbk-conn-2::before {
+    content: '';
+    position: absolute;
+    top: 25%;
+    bottom: 25%;
+    width: 1px;
+    background: rgba(200, 164, 92, 0.3);
+}
+
+.lbk-conn-2::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: rgba(200, 164, 92, 0.3);
+}
+
+.lbk-center {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.lbk-connector-h {
+    width: 20px;
+    height: 1px;
+    background: rgba(200, 164, 92, 0.3);
+    flex-shrink: 0;
+}
+
+.lbk-final .lbk-round-label {
+    color: #c8a45c;
+    font-size: 14px;
+    letter-spacing: 3px;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+    .lbk-bracket {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .lbk-side {
+        flex-direction: column;
+    }
+    .lbk-right {
+        flex-direction: column;
+    }
+    .lbk-connector, .lbk-connector-h {
+        width: 1px;
+        height: 16px;
+        background: rgba(200, 164, 92, 0.3);
+    }
+    .lbk-conn-2 {
+        width: 1px;
+        height: 16px;
+    }
+    .lbk-conn-2::before {
+        display: none;
+    }
+    .lbk-conn-2::after {
+        width: 1px;
+        height: 100%;
+        top: 0;
+    }
+    .lbk-center {
+        flex-direction: column;
+    }
+    .lbk-matchup {
+        min-width: 180px;
+    }
+}
+
+.empty-standings {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    padding: 24px 0;
 }
