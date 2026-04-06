@@ -2,6 +2,7 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/tracker/(.*)", "destination": "/tracker/index.html" },
-    { "source": "/simple-tracker/(.*)", "destination": "/simple-tracker/index.html" }
+    { "source": "/simple-tracker/(.*)", "destination": "/simple-tracker/index.html" },
+    { "source": "/lomba-recorder/(.*)", "destination": "/lomba-recorder/index.html" }
   ]
 }
