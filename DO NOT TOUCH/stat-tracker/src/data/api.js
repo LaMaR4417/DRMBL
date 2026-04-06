@@ -29,7 +29,7 @@ export async function fetchSeasonTeams(seasonId) {
 }
 
 export async function fetchTeamRoster(teamID, seasonID) {
-  const res = await fetch(`/api/team?id=${encodeURIComponent(teamID)}&season=${encodeURIComponent(seasonID)}`);
+  const res = await fetch(`/api/season?type=team&id=${encodeURIComponent(teamID)}&season=${encodeURIComponent(seasonID)}`);
   if (!res.ok) throw new Error('Failed to load team data');
   return res.json();
 }
