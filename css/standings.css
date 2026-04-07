@@ -679,43 +679,44 @@
 }
 
 /* LOMBA Table */
+.lomba-table thead th {
+    text-align: center;
+}
+
+.lomba-table thead th.col-team {
+    text-align: left;
+}
+
+.lomba-table .col-rank,
+.lomba-table .col-pts,
+.lomba-table .col-gp,
+.lomba-table .col-w,
+.lomba-table .col-l,
+.lomba-table .col-f,
+.lomba-table .col-pct,
+.lomba-table .col-diff {
+    text-align: center;
+    width: 50px;
+}
+
 .lomba-table .col-pts {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 18px;
     letter-spacing: 1px;
     color: #c8a45c;
-    text-align: center;
-    width: 50px;
 }
 
 .lomba-table .col-gp {
-    text-align: center;
-    width: 40px;
     color: rgba(255, 255, 255, 0.5);
 }
 
 .lomba-table .col-f {
-    text-align: center;
-    width: 40px;
     color: rgba(255, 255, 255, 0.4);
 }
 
 .lomba-table .col-pct {
-    text-align: center;
-    width: 50px;
     color: rgba(255, 255, 255, 0.7);
     font-size: 13px;
-}
-
-.lomba-table thead .col-pts,
-.lomba-table thead .col-gp,
-.lomba-table thead .col-f,
-.lomba-table thead .col-pct {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 13px;
-    letter-spacing: 2px;
-    color: rgba(255, 255, 255, 0.4);
-    text-transform: uppercase;
 }
 
 /* LOMBA Playoff Bracket */
