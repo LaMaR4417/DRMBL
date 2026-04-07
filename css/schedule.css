@@ -901,6 +901,16 @@
     color: rgba(255, 255, 255, 0.3);
 }
 
+.lomba-matchup-division {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #c8a45c;
+    text-align: center;
+    margin-top: 4px;
+}
+
 .schedule-empty {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 18px;

@@ -1203,42 +1203,89 @@
         return html;
     }
 
-    function renderLOMBASchedule() {
-        var container = document.getElementById('schedule-content');
-        var filtered = getFilteredLOMBASeasons();
-
-        // Collect all games across matching seasons, grouped by date
-        var dateMap = {};
+    function collectLOMBAGames(filtered) {
+        var allGames = [];
         for (var f = 0; f < filtered.length; f++) {
             var entry = filtered[f];
             var schedule = entry.season.schedule || [];
             var genderLabel = entry.gender.charAt(0).toUpperCase() + entry.gender.slice(1);
 
             for (var s = 0; s < schedule.length; s++) {
-                var dateObj = schedule[s].date;
-                var dateKey = dateObj.year + '-' + String(dateObj.month).padStart(2, '0') + '-' + String(dateObj.date).padStart(2, '0');
-
-                if (!dateMap[dateKey]) {
-                    dateMap[dateKey] = { date: dateObj, games: [] };
-                }
-
                 var games = schedule[s].games || [];
                 for (var g = 0; g < games.length; g++) {
-                    // Team filter (value is seasonId::teamName)
                     if (lombaFilters.team !== 'all') {
                         var teamName = lombaFilters.team.split('::')[1];
                         if (games[g].home !== teamName && games[g].away !== teamName) continue;
                     }
-                    dateMap[dateKey].games.push({
+                    allGames.push({
                         game: games[g],
+                        date: schedule[s].date,
                         gender: genderLabel,
                         division: entry.division
                     });
                 }
             }
         }
+        return allGames;
+    }
 
-        // Sort dates
+    function renderLOMBAByMatchup(container, allGames) {
+        var teamName = lombaFilters.team.split('::')[1];
+
+        // Group by opponent
+        var oppMap = {};
+        for (var i = 0; i < allGames.length; i++) {
+            var g = allGames[i];
+            var opp = g.game.home === teamName ? g.game.away : g.game.home;
+            if (!oppMap[opp]) oppMap[opp] = { games: [], wins: 0, losses: 0, division: g.division, gender: g.gender };
+            oppMap[opp].games.push(g);
+            var isHome = g.game.home === teamName;
+            var won = (g.game.winner === 'home' && isHome) || (g.game.winner === 'away' && !isHome);
+            if (won) oppMap[opp].wins++;
+            else oppMap[opp].losses++;
+        }
+
+        var opponents = Object.keys(oppMap).sort();
+
+        if (opponents.length === 0) {
+            container.innerHTML = '<div class="schedule-empty">No games found.</div>';
+            return;
+        }
+
+        var html = '';
+        for (var oi = 0; oi < opponents.length; oi++) {
+            var opp = opponents[oi];
+            var data = oppMap[opp];
+
+            html += '<section class="week-section">';
+            html += '<div class="week-header">';
+            html += '<h2 class="week-title">vs ' + opp + ' (' + data.wins + '-' + data.losses + ')</h2>';
+            html += '<p class="lomba-matchup-division">' + data.gender + ' \u2014 ' + data.division + '</p>';
+            html += '</div>';
+
+            html += '<div class="lomba-time-games">';
+            for (var gi = 0; gi < data.games.length; gi++) {
+                html += buildLOMBAGameCard(data.games[gi]);
+            }
+            html += '</div>';
+
+            html += '</section>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    function renderLOMBAByDate(container, allGames) {
+        // Group by date
+        var dateMap = {};
+        for (var i = 0; i < allGames.length; i++) {
+            var g = allGames[i];
+            var d = g.date;
+            var dateKey = d.year + '-' + String(d.month).padStart(2, '0') + '-' + String(d.date).padStart(2, '0');
+            if (!dateMap[dateKey]) dateMap[dateKey] = { date: d, games: [] };
+            dateMap[dateKey].games.push(g);
+        }
+
         var dateKeys = Object.keys(dateMap).sort();
 
         if (dateKeys.length === 0) {
@@ -1255,12 +1302,11 @@
             var d = group.date;
             var dateStr = months[d.month - 1] + ' ' + d.date + ', ' + d.year;
 
-            // Sort games by time
             group.games.sort(function (a, b) {
                 return parseTimeForSort(a.game.time) - parseTimeForSort(b.game.time);
             });
 
-            // Sub-group by hour (rounded down)
+            // Sub-group by hour
             var timeGroups = [];
             var timeMap = {};
             for (var gi = 0; gi < group.games.length; gi++) {
@@ -1298,6 +1344,18 @@
         }
 
         container.innerHTML = html;
+    }
+
+    function renderLOMBASchedule() {
+        var container = document.getElementById('schedule-content');
+        var filtered = getFilteredLOMBASeasons();
+        var allGames = collectLOMBAGames(filtered);
+
+        if (lombaFilters.team !== 'all') {
+            renderLOMBAByMatchup(container, allGames);
+        } else {
+            renderLOMBAByDate(container, allGames);
+        }
     }
 
     function showLOMBAScheduleShimmer() {
