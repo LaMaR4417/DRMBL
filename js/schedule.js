@@ -954,10 +954,18 @@
                         if (s.league && s.league.season &&
                             s.league.season['league.seasons.name'] === seasonName &&
                             s.league.season[genderKey] === divName) {
-                            var teams = (s.teams || []).map(function (t) { return t.name; }).sort();
+                            var teams = (s.teams || []).slice().sort(function (a, b) {
+                                return a.name.localeCompare(b.name);
+                            });
                             if (teams.length > 0) {
                                 var gLabel = gender.charAt(0).toUpperCase() + gender.slice(1);
-                                groups.push({ label: gLabel + ' — ' + divName, teams: teams });
+                                groups.push({
+                                    label: gLabel + ' \u2014 ' + divName,
+                                    seasonId: s.id,
+                                    gender: gender,
+                                    division: divName,
+                                    teams: teams
+                                });
                             }
                             break;
                         }
@@ -968,19 +976,16 @@
         return groups;
     }
 
-    function findTeamDivisionAndGender(teamName) {
+    function findTeamInfoBySeasonId(seasonId) {
         if (!lombaSeasonsData) return null;
         for (var si = 0; si < lombaSeasonsData.length; si++) {
             var s = lombaSeasonsData[si];
-            var teams = s.teams || [];
-            for (var t = 0; t < teams.length; t++) {
-                if (teams[t].name === teamName && s.league && s.league.season) {
-                    var season = s.league.season;
-                    for (var key in season) {
-                        if (key.indexOf('league.seasons.data.divisions.') === 0) {
-                            var gender = key.replace('league.seasons.data.divisions.', '');
-                            return { gender: gender, division: season[key] };
-                        }
+            if (s.id === seasonId && s.league && s.league.season) {
+                var season = s.league.season;
+                for (var key in season) {
+                    if (key.indexOf('league.seasons.data.divisions.') === 0) {
+                        var gender = key.replace('league.seasons.data.divisions.', '');
+                        return { gender: gender, division: season[key] };
                     }
                 }
             }
@@ -1017,15 +1022,16 @@
         }
         html += '</select>';
 
-        // Team filter (grouped by division)
+        // Team filter (grouped by division, value = seasonId::teamName)
         html += '<select class="lomba-sched-filter" id="lomba-sched-team">';
         html += '<option value="all">All Teams</option>';
         for (var tg = 0; tg < teamGroups.length; tg++) {
             var grp = teamGroups[tg];
             html += '<optgroup label="' + grp.label + '">';
             for (var ti = 0; ti < grp.teams.length; ti++) {
-                var sel3 = lombaFilters.team === grp.teams[ti] ? ' selected' : '';
-                html += '<option value="' + grp.teams[ti] + '"' + sel3 + '>' + grp.teams[ti] + '</option>';
+                var teamVal = grp.seasonId + '::' + grp.teams[ti].name;
+                var sel3 = lombaFilters.team === teamVal ? ' selected' : '';
+                html += '<option value="' + teamVal + '"' + sel3 + '>' + grp.teams[ti].name + '</option>';
             }
             html += '</optgroup>';
         }
@@ -1055,7 +1061,9 @@
             lombaFilters.team = this.value;
             // Auto-filter to team's division and gender
             if (this.value !== 'all') {
-                var info = findTeamDivisionAndGender(this.value);
+                var parts = this.value.split('::');
+                var seasonId = parts[0];
+                var info = findTeamInfoBySeasonId(seasonId);
                 if (info) {
                     lombaFilters.gender = info.gender;
                     lombaFilters.division = info.division;
@@ -1216,9 +1224,10 @@
 
                 var games = schedule[s].games || [];
                 for (var g = 0; g < games.length; g++) {
-                    // Team filter
+                    // Team filter (value is seasonId::teamName)
                     if (lombaFilters.team !== 'all') {
-                        if (games[g].home !== lombaFilters.team && games[g].away !== lombaFilters.team) continue;
+                        var teamName = lombaFilters.team.split('::')[1];
+                        if (games[g].home !== teamName && games[g].away !== teamName) continue;
                     }
                     dateMap[dateKey].games.push({
                         game: games[g],
