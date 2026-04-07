@@ -874,9 +874,11 @@
         html += '<th class="col-rank">#</th>';
         html += '<th class="col-team">Team</th>';
         html += '<th class="col-pts">PTS</th>';
+        html += '<th class="col-gp">GP</th>';
         html += '<th class="col-w">W</th>';
         html += '<th class="col-l">L</th>';
         html += '<th class="col-f">FF</th>';
+        html += '<th class="col-pct">PCT</th>';
         html += '<th class="col-diff">+/-</th>';
         html += '</tr></thead><tbody>';
         for (var i = 0; i < rowCount; i++) {
@@ -884,9 +886,11 @@
             html += '<td class="col-rank"><span class="shimmer-block shimmer-rank"></span></td>';
             html += '<td class="col-team"><span class="shimmer-block shimmer-team"></span></td>';
             html += '<td class="col-pts"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-gp"><span class="shimmer-block shimmer-stat"></span></td>';
             html += '<td class="col-w"><span class="shimmer-block shimmer-stat"></span></td>';
             html += '<td class="col-l"><span class="shimmer-block shimmer-stat"></span></td>';
             html += '<td class="col-f"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-pct"><span class="shimmer-block shimmer-stat"></span></td>';
             html += '<td class="col-diff"><span class="shimmer-block shimmer-stat"></span></td>';
             html += '</tr>';
         }
@@ -989,9 +993,11 @@
         html += '<th class="col-rank">#</th>';
         html += '<th class="col-team">Team</th>';
         html += '<th class="col-pts">PTS</th>';
+        html += '<th class="col-gp">GP</th>';
         html += '<th class="col-w">W</th>';
         html += '<th class="col-l">L</th>';
         html += '<th class="col-f">FF</th>';
+        html += '<th class="col-pct">PCT</th>';
         html += '<th class="col-diff">+/-</th>';
         html += '</tr></thead>';
         html += '<tbody>';
@@ -1003,6 +1009,10 @@
 
             var rowCls = '';
             if (isPlayoff) rowCls += ' playoff-team';
+
+            var gp = team.wins + team.losses;
+            var pct = gp > 0 ? (team.wins / gp) : 0;
+            var pctDisplay = gp > 0 ? pct.toFixed(3).replace(/^0/, '') : '--';
 
             var pd = team.pointDiff || 0;
             var diffDisplay = '--';
@@ -1017,9 +1027,11 @@
             html += '<td class="col-rank">' + rank + '</td>';
             html += '<td class="col-team">' + team.name + '</td>';
             html += '<td class="col-pts">' + team.pts + '</td>';
+            html += '<td class="col-gp">' + gp + '</td>';
             html += '<td class="col-w">' + team.wins + '</td>';
             html += '<td class="col-l">' + team.losses + '</td>';
             html += '<td class="col-f">' + team.forfeitsGiven + '</td>';
+            html += '<td class="col-pct">' + pctDisplay + '</td>';
             html += '<td class="' + diffCls + '">' + diffDisplay + '</td>';
             html += '</tr>';
         }

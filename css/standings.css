@@ -688,14 +688,29 @@
     width: 50px;
 }
 
+.lomba-table .col-gp {
+    text-align: center;
+    width: 40px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
 .lomba-table .col-f {
     text-align: center;
     width: 40px;
     color: rgba(255, 255, 255, 0.4);
 }
 
+.lomba-table .col-pct {
+    text-align: center;
+    width: 50px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+}
+
 .lomba-table thead .col-pts,
-.lomba-table thead .col-f {
+.lomba-table thead .col-gp,
+.lomba-table thead .col-f,
+.lomba-table thead .col-pct {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 13px;
     letter-spacing: 2px;
