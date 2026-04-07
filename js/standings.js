@@ -944,7 +944,7 @@
 
                 if (game.winner === 'home') {
                     statsMap[home].wins++;
-                    statsMap[home].pts += 3;
+                    statsMap[home].pts += 2;
                     statsMap[away].losses++;
                     if (isForfeit) {
                         statsMap[away].forfeitsGiven++;
@@ -954,7 +954,7 @@
                     }
                 } else if (game.winner === 'away') {
                     statsMap[away].wins++;
-                    statsMap[away].pts += 3;
+                    statsMap[away].pts += 2;
                     statsMap[home].losses++;
                     if (isForfeit) {
                         statsMap[home].forfeitsGiven++;
