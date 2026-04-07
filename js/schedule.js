@@ -3,6 +3,7 @@
     function getLeagueFromPath() {
         var path = window.location.pathname.replace(/\/+$/, '');
         if (path.indexOf('/schedule/copa-beta') !== -1) return 'copa-beta';
+        if (path.indexOf('/schedule/lomba') !== -1) return 'lomba';
         return 'drmbl';
     }
 
@@ -890,11 +891,362 @@
             });
     }
 
+    // ── LOMBA ──────────────────────────────────────────
+
+    var lombaLeagueData = null;
+    var lombaSeasonsData = null;
+    var lombaFilters = { gender: 'all', division: 'all' };
+
+    function getLOMBAGenders() {
+        if (!lombaLeagueData || !lombaLeagueData.league || !lombaLeagueData.league.seasons) return [];
+        var genders = {};
+        var seasons = lombaLeagueData.league.seasons;
+        for (var i = 0; i < seasons.length; i++) {
+            var divs = seasons[i].data.divisions;
+            for (var g in divs) genders[g] = true;
+        }
+        return Object.keys(genders);
+    }
+
+    function getLOMBADivisions(gender) {
+        if (!lombaLeagueData || !lombaLeagueData.league || !lombaLeagueData.league.seasons) return [];
+        var divs = [];
+        var seasons = lombaLeagueData.league.seasons;
+        for (var i = 0; i < seasons.length; i++) {
+            var genderDivs = seasons[i].data.divisions;
+            if (gender === 'all') {
+                for (var g in genderDivs) {
+                    for (var d = 0; d < genderDivs[g].length; d++) {
+                        if (divs.indexOf(genderDivs[g][d]) === -1) divs.push(genderDivs[g][d]);
+                    }
+                }
+            } else if (genderDivs[gender]) {
+                for (var d2 = 0; d2 < genderDivs[gender].length; d2++) {
+                    if (divs.indexOf(genderDivs[gender][d2]) === -1) divs.push(genderDivs[gender][d2]);
+                }
+            }
+        }
+        return divs;
+    }
+
+    function buildLOMBAFilterBar() {
+        var nav = document.getElementById('week-nav-inner');
+        if (!nav) return;
+
+        var genders = getLOMBAGenders();
+        var divisions = getLOMBADivisions(lombaFilters.gender);
+
+        var html = '';
+
+        // Gender filter
+        html += '<select class="lomba-sched-filter" id="lomba-sched-gender">';
+        html += '<option value="all">All Categories</option>';
+        for (var g = 0; g < genders.length; g++) {
+            var label = genders[g].charAt(0).toUpperCase() + genders[g].slice(1);
+            var sel = lombaFilters.gender === genders[g] ? ' selected' : '';
+            html += '<option value="' + genders[g] + '"' + sel + '>' + label + '</option>';
+        }
+        html += '</select>';
+
+        // Division filter
+        html += '<select class="lomba-sched-filter" id="lomba-sched-division">';
+        html += '<option value="all">All Divisions</option>';
+        for (var d = 0; d < divisions.length; d++) {
+            var sel2 = lombaFilters.division === divisions[d] ? ' selected' : '';
+            html += '<option value="' + divisions[d] + '"' + sel2 + '>' + divisions[d] + '</option>';
+        }
+        html += '</select>';
+
+        var hasFilter = lombaFilters.gender !== 'all' || lombaFilters.division !== 'all';
+        if (hasFilter) {
+            html += '<button type="button" class="lomba-sched-clear" id="lomba-sched-clear">&times;</button>';
+        }
+
+        nav.innerHTML = html;
+
+        document.getElementById('lomba-sched-gender').addEventListener('change', function () {
+            lombaFilters.gender = this.value;
+            lombaFilters.division = 'all';
+            buildLOMBAFilterBar();
+            renderLOMBASchedule();
+        });
+        document.getElementById('lomba-sched-division').addEventListener('change', function () {
+            lombaFilters.division = this.value;
+            buildLOMBAFilterBar();
+            renderLOMBASchedule();
+        });
+        if (hasFilter) {
+            document.getElementById('lomba-sched-clear').addEventListener('click', function () {
+                lombaFilters.gender = 'all';
+                lombaFilters.division = 'all';
+                buildLOMBAFilterBar();
+                renderLOMBASchedule();
+            });
+        }
+    }
+
+    function getFilteredLOMBASeasons() {
+        if (!lombaSeasonsData || !lombaLeagueData) return [];
+        var result = [];
+        var leagueSeasons = lombaLeagueData.league.seasons || [];
+
+        for (var ls = 0; ls < leagueSeasons.length; ls++) {
+            var seasonName = leagueSeasons[ls].name;
+            var divisions = leagueSeasons[ls].data.divisions;
+            var genders = Object.keys(divisions);
+
+            for (var gi = 0; gi < genders.length; gi++) {
+                var gender = genders[gi];
+                if (lombaFilters.gender !== 'all' && lombaFilters.gender !== gender) continue;
+
+                var divList = divisions[gender];
+                for (var di = 0; di < divList.length; di++) {
+                    var divName = divList[di];
+                    if (lombaFilters.division !== 'all' && lombaFilters.division !== divName) continue;
+
+                    var genderKey = 'league.seasons.data.divisions.' + gender;
+                    for (var si = 0; si < lombaSeasonsData.length; si++) {
+                        var s = lombaSeasonsData[si];
+                        if (s.league && s.league.season &&
+                            s.league.season['league.seasons.name'] === seasonName &&
+                            s.league.season[genderKey] === divName) {
+                            result.push({
+                                season: s,
+                                gender: gender,
+                                division: divName
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    function parseTimeForSort(timeStr) {
+        var parsed = normalizeLOMBATime(timeStr);
+        if (!parsed) return 0;
+        return parsed.hours * 60 + parsed.minutes;
+    }
+
+    function formatHourDisplay(hour) {
+        var ampm = hour >= 12 ? 'PM' : 'AM';
+        var h = hour % 12 || 12;
+        return h + ' ' + ampm;
+    }
+
+    function normalizeLOMBATime(timeStr) {
+        if (!timeStr) return null;
+        // Handle "8:00:00 p.m." or "8:00:00 a.m." format
+        var s = timeStr.trim().toLowerCase();
+        s = s.replace(/\./g, '').replace(/\s+/g, ' '); // "8:00:00 pm"
+        var match = s.match(/^(\d+):(\d+)(?::(\d+))?\s*(am|pm)$/);
+        if (!match) return null;
+        var h = parseInt(match[1]);
+        var m = parseInt(match[2]);
+        var period = match[4];
+        if (period === 'pm' && h !== 12) h += 12;
+        if (period === 'am' && h === 12) h = 0;
+        return { hours: h, minutes: m };
+    }
+
+    function getTimeGroupKey(timeStr) {
+        var parsed = normalizeLOMBATime(timeStr);
+        if (!parsed) return 'unscheduled';
+        return parsed.hours;
+    }
+
+    function buildLOMBAGameCard(gEntry) {
+        var game = gEntry.game;
+        var isForfeit = game.forfeit === true;
+        var hasResult = game.homeScore !== undefined && game.homeScore !== null;
+        var winnerIsHome = game.winner === 'home';
+        var winnerIsAway = game.winner === 'away';
+
+        var cardCls = 'lomba-card';
+        if (isForfeit) cardCls += ' lomba-forfeit';
+        if (hasResult) cardCls += ' lomba-final';
+
+        var html = '<div class="' + cardCls + '">';
+
+        // Division tag at top
+        html += '<div class="lomba-card-division">' + gEntry.gender + ' — ' + gEntry.division + '</div>';
+
+        // Matchup
+        html += '<div class="lomba-card-matchup">';
+
+        // Away
+        html += '<div class="lomba-card-team' + (hasResult && winnerIsAway ? ' lomba-winner' : '') + '">';
+        html += '<span class="lomba-card-name">' + game.away + '</span>';
+        if (hasResult) html += '<span class="lomba-card-score">' + game.awayScore + '</span>';
+        html += '</div>';
+
+        // Divider
+        html += '<div class="lomba-card-vs">' + (hasResult ? 'FINAL' : 'VS') + '</div>';
+
+        // Home
+        html += '<div class="lomba-card-team' + (hasResult && winnerIsHome ? ' lomba-winner' : '') + '">';
+        html += '<span class="lomba-card-name">' + game.home + '</span>';
+        if (hasResult) html += '<span class="lomba-card-score">' + game.homeScore + '</span>';
+        html += '</div>';
+
+        html += '</div>'; // end matchup
+
+        // Footer: forfeit badge + notes
+        if (isForfeit || game.notes) {
+            html += '<div class="lomba-card-footer">';
+            if (isForfeit) html += '<span class="lomba-forfeit-badge">FORFEIT</span>';
+            if (game.notes) html += '<span class="lomba-card-note">' + game.notes + '</span>';
+            html += '</div>';
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    function renderLOMBASchedule() {
+        var container = document.getElementById('schedule-content');
+        var filtered = getFilteredLOMBASeasons();
+
+        // Collect all games across matching seasons, grouped by date
+        var dateMap = {};
+        for (var f = 0; f < filtered.length; f++) {
+            var entry = filtered[f];
+            var schedule = entry.season.schedule || [];
+            var genderLabel = entry.gender.charAt(0).toUpperCase() + entry.gender.slice(1);
+
+            for (var s = 0; s < schedule.length; s++) {
+                var dateObj = schedule[s].date;
+                var dateKey = dateObj.year + '-' + String(dateObj.month).padStart(2, '0') + '-' + String(dateObj.date).padStart(2, '0');
+
+                if (!dateMap[dateKey]) {
+                    dateMap[dateKey] = { date: dateObj, games: [] };
+                }
+
+                var games = schedule[s].games || [];
+                for (var g = 0; g < games.length; g++) {
+                    dateMap[dateKey].games.push({
+                        game: games[g],
+                        gender: genderLabel,
+                        division: entry.division
+                    });
+                }
+            }
+        }
+
+        // Sort dates
+        var dateKeys = Object.keys(dateMap).sort();
+
+        if (dateKeys.length === 0) {
+            container.innerHTML = '<div class="schedule-empty">No games scheduled yet.</div>';
+            return;
+        }
+
+        var months = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+
+        var html = '';
+        for (var dk = 0; dk < dateKeys.length; dk++) {
+            var group = dateMap[dateKeys[dk]];
+            var d = group.date;
+            var dateStr = months[d.month - 1] + ' ' + d.date + ', ' + d.year;
+
+            // Sort games by time
+            group.games.sort(function (a, b) {
+                return parseTimeForSort(a.game.time) - parseTimeForSort(b.game.time);
+            });
+
+            // Sub-group by hour (rounded down)
+            var timeGroups = [];
+            var timeMap = {};
+            for (var gi = 0; gi < group.games.length; gi++) {
+                var timeKey = getTimeGroupKey(group.games[gi].game.time);
+                if (!timeMap[timeKey]) {
+                    timeMap[timeKey] = { time: group.games[gi].game.time, games: [] };
+                    timeGroups.push(timeMap[timeKey]);
+                }
+                timeMap[timeKey].games.push(group.games[gi]);
+            }
+
+            html += '<section class="week-section" data-week="' + dk + '">';
+            html += '<div class="week-header">';
+            html += '<h2 class="week-title">' + dateStr + '</h2>';
+            html += '</div>';
+
+            for (var ti = 0; ti < timeGroups.length; ti++) {
+                var tg = timeGroups[ti];
+                var hourKey = getTimeGroupKey(tg.time);
+                var timeDisplay = hourKey !== 'unscheduled' ? formatHourDisplay(hourKey) : '';
+
+                html += '<div class="lomba-time-group">';
+                if (timeDisplay) {
+                    html += '<div class="lomba-time-header">' + timeDisplay + '</div>';
+                }
+                html += '<div class="lomba-time-games">';
+                for (var tgi = 0; tgi < tg.games.length; tgi++) {
+                    html += buildLOMBAGameCard(tg.games[tgi]);
+                }
+                html += '</div>';
+                html += '</div>';
+            }
+
+            html += '</section>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    function showLOMBAScheduleShimmer() {
+        var container = document.getElementById('schedule-content');
+        var html = '';
+        for (var i = 0; i < 3; i++) {
+            html += '<section class="week-section">';
+            html += '<div class="week-header"><h2 class="week-title"><span class="shimmer-block" style="width:200px;height:24px;display:inline-block"></span></h2></div>';
+            html += '<div class="games-grid">';
+            for (var g = 0; g < 4; g++) {
+                html += '<div class="game-card">';
+                html += '<div class="game-time"><span class="shimmer-block" style="width:50px;height:16px;display:inline-block"></span></div>';
+                html += '<div class="game-team game-team-away"><span class="shimmer-block" style="width:100px;height:16px;display:inline-block"></span></div>';
+                html += '<div class="game-vs">VS</div>';
+                html += '<div class="game-team game-team-home"><span class="shimmer-block" style="width:100px;height:16px;display:inline-block"></span></div>';
+                html += '<div class="game-label"><span class="shimmer-block" style="width:60px;height:14px;display:inline-block"></span></div>';
+                html += '</div>';
+            }
+            html += '</div></section>';
+        }
+        container.innerHTML = html;
+    }
+
+    function loadLOMBA() {
+        showLOMBAScheduleShimmer();
+
+        fetch('/api/lomba?action=league')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                lombaLeagueData = data;
+                return fetch('/api/lomba?action=seasons');
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                lombaSeasonsData = data;
+                buildLOMBAFilterBar();
+                renderLOMBASchedule();
+            })
+            .catch(function (err) {
+                console.error('LOMBA schedule error:', err);
+                var container = document.getElementById('schedule-content');
+                container.innerHTML = '<div class="schedule-empty">Unable to load schedule. Please try again later.</div>';
+            });
+    }
+
     function init() {
         initLeagueSwitcher();
 
         if (CURRENT_LEAGUE === 'copa-beta') {
             loadCopaBeta();
+        } else if (CURRENT_LEAGUE === 'lomba') {
+            loadLOMBA();
         } else {
             loadSeason();
         }

@@ -720,3 +720,206 @@
         border-radius: 3px 3px 0 0;
     }
 }
+
+/* ── LOMBA Schedule ── */
+.lomba-sched-filter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.lomba-sched-filter:focus {
+    outline: none;
+    border-color: #c8a45c;
+}
+
+.lomba-sched-clear {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    background: none;
+    border: 1px solid rgba(201, 48, 44, 0.4);
+    color: #c9302c;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.lomba-sched-clear:hover {
+    background: rgba(201, 48, 44, 0.1);
+}
+
+/* Time grouping */
+.lomba-time-group {
+    margin-bottom: 24px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 20px;
+}
+
+.lomba-time-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: #c8a45c;
+    padding: 8px 0;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(200, 164, 92, 0.2);
+    text-align: center;
+}
+
+.lomba-time-games {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Game card */
+.lomba-card {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.lomba-card:hover {
+    border-color: rgba(200, 164, 92, 0.25);
+}
+
+.lomba-card.lomba-forfeit {
+    border-color: rgba(201, 48, 44, 0.25);
+}
+
+.lomba-card-division {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #c8a45c;
+    background: rgba(200, 164, 92, 0.08);
+    padding: 6px 12px;
+    text-align: center;
+    border-bottom: 1px solid rgba(200, 164, 92, 0.12);
+}
+
+.lomba-card-matchup {
+    display: flex;
+    align-items: center;
+    padding: 14px 12px;
+    gap: 8px;
+}
+
+.lomba-card-team {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.lomba-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.lomba-card-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1;
+}
+
+.lomba-card-vs {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.25);
+    text-align: center;
+    flex-shrink: 0;
+    min-width: 40px;
+}
+
+.lomba-card.lomba-final .lomba-card-vs {
+    color: rgba(200, 164, 92, 0.5);
+}
+
+.lomba-winner .lomba-card-name {
+    color: #c8a45c;
+}
+
+.lomba-winner .lomba-card-score {
+    color: #c8a45c;
+}
+
+.lomba-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.lomba-forfeit-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #c9302c;
+    background: rgba(201, 48, 44, 0.15);
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.lomba-card-note {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.schedule-empty {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    padding: 60px 20px;
+}
+
+@media (max-width: 480px) {
+    .lomba-time-games {
+        grid-template-columns: 1fr;
+    }
+    .lomba-card-matchup {
+        flex-direction: column;
+        gap: 4px;
+    }
+    .lomba-card-score {
+        font-size: 24px;
+    }
+}
+
+/* LOMBA league button */
+.league-btn[data-league="lomba"] {
+    background: #fff;
+}
+
+.league-btn[data-league="lomba"] .league-logo-img {
+    width: 90%;
+    height: 90%;
+    object-fit: cover;
+}
