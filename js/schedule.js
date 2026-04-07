@@ -895,7 +895,7 @@
 
     var lombaLeagueData = null;
     var lombaSeasonsData = null;
-    var lombaFilters = { gender: 'all', division: 'all' };
+    var lombaFilters = { gender: 'all', division: 'all', team: 'all' };
 
     function getLOMBAGenders() {
         if (!lombaLeagueData || !lombaLeagueData.league || !lombaLeagueData.league.seasons) return [];
@@ -929,12 +929,72 @@
         return divs;
     }
 
+    function getLOMBATeamsGrouped() {
+        if (!lombaSeasonsData || !lombaLeagueData) return [];
+        var groups = [];
+        var leagueSeasons = lombaLeagueData.league.seasons || [];
+
+        for (var ls = 0; ls < leagueSeasons.length; ls++) {
+            var seasonName = leagueSeasons[ls].name;
+            var divisions = leagueSeasons[ls].data.divisions;
+            var genders = Object.keys(divisions);
+
+            for (var gi = 0; gi < genders.length; gi++) {
+                var gender = genders[gi];
+                if (lombaFilters.gender !== 'all' && lombaFilters.gender !== gender) continue;
+
+                var divList = divisions[gender];
+                for (var di = 0; di < divList.length; di++) {
+                    var divName = divList[di];
+                    if (lombaFilters.division !== 'all' && lombaFilters.division !== divName) continue;
+
+                    var genderKey = 'league.seasons.data.divisions.' + gender;
+                    for (var si = 0; si < lombaSeasonsData.length; si++) {
+                        var s = lombaSeasonsData[si];
+                        if (s.league && s.league.season &&
+                            s.league.season['league.seasons.name'] === seasonName &&
+                            s.league.season[genderKey] === divName) {
+                            var teams = (s.teams || []).map(function (t) { return t.name; }).sort();
+                            if (teams.length > 0) {
+                                var gLabel = gender.charAt(0).toUpperCase() + gender.slice(1);
+                                groups.push({ label: gLabel + ' — ' + divName, teams: teams });
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return groups;
+    }
+
+    function findTeamDivisionAndGender(teamName) {
+        if (!lombaSeasonsData) return null;
+        for (var si = 0; si < lombaSeasonsData.length; si++) {
+            var s = lombaSeasonsData[si];
+            var teams = s.teams || [];
+            for (var t = 0; t < teams.length; t++) {
+                if (teams[t].name === teamName && s.league && s.league.season) {
+                    var season = s.league.season;
+                    for (var key in season) {
+                        if (key.indexOf('league.seasons.data.divisions.') === 0) {
+                            var gender = key.replace('league.seasons.data.divisions.', '');
+                            return { gender: gender, division: season[key] };
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     function buildLOMBAFilterBar() {
         var nav = document.getElementById('week-nav-inner');
         if (!nav) return;
 
         var genders = getLOMBAGenders();
         var divisions = getLOMBADivisions(lombaFilters.gender);
+        var teamGroups = getLOMBATeamsGrouped();
 
         var html = '';
 
@@ -957,7 +1017,21 @@
         }
         html += '</select>';
 
-        var hasFilter = lombaFilters.gender !== 'all' || lombaFilters.division !== 'all';
+        // Team filter (grouped by division)
+        html += '<select class="lomba-sched-filter" id="lomba-sched-team">';
+        html += '<option value="all">All Teams</option>';
+        for (var tg = 0; tg < teamGroups.length; tg++) {
+            var grp = teamGroups[tg];
+            html += '<optgroup label="' + grp.label + '">';
+            for (var ti = 0; ti < grp.teams.length; ti++) {
+                var sel3 = lombaFilters.team === grp.teams[ti] ? ' selected' : '';
+                html += '<option value="' + grp.teams[ti] + '"' + sel3 + '>' + grp.teams[ti] + '</option>';
+            }
+            html += '</optgroup>';
+        }
+        html += '</select>';
+
+        var hasFilter = lombaFilters.gender !== 'all' || lombaFilters.division !== 'all' || lombaFilters.team !== 'all';
         if (hasFilter) {
             html += '<button type="button" class="lomba-sched-clear" id="lomba-sched-clear">&times;</button>';
         }
@@ -967,11 +1041,26 @@
         document.getElementById('lomba-sched-gender').addEventListener('change', function () {
             lombaFilters.gender = this.value;
             lombaFilters.division = 'all';
+            lombaFilters.team = 'all';
             buildLOMBAFilterBar();
             renderLOMBASchedule();
         });
         document.getElementById('lomba-sched-division').addEventListener('change', function () {
             lombaFilters.division = this.value;
+            lombaFilters.team = 'all';
+            buildLOMBAFilterBar();
+            renderLOMBASchedule();
+        });
+        document.getElementById('lomba-sched-team').addEventListener('change', function () {
+            lombaFilters.team = this.value;
+            // Auto-filter to team's division and gender
+            if (this.value !== 'all') {
+                var info = findTeamDivisionAndGender(this.value);
+                if (info) {
+                    lombaFilters.gender = info.gender;
+                    lombaFilters.division = info.division;
+                }
+            }
             buildLOMBAFilterBar();
             renderLOMBASchedule();
         });
@@ -979,6 +1068,7 @@
             document.getElementById('lomba-sched-clear').addEventListener('click', function () {
                 lombaFilters.gender = 'all';
                 lombaFilters.division = 'all';
+                lombaFilters.team = 'all';
                 buildLOMBAFilterBar();
                 renderLOMBASchedule();
             });
@@ -1126,6 +1216,10 @@
 
                 var games = schedule[s].games || [];
                 for (var g = 0; g < games.length; g++) {
+                    // Team filter
+                    if (lombaFilters.team !== 'all') {
+                        if (games[g].home !== lombaFilters.team && games[g].away !== lombaFilters.team) continue;
+                    }
                     dateMap[dateKey].games.push({
                         game: games[g],
                         gender: genderLabel,

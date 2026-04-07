@@ -727,14 +727,24 @@
     font-size: 16px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.04);
+    background: #1a1209;
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: rgba(255, 255, 255, 0.85);
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
+    color-scheme: dark;
+}
+
+.lomba-sched-filter option {
+    background: #1a1209;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.lomba-sched-filter optgroup {
+    background: #1a1209;
+    color: #c8a45c;
+    font-style: normal;
 }
 
 .lomba-sched-filter:focus {
