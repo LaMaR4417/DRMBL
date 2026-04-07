@@ -620,8 +620,11 @@
     }
 
     .cb-filter-select {
-        font-size: 12px;
-        padding: 6px 10px;
+        font-size: 13px;
+        padding: 10px 12px;
+        min-height: 44px;
+        flex: 1;
+        min-width: calc(50% - 4px);
     }
 
     .cb-filter-clear {

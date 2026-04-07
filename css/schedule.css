@@ -730,10 +730,13 @@
     background: #1a1209;
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: rgba(255, 255, 255, 0.85);
-    padding: 8px 16px;
+    padding: 10px 16px;
     border-radius: 4px;
     cursor: pointer;
     color-scheme: dark;
+    min-height: 44px;
+    flex: 1;
+    min-width: 0;
 }
 
 .lomba-sched-filter option {
@@ -920,7 +923,27 @@
     padding: 60px 20px;
 }
 
+@media (max-width: 600px) {
+    .week-nav-inner:has(.lomba-sched-filter) {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+    .lomba-sched-filter {
+        font-size: 14px;
+        padding: 10px 12px;
+        min-width: calc(50% - 4px);
+    }
+    .lomba-sched-clear {
+        min-height: 44px;
+        padding: 8px 16px;
+    }
+}
+
 @media (max-width: 480px) {
+    .lomba-sched-filter {
+        min-width: 100%;
+    }
     .lomba-time-games {
         grid-template-columns: 1fr;
     }
