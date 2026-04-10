@@ -945,21 +945,21 @@
                 if (game.winner === 'home') {
                     statsMap[home].wins++;
                     statsMap[home].pts += 2;
-                    statsMap[away].losses++;
                     if (isForfeit) {
                         statsMap[away].forfeitsGiven++;
-                        // 0 pts for forfeit loss
+                        // 0 pts for forfeit loss, not counted as regular loss
                     } else {
+                        statsMap[away].losses++;
                         statsMap[away].pts += 1;
                     }
                 } else if (game.winner === 'away') {
                     statsMap[away].wins++;
                     statsMap[away].pts += 2;
-                    statsMap[home].losses++;
                     if (isForfeit) {
                         statsMap[home].forfeitsGiven++;
-                        // 0 pts for forfeit loss
+                        // 0 pts for forfeit loss, not counted as regular loss
                     } else {
+                        statsMap[home].losses++;
                         statsMap[home].pts += 1;
                     }
                 }
@@ -1011,7 +1011,7 @@
             var rowCls = '';
             if (isPlayoff) rowCls += ' playoff-team';
 
-            var gp = team.wins + team.losses;
+            var gp = team.wins + team.losses + team.forfeitsGiven;
             var pct = gp > 0 ? (team.wins / gp) : 0;
             var pctDisplay = gp > 0 ? pct.toFixed(3).replace(/^0/, '') : '--';
 
