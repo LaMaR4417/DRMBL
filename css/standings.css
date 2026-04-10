@@ -717,6 +717,10 @@
     color: rgba(255, 255, 255, 0.4);
 }
 
+.lomba-table .col-f.ff-active {
+    color: #c9302c;
+}
+
 .lomba-table .col-pct {
     color: rgba(255, 255, 255, 0.7);
     font-size: 13px;

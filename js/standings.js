@@ -1031,7 +1031,7 @@
             html += '<td class="col-gp">' + gp + '</td>';
             html += '<td class="col-w">' + team.wins + '</td>';
             html += '<td class="col-l">' + team.losses + '</td>';
-            html += '<td class="col-f">' + team.forfeitsGiven + '</td>';
+            html += '<td class="col-f' + (team.forfeitsGiven > 0 ? ' ff-active' : '') + '">' + team.forfeitsGiven + '</td>';
             html += '<td class="col-pct">' + pctDisplay + '</td>';
             html += '<td class="' + diffCls + '">' + diffDisplay + '</td>';
             html += '</tr>';
