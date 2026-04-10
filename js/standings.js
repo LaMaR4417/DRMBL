@@ -980,6 +980,7 @@
         standings.sort(function (a, b) {
             if (b.pts !== a.pts) return b.pts - a.pts;
             if (b.wins !== a.wins) return b.wins - a.wins;
+            if (a.losses !== b.losses) return a.losses - b.losses;
             return b.pointDiff - a.pointDiff;
         });
 
