@@ -78,6 +78,43 @@ module.exports = async function (req, res) {
             });
         }
 
+        // LOMBA mode: fetch active season docs via League doc
+        if (league === 'lomba') {
+            var leaguesContainer = client
+                .database("DRMBL Database")
+                .container("Leagues");
+
+            var { resources: lombaLeague } = await leaguesContainer.items
+                .query("SELECT * FROM c WHERE c.id = 'LOMBA'")
+                .fetchAll();
+
+            if (!lombaLeague.length || !lombaLeague[0].league.activeSeason) {
+                return res.status(404).json({ error: "No active LOMBA season found." });
+            }
+
+            var lombaLeagueDoc = lombaLeague[0];
+            var lombaActiveSeason = lombaLeagueDoc.league.activeSeason;
+
+            var { resources: lombaSeasons } = await seasonsContainer.items
+                .query("SELECT * FROM c WHERE STARTSWITH(c.id, 'LOMBA -') AND ENDSWITH(c.id, '" + lombaActiveSeason + "')")
+                .fetchAll();
+
+            var seasons = lombaSeasons.map(function (doc) {
+                return {
+                    id: doc.id,
+                    league: doc.league || null,
+                    teams: doc.teams || [],
+                    schedule: doc.schedule || [],
+                    timeline: doc.timeline || null
+                };
+            });
+
+            return res.status(200).json({
+                leagueInfo: lombaLeagueDoc.league,
+                seasons: seasons
+            });
+        }
+
         // Copa Beta mode: return league info + all Copa Beta categories
         if (league === 'copa-beta') {
             var leaguesContainer = client

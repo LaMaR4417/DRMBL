@@ -1117,114 +1117,68 @@
 
         var qualifiers = standings.slice(0, cutoff);
 
-        // QF matchups: #1v#8, #4v#5, #2v#7, #3v#6
-        // Arranged so winners of top half meet in SF, bottom half meet in SF
-        var qfTop = [
+        // QF matchups: #1v#8, #2v#7, #3v#6, #4v#5
+        var qfMatchups = [
             { seed1: 1, seed2: 8 },
-            { seed1: 4, seed2: 5 }
-        ];
-        var qfBot = [
             { seed1: 2, seed2: 7 },
-            { seed1: 3, seed2: 6 }
+            { seed1: 3, seed2: 6 },
+            { seed1: 4, seed2: 5 }
         ];
 
         function teamName(seed) {
             return qualifiers[seed - 1] ? qualifiers[seed - 1].name : 'TBD';
         }
 
-        function buildSlot(seed, name, pos, side, score) {
-            var scoreHtml = '<span class="lbk-score">' + (score !== undefined && score !== null ? score : '') + '</span>';
-            if (side === 'right') {
-                return '<div class="lbk-slot ' + pos + '">' +
-                    scoreHtml +
-                    '<span class="lbk-name">' + name + '</span>' +
-                    '<span class="lbk-seed">#' + seed + '</span>' +
-                    '</div>';
-            }
-            return '<div class="lbk-slot ' + pos + '">' +
-                '<span class="lbk-seed">#' + seed + '</span>' +
-                '<span class="lbk-name">' + name + '</span>' +
-                scoreHtml +
-                '</div>';
-        }
-
-        function buildMatchup(m, cls, side) {
+        function buildMatchup(m, cls) {
             return '<div class="lbk-matchup ' + (cls || '') + '">' +
-                buildSlot(m.seed1, teamName(m.seed1), 'top', side) +
-                buildSlot(m.seed2, teamName(m.seed2), 'bot', side) +
-                '</div>';
+                '<div class="lbk-slot top">' +
+                    '<span class="lbk-seed">#' + m.seed1 + '</span>' +
+                    '<span class="lbk-name">' + teamName(m.seed1) + '</span>' +
+                '</div>' +
+                '<div class="lbk-vs">vs</div>' +
+                '<div class="lbk-slot bot">' +
+                    '<span class="lbk-seed">#' + m.seed2 + '</span>' +
+                    '<span class="lbk-name">' + teamName(m.seed2) + '</span>' +
+                '</div>' +
+            '</div>';
         }
 
-        function buildTBDMatchup(cls, side) {
-            var slot1, slot2;
-            if (side === 'right') {
-                slot1 = '<div class="lbk-slot top"><span class="lbk-score"></span><span class="lbk-name lbk-tbd">TBD</span></div>';
-                slot2 = '<div class="lbk-slot bot"><span class="lbk-score"></span><span class="lbk-name lbk-tbd">TBD</span></div>';
-            } else {
-                slot1 = '<div class="lbk-slot top"><span class="lbk-name lbk-tbd">TBD</span><span class="lbk-score"></span></div>';
-                slot2 = '<div class="lbk-slot bot"><span class="lbk-name lbk-tbd">TBD</span><span class="lbk-score"></span></div>';
-            }
-            return '<div class="lbk-matchup ' + (cls || '') + '">' + slot1 + slot2 + '</div>';
+        function buildTBDMatchup(cls) {
+            return '<div class="lbk-matchup ' + (cls || '') + '">' +
+                '<div class="lbk-slot top"><span class="lbk-name lbk-tbd">TBD</span></div>' +
+                '<div class="lbk-vs">vs</div>' +
+                '<div class="lbk-slot bot"><span class="lbk-name lbk-tbd">TBD</span></div>' +
+            '</div>';
         }
 
         var html = '<div class="lomba-playoff-picture">';
         html += '<h4 class="lbk-title">Playoff Picture</h4>';
 
-        html += '<div class="lbk-bracket">';
-
-        // ── Left side (QF top → SF top) ──
-        html += '<div class="lbk-side lbk-left">';
-
-        // QF round
-        html += '<div class="lbk-round lbk-qf">';
+        // Quarter-Finals row
+        html += '<div class="lbk-round-row">';
         html += '<div class="lbk-round-label">Quarter-Finals</div>';
-        for (var i = 0; i < qfTop.length; i++) {
-            html += buildMatchup(qfTop[i], '', 'left');
+        html += '<div class="lbk-matchups-row">';
+        for (var i = 0; i < qfMatchups.length; i++) {
+            html += buildMatchup(qfMatchups[i]);
         }
-        html += '</div>';
+        html += '</div></div>';
 
-        // Connector
-        html += '<div class="lbk-connector lbk-conn-2"></div>';
+        // Semi-Finals row
+        html += '<div class="lbk-round-row">';
+        html += '<div class="lbk-round-label">Semi-Finals</div>';
+        html += '<div class="lbk-matchups-row">';
+        html += buildTBDMatchup();
+        html += buildTBDMatchup();
+        html += '</div></div>';
 
-        // SF round
-        html += '<div class="lbk-round lbk-sf">';
-        html += '<div class="lbk-round-label">Semi-Final</div>';
-        html += buildTBDMatchup('', 'left');
-        html += '</div>';
-
-        html += '</div>'; // end left side
-
-        // ── Championship ──
-        html += '<div class="lbk-center">';
-        html += '<div class="lbk-connector-h"></div>';
-        html += '<div class="lbk-round lbk-final">';
+        // Championship row
+        html += '<div class="lbk-round-row">';
         html += '<div class="lbk-round-label">Championship</div>';
+        html += '<div class="lbk-matchups-row">';
         html += buildTBDMatchup('lbk-champ');
+        html += '</div></div>';
+
         html += '</div>';
-        html += '<div class="lbk-connector-h"></div>';
-        html += '</div>';
-
-        // ── Right side: SF (next to champ) → connector → QF (outside) ──
-        html += '<div class="lbk-side lbk-right">';
-
-        html += '<div class="lbk-round lbk-sf">';
-        html += '<div class="lbk-round-label">Semi-Final</div>';
-        html += buildTBDMatchup('', 'right');
-        html += '</div>';
-
-        html += '<div class="lbk-connector lbk-conn-2"></div>';
-
-        html += '<div class="lbk-round lbk-qf">';
-        html += '<div class="lbk-round-label">Quarter-Finals</div>';
-        for (var j = 0; j < qfBot.length; j++) {
-            html += buildMatchup(qfBot[j], '', 'right');
-        }
-        html += '</div>';
-
-        html += '</div>'; // end right side
-
-        html += '</div>'; // end bracket
-        html += '</div>'; // end playoff picture
         return html;
     }
 
@@ -1315,15 +1269,11 @@
     function loadLOMBA() {
         showLOMBAShimmer();
 
-        fetch('/api/lomba?action=league')
+        fetch('/api/seasons?league=lomba')
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                lombaLeagueData = data;
-                return fetch('/api/lomba?action=seasons');
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                lombaSeasonsData = data;
+                lombaLeagueData = { league: data.leagueInfo };
+                lombaSeasonsData = data.seasons || [];
                 buildLOMBAFilterBar();
                 renderLOMBA();
             })
