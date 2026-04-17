@@ -193,110 +193,27 @@
         }
     }
 
-    // Fallback data for local/offline viewing
-    var FALLBACK_TEAMS = [
-        { "slot": "A", "name": "Wonderland" },
-        { "slot": "B", "name": "DR Elite" },
-        { "slot": "C", "name": "Air Ballers" },
-        { "slot": "D", "name": "bbl crackin" },
-        { "slot": "E", "name": null },
-        { "slot": "F", "name": null },
-        { "slot": "G", "name": null },
-        { "slot": "H", "name": null }
-    ];
-
-    var FALLBACK_SCHEDULE = [
-        { "week": 1, "date": "TBD", "games": [
-            { "time": "9:00 AM",  "away": "A", "home": "H" },
-            { "time": "10:00 AM", "away": "G", "home": "B" },
-            { "time": "11:00 AM", "away": "C", "home": "F" },
-            { "time": "12:00 PM", "away": "E", "home": "D" }
-        ]},
-        { "week": 2, "date": "TBD", "games": [
-            { "time": "9:00 AM",  "away": "H", "home": "G" },
-            { "time": "10:00 AM", "away": "F", "home": "A" },
-            { "time": "11:00 AM", "away": "B", "home": "E" },
-            { "time": "12:00 PM", "away": "D", "home": "C" }
-        ]},
-        { "week": 3, "date": "TBD", "games": [
-            { "time": "9:00 AM",  "away": "F", "home": "H" },
-            { "time": "10:00 AM", "away": "E", "home": "G" },
-            { "time": "11:00 AM", "away": "A", "home": "D" },
-            { "time": "12:00 PM", "away": "C", "home": "B" }
-        ]},
-        { "week": 4, "date": "TBD", "games": [
-            { "time": "9:00 AM",  "away": "H", "home": "E" },
-            { "time": "10:00 AM", "away": "F", "home": "D" },
-            { "time": "11:00 AM", "away": "G", "home": "C" },
-            { "time": "12:00 PM", "away": "B", "home": "A" }
-        ]},
-        { "week": 5, "date": "TBD", "games": [
-            { "time": "9:00 AM",  "away": "D", "home": "H" },
-            { "time": "10:00 AM", "away": "E", "home": "C" },
-            { "time": "11:00 AM", "away": "F", "home": "B" },
-            { "time": "12:00 PM", "away": "A", "home": "G" }
-        ]},
-        { "week": 6, "date": "TBD", "games": [
-            { "time": "9:00 AM",  "away": "H", "home": "C" },
-            { "time": "10:00 AM", "away": "D", "home": "B" },
-            { "time": "11:00 AM", "away": "E", "home": "A" },
-            { "time": "12:00 PM", "away": "G", "home": "F" }
-        ]},
-        { "week": 7, "date": "TBD", "games": [
-            { "time": "9:00 AM",  "away": "B", "home": "H" },
-            { "time": "10:00 AM", "away": "C", "home": "A" },
-            { "time": "11:00 AM", "away": "D", "home": "G" },
-            { "time": "12:00 PM", "away": "F", "home": "E" }
-        ]},
-        { "week": 8, "date": "TBD", "type": "seeded", "note": "Seeds determined by Week 7 standings", "games": [
-            { "time": "9:00 AM",  "away": "#4 Seed", "home": "#1 Seed" },
-            { "time": "10:00 AM", "away": "#3 Seed", "home": "#2 Seed" },
-            { "time": "11:00 AM", "away": "#8 Seed", "home": "#5 Seed" },
-            { "time": "12:00 PM", "away": "#7 Seed", "home": "#6 Seed" }
-        ]},
-        { "week": 9, "date": "TBD", "type": "seeded", "note": "Seeds determined by Week 7 standings", "games": [
-            { "time": "9:00 AM",  "away": "#3 Seed", "home": "#1 Seed" },
-            { "time": "10:00 AM", "away": "#4 Seed", "home": "#2 Seed" },
-            { "time": "11:00 AM", "away": "#8 Seed", "home": "#5 Seed" },
-            { "time": "12:00 PM", "away": "#7 Seed", "home": "#6 Seed" }
-        ]},
-        { "week": 10, "date": "TBD", "type": "seeded", "note": "Seeds determined by Week 7 standings", "games": [
-            { "time": "9:00 AM",  "away": "#2 Seed", "home": "#1 Seed" },
-            { "time": "10:00 AM", "away": "#4 Seed", "home": "#3 Seed" },
-            { "time": "11:00 AM", "away": "#6 Seed", "home": "#5 Seed" },
-            { "time": "12:00 PM", "away": "#8 Seed", "home": "#7 Seed" }
-        ]},
-        { "week": 11, "date": "TBD", "type": "playoffs", "games": [
-            { "time": "9:00 AM",  "away": "#4 Seed", "home": "#1 Seed", "round": "Semifinal 1" },
-            { "time": "10:30 AM", "away": "#3 Seed", "home": "#2 Seed", "round": "Semifinal 2" },
-            { "time": "12:00 PM", "away": "Loser SF1", "home": "Loser SF2", "round": "3rd Place" },
-            { "time": "1:30 PM",  "away": "Winner SF1", "home": "Winner SF2", "round": "Championship" }
-        ]}
-    ];
+    function showLoadingState() {
+        var container = document.getElementById('schedule-content');
+        container.innerHTML = '<div class="schedule-loading"><span class="team-name-loading" style="width:200px;height:24px;display:block;margin:40px auto;"></span></div>';
+    }
 
     function loadSeason() {
-        // Step 1: Render skeleton immediately with fallback schedule
-        buildWeekNav(FALLBACK_SCHEDULE);
-        buildScheduleSkeleton(FALLBACK_SCHEDULE);
+        // Show shimmer while loading
+        showLoadingState();
 
-        // Step 2: Fetch teams from API and fill in names
-        fetch('/api/season')
+        fetch('/api/seasons?league=drmbl')
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (data && data.teams) {
-                    fillTeamNames(data.teams);
-                }
-                // If API returns a different schedule structure, rebuild
-                if (data && data.weeklySchedule &&
-                    data.weeklySchedule.length !== FALLBACK_SCHEDULE.length) {
-                    buildWeekNav(data.weeklySchedule);
-                    buildScheduleSkeleton(data.weeklySchedule);
-                    if (data.teams) fillTeamNames(data.teams);
-                }
+                var season = data && data.season;
+                if (!season || !season.weeklySchedule) return;
+                buildWeekNav(season.weeklySchedule);
+                buildScheduleSkeleton(season.weeklySchedule);
+                if (season.teams) fillTeamNames(season.teams);
             })
             .catch(function () {
-                // API unavailable (local dev) — fill with fallback team names
-                fillTeamNames(FALLBACK_TEAMS);
+                var container = document.getElementById('schedule-content');
+                container.innerHTML = '<p style="text-align:center;color:#888;padding:40px;">Unable to load schedule.</p>';
             });
     }
 

@@ -41,6 +41,43 @@ module.exports = async function (req, res) {
     var league = req.query.league || null;
 
     try {
+        // DRMBL mode: fetch active season via League doc
+        if (league === 'drmbl') {
+            var leaguesContainer = client
+                .database("DRMBL Database")
+                .container("Leagues");
+
+            var { resources: drmblLeague } = await leaguesContainer.items
+                .query("SELECT * FROM c WHERE c.id = 'DRMBL'")
+                .fetchAll();
+
+            if (!drmblLeague.length || !drmblLeague[0].league.activeSeason) {
+                return res.status(404).json({ error: "No active DRMBL season found." });
+            }
+
+            var leagueDoc = drmblLeague[0];
+            var activeSeasonId = leagueDoc.league.activeSeason;
+
+            var seasonResponse = await seasonsContainer.item(activeSeasonId, activeSeasonId).read();
+            var seasonDoc = seasonResponse.resource;
+
+            if (!seasonDoc) {
+                return res.status(404).json({ error: "Active season not found." });
+            }
+
+            return res.status(200).json({
+                leagueInfo: leagueDoc.league,
+                season: {
+                    id: seasonDoc.id,
+                    league: seasonDoc.league || null,
+                    teams: seasonDoc.teams || [],
+                    standings: seasonDoc.standings || [],
+                    weeklySchedule: seasonDoc.weeklySchedule || null,
+                    timeline: seasonDoc.timeline || null
+                }
+            });
+        }
+
         // Copa Beta mode: return league info + all Copa Beta categories
         if (league === 'copa-beta') {
             var leaguesContainer = client

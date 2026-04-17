@@ -97,21 +97,9 @@
 
     // ── DRMBL ──────────────────────────────────────────
 
-    var DRMBL_FALLBACK = [
-        { slot: 'A', name: 'Wonderland', wins: 0, losses: 0, pointDiff: 0 },
-        { slot: 'B', name: 'DR Elite', wins: 0, losses: 0, pointDiff: 0 },
-        { slot: 'C', name: 'Air Ballers', wins: 0, losses: 0, pointDiff: 0 },
-        { slot: 'D', name: 'bbl crackin', wins: 0, losses: 0, pointDiff: 0 },
-        { slot: 'E', name: 'Del Rio Heat', wins: 0, losses: 0, pointDiff: 0 },
-        { slot: 'F', name: 'The Reapers', wins: 0, losses: 0, pointDiff: 0 },
-        { slot: 'G', name: 'R. Blitz', wins: 0, losses: 0, pointDiff: 0 },
-        { slot: 'H', name: 'Kings', wins: 0, losses: 0, pointDiff: 0 },
-        { slot: 'I', name: 'Dunk Dynasty', wins: 0, losses: 0, pointDiff: 0 }
-    ];
-
     function showDRMBLShimmer() {
         var container = document.getElementById('standings-content');
-        container.innerHTML = buildShimmerTable(9);
+        container.innerHTML = buildShimmerTable(8);
     }
 
     function renderDRMBL(standings) {
@@ -126,30 +114,19 @@
     function loadDRMBL() {
         showDRMBLShimmer();
 
-        fetch('/api/seasons')
+        fetch('/api/seasons?league=drmbl')
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (data && data.seasons) {
-                    var drmblSeason = null;
-                    for (var i = 0; i < data.seasons.length; i++) {
-                        var s = data.seasons[i];
-                        if (s.league && s.league.abbreviation === 'DRMBL') {
-                            drmblSeason = s;
-                            break;
-                        }
-                    }
-
-                    if (drmblSeason && drmblSeason.standings && drmblSeason.standings.length > 0) {
-                        renderDRMBL(drmblSeason.standings);
-                    } else {
-                        renderDRMBL(DRMBL_FALLBACK);
-                    }
+                var season = data && data.season;
+                if (season && season.standings && season.standings.length > 0) {
+                    renderDRMBL(season.standings);
                 } else {
-                    renderDRMBL(DRMBL_FALLBACK);
+                    renderDRMBL([]);
                 }
             })
             .catch(function () {
-                renderDRMBL(DRMBL_FALLBACK);
+                var container = document.getElementById('standings-content');
+                container.innerHTML = '<p style="text-align:center;color:#888;padding:40px;">Unable to load standings.</p>';
             });
     }
 
