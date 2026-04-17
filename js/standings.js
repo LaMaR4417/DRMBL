@@ -1111,43 +1111,62 @@
         }
     }
 
-    function buildLOMBAPlayoffPicture(standings) {
+    function buildLOMBAPlayoffPicture(standings, playoffs) {
         var cutoff = Math.min(8, standings.length);
         if (cutoff < 2) return '';
 
         var qualifiers = standings.slice(0, cutoff);
 
-        // QF matchups: #1v#8, #2v#7, #3v#6, #4v#5
-        var qfMatchups = [
-            { seed1: 1, seed2: 8 },
-            { seed1: 2, seed2: 7 },
-            { seed1: 3, seed2: 6 },
-            { seed1: 4, seed2: 5 }
-        ];
-
-        function teamName(seed) {
+        function teamNameFromSeed(seed) {
             return qualifiers[seed - 1] ? qualifiers[seed - 1].name : 'TBD';
         }
 
-        function buildMatchup(m, cls) {
-            return '<div class="lbk-matchup ' + (cls || '') + '">' +
-                '<div class="lbk-slot top">' +
-                    '<span class="lbk-seed">#' + m.seed1 + '</span>' +
-                    '<span class="lbk-name">' + teamName(m.seed1) + '</span>' +
-                '</div>' +
-                '<div class="lbk-vs">vs</div>' +
-                '<div class="lbk-slot bot">' +
-                    '<span class="lbk-seed">#' + m.seed2 + '</span>' +
-                    '<span class="lbk-name">' + teamName(m.seed2) + '</span>' +
-                '</div>' +
-            '</div>';
+        function isSeriesOver(series) {
+            return series.seed1Wins >= 2 || series.seed2Wins >= 2;
+        }
+
+        function seriesWinner(series) {
+            if (series.seed1Wins >= 2) return { seed: series.seed1, name: series.name1 };
+            if (series.seed2Wins >= 2) return { seed: series.seed2, name: series.name2 };
+            return null;
+        }
+
+        function buildSeriesMatchup(series, cls) {
+            var name1 = series.name1 || 'TBD';
+            var name2 = series.name2 || 'TBD';
+            var hasSeed1 = series.seed1 !== null;
+            var hasSeed2 = series.seed2 !== null;
+            var done = isSeriesOver(series);
+            var winner = seriesWinner(series);
+
+            var slot1Cls = 'lbk-slot top';
+            var slot2Cls = 'lbk-slot bot';
+            if (done && winner) {
+                if (winner.seed === series.seed1) slot2Cls += ' lbk-eliminated';
+                else slot1Cls += ' lbk-eliminated';
+            }
+
+            var html = '<div class="lbk-matchup ' + (cls || '') + (done ? ' lbk-completed' : '') + '">';
+            html += '<div class="' + slot1Cls + '">';
+            if (hasSeed1) html += '<span class="lbk-seed">#' + series.seed1 + '</span>';
+            html += '<span class="lbk-name' + (!hasSeed1 ? ' lbk-tbd' : '') + '">' + name1 + '</span>';
+            html += '<span class="lbk-wins">' + series.seed1Wins + '</span>';
+            html += '</div>';
+            html += '<div class="lbk-vs">vs</div>';
+            html += '<div class="' + slot2Cls + '">';
+            if (hasSeed2) html += '<span class="lbk-seed">#' + series.seed2 + '</span>';
+            html += '<span class="lbk-name' + (!hasSeed2 ? ' lbk-tbd' : '') + '">' + name2 + '</span>';
+            html += '<span class="lbk-wins">' + series.seed2Wins + '</span>';
+            html += '</div>';
+            html += '</div>';
+            return html;
         }
 
         function buildTBDMatchup(cls) {
             return '<div class="lbk-matchup ' + (cls || '') + '">' +
-                '<div class="lbk-slot top"><span class="lbk-name lbk-tbd">TBD</span></div>' +
+                '<div class="lbk-slot top"><span class="lbk-name lbk-tbd">TBD</span><span class="lbk-wins"></span></div>' +
                 '<div class="lbk-vs">vs</div>' +
-                '<div class="lbk-slot bot"><span class="lbk-name lbk-tbd">TBD</span></div>' +
+                '<div class="lbk-slot bot"><span class="lbk-name lbk-tbd">TBD</span><span class="lbk-wins"></span></div>' +
             '</div>';
         }
 
@@ -1158,8 +1177,28 @@
         html += '<div class="lbk-round-row">';
         html += '<div class="lbk-round-label">Quarter-Finals</div>';
         html += '<div class="lbk-matchups-row">';
-        for (var i = 0; i < qfMatchups.length; i++) {
-            html += buildMatchup(qfMatchups[i]);
+        if (playoffs && playoffs.quarterFinals) {
+            for (var i = 0; i < playoffs.quarterFinals.length; i++) {
+                var qf = playoffs.quarterFinals[i];
+                // Fill names from standings if not set
+                if (!qf.name1 && qf.seed1) qf.name1 = teamNameFromSeed(qf.seed1);
+                if (!qf.name2 && qf.seed2) qf.name2 = teamNameFromSeed(qf.seed2);
+                html += buildSeriesMatchup(qf);
+            }
+        } else {
+            // Fallback: build from standings
+            var defaultQF = [
+                { seed1: 1, seed2: 8 }, { seed1: 2, seed2: 7 },
+                { seed1: 3, seed2: 6 }, { seed1: 4, seed2: 5 }
+            ];
+            for (var q = 0; q < defaultQF.length; q++) {
+                var dqf = defaultQF[q];
+                html += buildSeriesMatchup({
+                    seed1: dqf.seed1, name1: teamNameFromSeed(dqf.seed1),
+                    seed2: dqf.seed2, name2: teamNameFromSeed(dqf.seed2),
+                    seed1Wins: 0, seed2Wins: 0
+                });
+            }
         }
         html += '</div></div>';
 
@@ -1167,15 +1206,30 @@
         html += '<div class="lbk-round-row">';
         html += '<div class="lbk-round-label">Semi-Finals</div>';
         html += '<div class="lbk-matchups-row">';
-        html += buildTBDMatchup();
-        html += buildTBDMatchup();
+        if (playoffs && playoffs.semiFinals) {
+            for (var s = 0; s < playoffs.semiFinals.length; s++) {
+                var sf = playoffs.semiFinals[s];
+                if (sf.seed1 !== null || sf.name1) {
+                    html += buildSeriesMatchup(sf);
+                } else {
+                    html += buildTBDMatchup();
+                }
+            }
+        } else {
+            html += buildTBDMatchup();
+            html += buildTBDMatchup();
+        }
         html += '</div></div>';
 
         // Championship row
         html += '<div class="lbk-round-row">';
         html += '<div class="lbk-round-label">Championship</div>';
         html += '<div class="lbk-matchups-row">';
-        html += buildTBDMatchup('lbk-champ');
+        if (playoffs && playoffs.championship && (playoffs.championship.seed1 !== null || playoffs.championship.name1)) {
+            html += buildSeriesMatchup(playoffs.championship, 'lbk-champ');
+        } else {
+            html += buildTBDMatchup('lbk-champ');
+        }
         html += '</div></div>';
 
         html += '</div>';
@@ -1236,7 +1290,7 @@
                         var standings = computeLOMBAStandings(matchSeason);
                         var playoffCut = Math.min(8, standings.length);
                         genderHtml += buildLOMBAStandingsTable(standings, playoffCut);
-                        genderHtml += buildLOMBAPlayoffPicture(standings);
+                        genderHtml += buildLOMBAPlayoffPicture(standings, matchSeason.playoffs);
                     } else {
                         genderHtml += '<p class="empty-standings">No teams registered yet.</p>';
                     }

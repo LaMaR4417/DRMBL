@@ -105,6 +105,7 @@ module.exports = async function (req, res) {
                     league: doc.league || null,
                     teams: doc.teams || [],
                     schedule: doc.schedule || [],
+                    playoffs: doc.playoffs || null,
                     timeline: doc.timeline || null
                 };
             });

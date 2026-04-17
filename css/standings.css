@@ -824,6 +824,24 @@
     font-style: italic;
 }
 
+.lbk-wins {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.85);
+    margin-left: auto;
+    min-width: 16px;
+    text-align: center;
+}
+
+.lbk-eliminated {
+    opacity: 0.35;
+}
+
+.lbk-completed {
+    border-color: rgba(200, 164, 92, 0.3);
+}
+
 /* Responsive */
 @media (max-width: 700px) {
     .lbk-matchups-row {
