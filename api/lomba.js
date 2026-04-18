@@ -139,6 +139,56 @@ module.exports = async function (req, res) {
         }
     }
 
+    // POST /api/lomba?action=edit-game
+    if (req.method === "POST" && action === "edit-game") {
+        var gameId = req.body.gameId;
+        var seasonId = req.body.seasonId;
+        var gameData = req.body.gameData;
+        var boxScore = req.body.boxScore;
+
+        if (!gameId || !seasonId || !gameData) {
+            return res.status(400).json({ error: "Missing required parameters" });
+        }
+
+        try {
+            // Upsert box score if provided
+            if (boxScore) {
+                await boxScoresContainer.items.upsert(boxScore);
+            }
+
+            // Read season doc and find the game by ID across all date groups
+            var { resource: season } = await seasonsContainer.item(seasonId, seasonId).read();
+            if (!season) return res.status(404).json({ error: "Season not found" });
+
+            var found = false;
+            for (var i = 0; i < (season.schedule || []).length; i++) {
+                var games = season.schedule[i].games || [];
+                for (var j = 0; j < games.length; j++) {
+                    if (games[j].id === gameId) {
+                        games[j].homeScore = gameData.homeScore;
+                        games[j].awayScore = gameData.awayScore;
+                        games[j].winner = gameData.winner;
+                        games[j].forfeit = gameData.forfeit || false;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+
+            if (!found) {
+                return res.status(404).json({ error: "Game not found in schedule" });
+            }
+
+            await seasonsContainer.items.upsert(season);
+            return res.status(200).json({ success: true, id: gameId });
+
+        } catch (err) {
+            console.error("LOMBA edit game error:", err.message);
+            return res.status(500).json({ error: "Failed to edit game" });
+        }
+    }
+
     // POST /api/lomba?action=save-playoff-game
     if (req.method === "POST" && action === "save-playoff-game") {
         var seasonId = req.body.seasonId;
@@ -185,18 +235,16 @@ module.exports = async function (req, res) {
             gameEntry.completion = true;
             if (boxScore) gameEntry.id = boxScore.id;
 
-            // Update series wins
-            if (gameData.winner === 'home') {
-                // home is seed1 in games 1 & 3, seed2 in game 2
-                if (gameEntry.home === series.name1) {
+            // Recalculate series wins from all completed games
+            series.seed1Wins = 0;
+            series.seed2Wins = 0;
+            for (var w = 0; w < series.games.length; w++) {
+                var gm = series.games[w];
+                if (!gm || !gm.completion) continue;
+                var gmWinnerName = gm.winner === 'home' ? gm.home : gm.away;
+                if (gmWinnerName === series.name1) {
                     series.seed1Wins++;
-                } else {
-                    series.seed2Wins++;
-                }
-            } else if (gameData.winner === 'away') {
-                if (gameEntry.away === series.name1) {
-                    series.seed1Wins++;
-                } else {
+                } else if (gmWinnerName === series.name2) {
                     series.seed2Wins++;
                 }
             }
