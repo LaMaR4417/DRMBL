@@ -1163,7 +1163,7 @@
         }
 
         function buildTBDMatchup(cls) {
-            return '<div class="lbk-matchup ' + (cls || '') + '">' +
+            return '<div class="lbk-matchup lbk-disabled ' + (cls || '') + '">' +
                 '<div class="lbk-slot top"><span class="lbk-name lbk-tbd">TBD</span><span class="lbk-wins"></span></div>' +
                 '<div class="lbk-vs">vs</div>' +
                 '<div class="lbk-slot bot"><span class="lbk-name lbk-tbd">TBD</span><span class="lbk-wins"></span></div>' +

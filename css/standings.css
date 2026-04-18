@@ -838,6 +838,11 @@
     opacity: 0.35;
 }
 
+.lbk-disabled {
+    opacity: 0.25;
+    pointer-events: none;
+}
+
 .lbk-completed {
     border-color: rgba(200, 164, 92, 0.3);
 }
