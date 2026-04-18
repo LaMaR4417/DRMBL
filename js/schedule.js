@@ -1343,33 +1343,31 @@
 
                         html += '<div class="lomba-playoff-round">';
                         html += '<h3 class="lomba-playoff-round-label">' + round.label + '</h3>';
-                        html += '<div class="lomba-playoff-series-list">';
 
                         for (var si2 = 0; si2 < seriesList.length; si2++) {
                             var series = seriesList[si2];
                             if (!series || (!series.name1 && !series.name2)) continue;
 
                             var isOver = series.seed1Wins >= 2 || series.seed2Wins >= 2;
+                            var seriesTitle = '#' + series.seed1 + ' ' + series.name1 + ' vs #' + series.seed2 + ' ' + series.name2;
 
-                            html += '<div class="lomba-playoff-series' + (isOver ? ' lomba-series-complete' : '') + '">';
-                            html += '<div class="lomba-series-header">';
-                            html += '<span class="lomba-series-teams">#' + series.seed1 + ' ' + series.name1 + ' vs #' + series.seed2 + ' ' + series.name2 + '</span>';
-                            html += '<span class="lomba-series-score">' + series.seed1Wins + ' - ' + series.seed2Wins + '</span>';
-                            html += '</div>';
+                            html += '<div class="lomba-matchup-section">';
+                            html += '<h3 class="lomba-matchup-title">' + seriesTitle + ' (' + series.seed1Wins + '-' + series.seed2Wins + ')</h3>';
+                            html += '<p class="lomba-matchup-division">' + genderLabel + ' — ' + divName + '</p>';
+
+                            html += '<div class="lomba-time-games lomba-playoff-games">';
 
                             var games = series.games || [];
                             for (var gmi = 0; gmi < games.length; gmi++) {
                                 var gm = games[gmi];
-                                if (gm === null) {
-                                    html += '<div class="lomba-card lomba-card-null"><span class="lomba-card-label">Juego ' + (gmi + 1) + ' — No necesario</span></div>';
-                                    continue;
-                                }
+                                if (gm === null) continue;
                                 var gmComplete = gm.completion;
                                 var gmWinnerHome = gm.winner === 'home';
                                 var gmWinnerAway = gm.winner === 'away';
+                                var isForfeit = gm.forfeit && gmComplete;
 
-                                html += '<div class="lomba-card' + (gmComplete ? ' lomba-final' : '') + (gm.forfeit ? ' lomba-forfeit' : '') + '">';
-                                html += '<div class="lomba-card-label">Juego ' + (gmi + 1) + '</div>';
+                                html += '<div class="lomba-card' + (gmComplete ? ' lomba-final' : '') + (isForfeit ? ' lomba-forfeit' : '') + '">';
+                                html += '<div class="lomba-card-division">Juego ' + (gmi + 1) + '</div>';
                                 html += '<div class="lomba-card-matchup">';
                                 html += '<div class="lomba-card-team' + (gmComplete && gmWinnerAway ? ' lomba-winner' : '') + '">';
                                 html += '<span class="lomba-card-name">' + gm.away + '</span>';
@@ -1381,14 +1379,14 @@
                                 if (gmComplete) html += '<span class="lomba-card-score">' + gm.homeScore + '</span>';
                                 html += '</div>';
                                 html += '</div>';
-                                if (gm.forfeit && gmComplete) html += '<div class="lomba-card-footer"><span class="lomba-forfeit-badge">FORFEIT</span></div>';
+                                if (isForfeit) html += '<div class="lomba-card-footer"><span class="lomba-forfeit-badge">FORFEIT</span></div>';
                                 html += '</div>';
                             }
 
                             html += '</div>';
+                            html += '</div>';
                         }
 
-                        html += '</div>';
                         html += '</div>';
                     }
 
