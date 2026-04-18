@@ -812,7 +812,7 @@
 
     var lombaLeagueData = null;
     var lombaSeasonsData = null;
-    var lombaFilters = { gender: 'all', division: 'all', team: 'all' };
+    var lombaFilters = { gender: 'all', division: 'all', team: 'all', view: 'season' };
 
     function getLOMBAGenders() {
         if (!lombaLeagueData || !lombaLeagueData.league || !lombaLeagueData.league.seasons) return [];
@@ -920,6 +920,24 @@
 
         var html = '';
 
+        // View toggle
+        html += '<div class="lomba-view-toggle">';
+        html += '<button type="button" class="lomba-view-btn' + (lombaFilters.view === 'season' ? ' active' : '') + '" data-view="season">Temporada</button>';
+        html += '<button type="button" class="lomba-view-btn' + (lombaFilters.view === 'playoffs' ? ' active' : '') + '" data-view="playoffs">Playoffs</button>';
+        html += '</div>';
+
+        if (lombaFilters.view === 'playoffs') {
+            nav.innerHTML = html;
+            nav.querySelectorAll('.lomba-view-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    lombaFilters.view = this.getAttribute('data-view');
+                    buildLOMBAFilterBar();
+                    renderLOMBASchedule();
+                });
+            });
+            return;
+        }
+
         // Gender filter
         html += '<select class="lomba-sched-filter" id="lomba-sched-gender">';
         html += '<option value="all">All Categories</option>';
@@ -960,6 +978,14 @@
         }
 
         nav.innerHTML = html;
+
+        nav.querySelectorAll('.lomba-view-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                lombaFilters.view = this.getAttribute('data-view');
+                buildLOMBAFilterBar();
+                renderLOMBASchedule();
+            });
+        });
 
         document.getElementById('lomba-sched-gender').addEventListener('change', function () {
             lombaFilters.gender = this.value;
@@ -1263,8 +1289,129 @@
         container.innerHTML = html;
     }
 
+    function renderLOMBAPlayoffs(container) {
+        if (!lombaSeasonsData) { container.innerHTML = ''; return; }
+
+        var html = '';
+        var leagueSeasons = lombaLeagueData && lombaLeagueData.league ? lombaLeagueData.league.seasons : [];
+
+        for (var ls = 0; ls < leagueSeasons.length; ls++) {
+            var seasonName = leagueSeasons[ls].name;
+            var divisions = leagueSeasons[ls].data.divisions;
+            var genders = Object.keys(divisions);
+
+            for (var gi = 0; gi < genders.length; gi++) {
+                var gender = genders[gi];
+                var genderLabel = gender.charAt(0).toUpperCase() + gender.slice(1);
+                var divList = divisions[gender];
+
+                for (var di = 0; di < divList.length; di++) {
+                    var divName = divList[di];
+                    var genderKey = 'league.seasons.data.divisions.' + gender;
+
+                    var matchSeason = null;
+                    for (var si = 0; si < lombaSeasonsData.length; si++) {
+                        var s = lombaSeasonsData[si];
+                        if (s.league && s.league.season &&
+                            s.league.season['league.seasons.name'] === seasonName &&
+                            s.league.season[genderKey] === divName) {
+                            matchSeason = s;
+                            break;
+                        }
+                    }
+
+                    if (!matchSeason || !matchSeason.playoffs) continue;
+                    var playoffs = matchSeason.playoffs;
+
+                    html += '<section class="lomba-playoff-section">';
+                    html += '<div class="week-header"><h2 class="week-title">' + genderLabel + ' — ' + divName + '</h2></div>';
+
+                    var rounds = [
+                        { key: 'quarterFinals', label: 'Cuartos de Final', series: playoffs.quarterFinals || [] },
+                        { key: 'semiFinals', label: 'Semifinales', series: playoffs.semiFinals || [] },
+                        { key: 'championship', label: 'Final', series: playoffs.championship ? [playoffs.championship] : [] }
+                    ];
+
+                    for (var r = 0; r < rounds.length; r++) {
+                        var round = rounds[r];
+                        var seriesList = round.series;
+                        var hasContent = false;
+                        for (var ch = 0; ch < seriesList.length; ch++) {
+                            if (seriesList[ch] && (seriesList[ch].name1 || seriesList[ch].name2)) { hasContent = true; break; }
+                        }
+                        if (!hasContent) continue;
+
+                        html += '<div class="lomba-playoff-round">';
+                        html += '<h3 class="lomba-playoff-round-label">' + round.label + '</h3>';
+                        html += '<div class="lomba-playoff-series-list">';
+
+                        for (var si2 = 0; si2 < seriesList.length; si2++) {
+                            var series = seriesList[si2];
+                            if (!series || (!series.name1 && !series.name2)) continue;
+
+                            var isOver = series.seed1Wins >= 2 || series.seed2Wins >= 2;
+
+                            html += '<div class="lomba-playoff-series' + (isOver ? ' lomba-series-complete' : '') + '">';
+                            html += '<div class="lomba-series-header">';
+                            html += '<span class="lomba-series-teams">#' + series.seed1 + ' ' + series.name1 + ' vs #' + series.seed2 + ' ' + series.name2 + '</span>';
+                            html += '<span class="lomba-series-score">' + series.seed1Wins + ' - ' + series.seed2Wins + '</span>';
+                            html += '</div>';
+
+                            var games = series.games || [];
+                            for (var gmi = 0; gmi < games.length; gmi++) {
+                                var gm = games[gmi];
+                                if (gm === null) {
+                                    html += '<div class="lomba-card lomba-card-null"><span class="lomba-card-label">Juego ' + (gmi + 1) + ' — No necesario</span></div>';
+                                    continue;
+                                }
+                                var gmComplete = gm.completion;
+                                var gmWinnerHome = gm.winner === 'home';
+                                var gmWinnerAway = gm.winner === 'away';
+
+                                html += '<div class="lomba-card' + (gmComplete ? ' lomba-final' : '') + (gm.forfeit ? ' lomba-forfeit' : '') + '">';
+                                html += '<div class="lomba-card-label">Juego ' + (gmi + 1) + '</div>';
+                                html += '<div class="lomba-card-matchup">';
+                                html += '<div class="lomba-card-team' + (gmComplete && gmWinnerAway ? ' lomba-winner' : '') + '">';
+                                html += '<span class="lomba-card-name">' + gm.away + '</span>';
+                                if (gmComplete) html += '<span class="lomba-card-score">' + gm.awayScore + '</span>';
+                                html += '</div>';
+                                html += '<div class="lomba-card-vs">' + (gmComplete ? 'FINAL' : 'VS') + '</div>';
+                                html += '<div class="lomba-card-team' + (gmComplete && gmWinnerHome ? ' lomba-winner' : '') + '">';
+                                html += '<span class="lomba-card-name">' + gm.home + '</span>';
+                                if (gmComplete) html += '<span class="lomba-card-score">' + gm.homeScore + '</span>';
+                                html += '</div>';
+                                html += '</div>';
+                                if (gm.forfeit && gmComplete) html += '<div class="lomba-card-footer"><span class="lomba-forfeit-badge">FORFEIT</span></div>';
+                                html += '</div>';
+                            }
+
+                            html += '</div>';
+                        }
+
+                        html += '</div>';
+                        html += '</div>';
+                    }
+
+                    html += '</section>';
+                }
+            }
+        }
+
+        if (!html) {
+            html = '<div class="schedule-empty">No hay playoffs disponibles.</div>';
+        }
+
+        container.innerHTML = html;
+    }
+
     function renderLOMBASchedule() {
         var container = document.getElementById('schedule-content');
+
+        if (lombaFilters.view === 'playoffs') {
+            renderLOMBAPlayoffs(container);
+            return;
+        }
+
         var filtered = getFilteredLOMBASeasons();
         var allGames = collectLOMBAGames(filtered);
 
@@ -1299,15 +1446,11 @@
     function loadLOMBA() {
         showLOMBAScheduleShimmer();
 
-        fetch('/api/lomba?action=league')
+        fetch('/api/seasons?league=lomba')
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                lombaLeagueData = data;
-                return fetch('/api/lomba?action=seasons');
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                lombaSeasonsData = data;
+                lombaLeagueData = { league: data.leagueInfo };
+                lombaSeasonsData = data.seasons || [];
                 buildLOMBAFilterBar();
                 renderLOMBASchedule();
             })
