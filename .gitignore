@@ -3,5 +3,18 @@ nul
 *.psd
 node_modules/
 .vercel/
-
 .env*.local
+
+# Local reference data (not deployed)
+Local Template Fills/
+Imported from LMR-Jr/
+Scratchpad JSON*.json
+Live Game UI Changes.md
+DO NOT TOUCH/Schedule Helper.xlsx
+DO NOT TOUCH/Teams Excel.xlsx
+DO NOT TOUCH/schedule-builder/
+PSDs/*.png
+PSDs/Sponsor Spotlight/
+css/toggle-resolution.ahk
+js/magna-vs-mango-sports Example.json
+schedule-builder/
