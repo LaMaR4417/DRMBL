@@ -23,6 +23,7 @@
     var WEEK_META = {
         1:  { sponsor: 'Walmart' },
         2:  { sponsor: 'El Tacon Madre' },
+        3:  { sponsor: 'Chick-fil-A Del Rio' },
         11: { label: 'Playoff Sunday' }
     };
 
