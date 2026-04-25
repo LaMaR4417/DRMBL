@@ -202,16 +202,20 @@
         var sub = $('sb-period-sub');
         sub.textContent = 'WARM-UP';
         sub.classList.add('active');
+        $('scoreboard-view').classList.add('warmup-mode');
     }
 
     function clearWarmupSub() {
         $('sb-period-sub').classList.remove('active');
+        $('scoreboard-view').classList.remove('warmup-mode');
     }
 
     function applyTimeoutOverlay() {
         $('sb-clock').textContent = formatClock(timeoutState.seconds);
         // Period stays as the actual period — TIMEOUT shows as a tag below the calling team's name
         setTimeoutTag(timeoutState.side);
+        // Timeout takes over from any clock-only warm-up view
+        $('scoreboard-view').classList.remove('warmup-mode');
     }
 
     function setTimeoutTag(side) {
@@ -423,6 +427,7 @@
                 warmupState.active = false;
                 clearTimeoutTag();
                 clearBreakSub();
+                $('scoreboard-view').classList.remove('warmup-mode');
                 renderScoreboard(msg.payload || { boxScore: {} }, true);
                 var c = $('sb-conn');
                 c.textContent = 'GAME ENDED';
