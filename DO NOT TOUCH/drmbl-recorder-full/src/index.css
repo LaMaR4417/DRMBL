@@ -1599,67 +1599,31 @@ body {
 .livesync-saved { color: rgba(120, 220, 140, 0.95); }
 .livesync-error { color: rgba(255, 90, 90, 0.95); }
 
-/* Chord HUD — appears when keyboard chord is in progress */
-.chord-hud {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 1000;
-  background: rgba(20, 16, 10, 0.96);
-  border: 1px solid var(--court-wood, #c8a45c);
-  border-radius: 6px;
-  padding: 10px 16px;
-  min-width: 280px;
-  max-width: 360px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
-  font-size: 13px;
-  pointer-events: none;
+/* Hotkey badge — corner letter on every chord-actionable button / card */
+.btn-action,
+.btn-sub-choice,
+.player-card.selectable {
+  position: relative;
 }
-.chord-breadcrumb {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.hotkey-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 16px;
-  letter-spacing: 2px;
-  color: var(--court-wood, #c8a45c);
-  margin-bottom: 8px;
-  border-bottom: 1px solid rgba(200, 164, 92, 0.25);
-  padding-bottom: 6px;
-}
-.chord-esc {
-  font-size: 11px;
+  font-size: 22px;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.4);
-  text-transform: uppercase;
+  color: #ffffff;
+  opacity: 0.78;
+  pointer-events: none;
+  line-height: 1;
 }
-.chord-keys {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: rgba(255, 255, 255, 0.85);
-}
-.chord-key {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.chord-key kbd {
-  display: inline-block;
-  background: rgba(200, 164, 92, 0.18);
-  border: 1px solid rgba(200, 164, 92, 0.55);
+.player-card .hotkey-badge.player-hotkey {
+  top: 6px;
+  bottom: auto;
+  right: 8px;
+  font-size: 18px;
   color: var(--court-wood, #c8a45c);
-  padding: 2px 7px;
-  border-radius: 3px;
-  font-family: ui-monospace, monospace;
-  font-size: 12px;
-  font-weight: 700;
-  min-width: 18px;
-  text-align: center;
+  opacity: 0.95;
 }
 
 /* Scoreboard */

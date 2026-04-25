@@ -225,14 +225,15 @@ export default function GameScreen() {
   //   Escape pops one level
   useEffect(() => {
     const PLAYER_KEYS = ['q','w','e','r','t','a','s','d','f','g','z','x','c','v','b'];
-    // Mirrors the on-screen button grid: top row of keys = top row of buttons.
+    // Single keyboard row Q-Y: mades first (Q W E), then misses (R T Y)
     const SCORING_MAP = {
       q: { points: 1, made: true },  w: { points: 2, made: true },  e: { points: 3, made: true },
-      a: { points: 1, made: false }, s: { points: 2, made: false }, d: { points: 3, made: false },
+      r: { points: 1, made: false }, t: { points: 2, made: false }, y: { points: 3, made: false },
     };
+    // Single keyboard row Q-Y: top button row first (Q W E), then second row (R T Y)
     const STATS_MAP = {
       q: 'rebound', w: 'assist',   e: 'steal',
-      a: 'block',   s: 'turnover', d: 'foul',
+      r: 'block',   t: 'turnover', y: 'foul',
     };
     const SUB_KEYS = ['q', 'w', 'e', 'r'];
 
@@ -616,6 +617,7 @@ export default function GameScreen() {
               onClick={() => handleShotTap(side, pts, true)}
             >
               {actionLabel(pts, true)}
+              <span className="hotkey-badge">{SHOT_HOTKEYS[`made-${pts}`]}</span>
             </button>
           ))}
           {[1, 2, 3].map((pts) => (
@@ -625,6 +627,7 @@ export default function GameScreen() {
               onClick={() => handleShotTap(side, pts, false)}
             >
               {actionLabel(pts, false)}
+              <span className="hotkey-badge">{SHOT_HOTKEYS[`miss-${pts}`]}</span>
             </button>
           ))}
         </div>
@@ -642,36 +645,42 @@ export default function GameScreen() {
             onClick={() => handleStatTap(side, 'rebound')}
           >
             {t('game', 'rebound')}
+            <span className="hotkey-badge">{STAT_HOTKEYS.rebound}</span>
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'assist') ? 'active' : ''} ${suggestAssist === side ? 'suggest' : ''}`}
             onClick={() => handleStatTap(side, 'assist')}
           >
             {t('game', 'assist')}
+            <span className="hotkey-badge">{STAT_HOTKEYS.assist}</span>
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'steal') ? 'active' : ''} ${suggestSteal === side ? 'suggest' : ''}`}
             onClick={() => handleStatTap(side, 'steal')}
           >
             {t('game', 'steal')}
+            <span className="hotkey-badge">{STAT_HOTKEYS.steal}</span>
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'block') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'block')}
           >
             {t('game', 'block')}
+            <span className="hotkey-badge">{STAT_HOTKEYS.block}</span>
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'turnover') || isStatActive(side, 'turnover-steal') || isStatActive(side, 'turnover-error') ? 'active' : ''} ${suggestTurnover === side ? 'suggest' : ''}`}
             onClick={() => handleStatTap(side, 'turnover')}
           >
             {t('game', 'turnover')}
+            <span className="hotkey-badge">{STAT_HOTKEYS.turnover}</span>
           </button>
           <button
             className={`btn-action stat ${isStatActive(side, 'foul') || isStatActive(side, 'foul-personal') || isStatActive(side, 'foul-technical') || isStatActive(side, 'foul-flagrant') || isStatActive(side, 'foul-offensive') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'foul')}
           >
             {t('game', 'foul')}
+            <span className="hotkey-badge">{STAT_HOTKEYS.foul}</span>
           </button>
         </div>
       </div>
@@ -694,12 +703,14 @@ export default function GameScreen() {
                 {timeoutCountdown.type === 'full' ? t('game', 'full') : t('game', 'short')} {formatClock(timeoutCountdown.timeLeft)}
               </span>
             )}
+            <span className="hotkey-badge">{STAT_HOTKEYS.timeout}</span>
           </button>
           <button
             className={`btn-action mgmt ${isStatActive(side, 'substitution') ? 'active' : ''}`}
             onClick={() => handleStatTap(side, 'substitution')}
           >
             {t('game', 'substitution')}
+            <span className="hotkey-badge">{STAT_HOTKEYS.substitution}</span>
           </button>
           <button
             className={`btn-action mgmt ${isStatActive(side, 'late-add') ? 'active' : ''}`}
@@ -713,13 +724,14 @@ export default function GameScreen() {
   }
 
   function renderPlayerCard(player, team, opts = {}) {
-    const { selectable, onClick, highlighted, dimmed } = opts;
+    const { selectable, onClick, highlighted, dimmed, hotkey } = opts;
     return (
       <div
         key={player.playerID}
         className={`player-card ${selectable ? 'selectable' : ''} ${highlighted ? 'highlighted' : ''} ${dimmed ? 'dimmed' : ''}`}
         onClick={selectable ? onClick : undefined}
       >
+        {selectable && hotkey && <span className="hotkey-badge player-hotkey">{hotkey}</span>}
         <span className="player-card-number">#{player.number || '?'}</span>
         <span className="player-card-name">{player.name}</span>
         <div className="player-card-stats">
@@ -913,7 +925,7 @@ export default function GameScreen() {
         )}
         {subChoices ? (
           <div className="sub-menu-choices">
-            {subChoices.map((choice) => {
+            {subChoices.map((choice, i) => {
               const isTimeout = choice.timeoutType != null;
               const remaining = isTimeout ? bs.teamInfo[side].stats.timeouts.remaining[choice.timeoutType] : null;
               return (
@@ -929,19 +941,21 @@ export default function GameScreen() {
                   }}
                 >
                   {choice.label}{isTimeout ? ` (${remaining})` : ''}
+                  <span className="hotkey-badge">{SUB_MENU_HOTKEYS[i]}</span>
                 </button>
               );
             })}
           </div>
         ) : (
         <div className="player-grid">
-          {courtPlayers.map((player) => {
+          {courtPlayers.map((player, displayIdx) => {
             const actualIndex = team.roster.inGame.findIndex(
               (p) => p.playerID === player.playerID,
             );
             return renderPlayerCard(player, team, {
               selectable: isPlayerSelectable,
               onClick: () => handlePlayerSelect(side, actualIndex),
+              hotkey: PLAYER_HOTKEYS[displayIdx],
             });
           })}
           {courtPlayers.length < 5 && benchPlayers.length > 0 && (
@@ -1235,78 +1249,11 @@ export default function GameScreen() {
     }
   })();
 
-  // --- Chord HUD: show current chord state and valid keys ---
-  function renderChordHud() {
-    const sideLabel = chord.side === 'home' ? bs.teamInfo.home.name : chord.side === 'away' ? bs.teamInfo.away.name : null;
-    const breadcrumbs = [];
-    if (sideLabel) breadcrumbs.push(sideLabel);
-    if (chord.category) breadcrumbs.push(chord.category.toUpperCase());
-    if (pendingAction) {
-      if (sideLabel == null) {
-        const pSide = pendingAction.side === 'home' ? bs.teamInfo.home.name : bs.teamInfo.away.name;
-        breadcrumbs.push(pSide);
-      }
-      breadcrumbs.push((pendingAction.action || '').replace('-', ' ').toUpperCase());
-    }
-
-    let keys = [];
-    if (pendingAction) {
-      const subChoices = SUB_MENU_CHOICES[pendingAction.action];
-      if (subChoices) {
-        keys = subChoices.map((c, i) => ({ key: ['Q','W','E','R'][i], label: c.label }));
-      } else {
-        // Player select — show on-court roster with player keys
-        const team = bs.teamInfo[pendingAction.side];
-        const slots = team.roster.inGame.slice(0, 15);
-        const PK = ['Q','W','E','R','T','A','S','D','F','G','Z','X','C','V','B'];
-        keys = slots.map((p, i) => p && p.playerID ? { key: PK[i], label: `#${p.number ?? '—'} ${p.name}` } : null).filter(Boolean);
-      }
-    } else if (!chord.side) {
-      keys = [
-        { key: '1', label: bs.teamInfo.home.name },
-        { key: '2', label: bs.teamInfo.away.name },
-      ];
-    } else if (!chord.category) {
-      keys = [
-        { key: 'Q', label: 'Scoring' },
-        { key: 'W', label: 'Stats' },
-        { key: 'E', label: 'Game' },
-      ];
-    } else if (chord.category === 'scoring') {
-      keys = [
-        { key: 'Q', label: '1PT Made' }, { key: 'W', label: '2PT Made' }, { key: 'E', label: '3PT Made' },
-        { key: 'A', label: '1PT Miss' }, { key: 'S', label: '2PT Miss' }, { key: 'D', label: '3PT Miss' },
-      ];
-    } else if (chord.category === 'stats') {
-      keys = [
-        { key: 'Q', label: 'Rebound' }, { key: 'W', label: 'Assist' },   { key: 'E', label: 'Steal' },
-        { key: 'A', label: 'Block' },   { key: 'S', label: 'Turnover' }, { key: 'D', label: 'Foul' },
-      ];
-    } else if (chord.category === 'game') {
-      keys = [
-        { key: 'Q', label: 'Timeout' },
-        { key: 'W', label: 'Substitution' },
-      ];
-    }
-
-    if (breadcrumbs.length === 0 && keys.length === 0) return null;
-
-    return (
-      <div className="chord-hud">
-        <div className="chord-breadcrumb">
-          {breadcrumbs.length > 0 ? breadcrumbs.join(' › ') : 'Press 1 or 2'}
-          <span className="chord-esc">ESC to back out</span>
-        </div>
-        <div className="chord-keys">
-          {keys.map((k) => (
-            <span key={k.key} className="chord-key">
-              <kbd>{k.key}</kbd> {k.label}
-            </span>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  // Hotkey constants for inline badges on each option
+  const SHOT_HOTKEYS = { 'made-1': 'Q', 'made-2': 'W', 'made-3': 'E', 'miss-1': 'R', 'miss-2': 'T', 'miss-3': 'Y' };
+  const STAT_HOTKEYS = { rebound: 'Q', assist: 'W', steal: 'E', block: 'R', turnover: 'T', foul: 'Y', timeout: 'Q', substitution: 'W' };
+  const SUB_MENU_HOTKEYS = ['Q', 'W', 'E', 'R'];
+  const PLAYER_HOTKEYS = ['Q', 'W', 'E', 'R', 'T', 'A', 'S', 'D', 'F', 'G', 'Z', 'X', 'C', 'V', 'B'];
 
   return (
     <div className={`screen game-screen ${correctionMode ? 'correction-mode' : ''}`}>
@@ -1318,8 +1265,6 @@ export default function GameScreen() {
         <span className={`livesync-status livesync-${liveSync.saveStatus}`}>{liveStatusLabel}</span>
       </div>
 
-      {/* Chord HUD: shown whenever a chord is in progress */}
-      {(chord.side || pendingAction) && renderChordHud()}
 
       {/* Scoreboard */}
       <div className="game-scoreboard">
