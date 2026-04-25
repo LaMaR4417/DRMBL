@@ -4,8 +4,15 @@ import { syncLiveGame, saveEndGame } from '../data/api';
 import { useTranslation } from '../i18n/useTranslation';
 
 function formatClock(totalSeconds) {
-  const m = Math.floor(totalSeconds / 60);
-  const s = totalSeconds % 60;
+  const t = Math.max(0, totalSeconds || 0);
+  // In the last minute show tenths (SS.t); otherwise show MM:SS
+  if (t < 60) {
+    const whole = Math.floor(t);
+    const tenths = Math.floor((t - whole) * 10);
+    return `${whole}.${tenths}`;
+  }
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60);
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
@@ -184,7 +191,11 @@ export default function GameScreen() {
 
   useEffect(() => {
     if (!isActive) return;
+    let lastTick = performance.now();
     const id = setInterval(() => {
+      const now = performance.now();
+      const delta = (now - lastTick) / 1000;
+      lastTick = now;
       const tl = timeLeftRef.current;
       if (tl <= 0) {
         clearInterval(id);
@@ -192,8 +203,14 @@ export default function GameScreen() {
         shouldSync.current = true;
         return;
       }
-      dispatch({ type: 'SET_CLOCK_TIME', timeLeft: tl - 1 });
-    }, 1000);
+      const newTl = Math.max(0, tl - delta);
+      dispatch({ type: 'SET_CLOCK_TIME', timeLeft: newTl });
+      if (newTl <= 0) {
+        clearInterval(id);
+        dispatch({ type: 'TOGGLE_CLOCK' });
+        shouldSync.current = true;
+      }
+    }, 100);
     return () => clearInterval(id);
   }, [isActive, dispatch]);
 
@@ -1141,8 +1158,9 @@ export default function GameScreen() {
               className={`scoreboard-time ${!isActive ? 'stopped' : ''} ${correctionMode ? 'editable' : ''}`}
               onClick={() => {
                 if (correctionMode) {
-                  const m = Math.floor(timeLeft / 60);
-                  const s = timeLeft % 60;
+                  const t = Math.max(0, timeLeft || 0);
+                  const m = Math.floor(t / 60);
+                  const s = Math.floor(t % 60);
                   setClockEdit({ minutes: m, seconds: s });
                 }
               }}
