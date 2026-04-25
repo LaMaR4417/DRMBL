@@ -106,6 +106,9 @@ export default function TipOffOverlay() {
     dispatch({ type: 'SET_FIRST_POSSESSION', side: finalPossession });
     dispatch({ type: 'INIT_BOX_SCORE' });
     dispatch({ type: 'SET_STEP', step: 7 });
+    // Auto-start the game clock so the scorekeeper doesn't have to press space
+    // right after picking the tip-off winner.
+    dispatch({ type: 'TOGGLE_CLOCK' });
   }
 
   function pickWinner(side) {

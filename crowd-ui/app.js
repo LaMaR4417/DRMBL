@@ -208,6 +208,9 @@
     function clearWarmupSub() {
         $('sb-period-sub').classList.remove('active');
         $('scoreboard-view').classList.remove('warmup-mode');
+        // Restore the clock display to the latest game time (the warm-up
+        // overlay had been writing 0.0 / countdown values into sb-clock).
+        $('sb-clock').textContent = formatClock(localClock.timeLeft);
     }
 
     function applyTimeoutOverlay() {
