@@ -1773,6 +1773,14 @@ body {
 .tipoff-start-game {
   width: 100%;
 }
+.tipoff-overlay-hint {
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--court-wood, #c8a45c);
+  margin: 0;
+}
 
 /* Open Scoreboard button in the tip-off overlay (top-right corner) */
 .tipoff-overlay {
