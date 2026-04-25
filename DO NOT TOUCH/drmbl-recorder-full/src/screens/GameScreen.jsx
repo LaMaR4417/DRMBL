@@ -214,6 +214,22 @@ export default function GameScreen() {
     return () => clearInterval(id);
   }, [isActive, dispatch]);
 
+  // --- Spacebar hotkey: toggle clock ---
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.code !== 'Space' && e.key !== ' ') return;
+      // Ignore when typing in an input (clock edit, etc.) or while a sub-menu is open
+      const tag = e.target && e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+      if (e.repeat) return;
+      e.preventDefault();
+      dispatch({ type: 'TOGGLE_CLOCK' });
+      shouldSync.current = true;
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [dispatch]);
+
   // --- Timeout countdown timer ---
   const toCountdownRef = useRef(null);
   useEffect(() => {
