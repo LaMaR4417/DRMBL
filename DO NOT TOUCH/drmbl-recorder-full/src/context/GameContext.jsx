@@ -865,6 +865,13 @@ export function GameProvider({ children }) {
     });
   }, []);
 
+  // Generic broadcast helper — let consumers post arbitrary messages on the same channel
+  // (e.g. break countdown updates from GameScreen).
+  const broadcast = useCallback((message) => {
+    if (!bcRef.current) return;
+    try { bcRef.current.postMessage(message); } catch (e) { /* ignore */ }
+  }, []);
+
   // Open the crowd-facing scoreboard in a popup window. Subsequent clicks refocus the existing window.
   const openScoreboard = useCallback(() => {
     if (scoreboardWindowRef.current && !scoreboardWindowRef.current.closed) {
@@ -881,7 +888,7 @@ export function GameProvider({ children }) {
   return (
     <GameContext.Provider value={state}>
       <GameDispatchContext.Provider value={dispatch}>
-        <LiveSyncContext.Provider value={{ saveStatus, lastSavedAt, openScoreboard }}>
+        <LiveSyncContext.Provider value={{ saveStatus, lastSavedAt, openScoreboard, broadcast }}>
           {children}
         </LiveSyncContext.Provider>
       </GameDispatchContext.Provider>

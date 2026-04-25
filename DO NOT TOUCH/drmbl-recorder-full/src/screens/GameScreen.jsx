@@ -383,6 +383,21 @@ export default function GameScreen() {
     return () => clearInterval(id);
   }, [timeoutCountdown?.side, timeoutCountdown?.type]); // restart only when a new timeout starts
 
+  // --- Broadcast break countdown to crowd UI ---
+  useEffect(() => {
+    if (!liveSync || typeof liveSync.broadcast !== 'function') return;
+    if (breakCountdown != null && breakCountdown > 0) {
+      liveSync.broadcast({
+        type: 'break',
+        breakCountdown,
+        currentQuarter: quarter,
+      });
+    } else {
+      liveSync.broadcast({ type: 'break', breakCountdown: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [breakCountdown, quarter]);
+
   // --- Break countdown timer (between periods) ---
   const breakRef = useRef(null);
   useEffect(() => {

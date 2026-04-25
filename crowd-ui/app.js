@@ -38,10 +38,11 @@
         return 'OT' + (quarter - 4);
     }
 
-    // Compact period display for the big yellow center label: "1"-"4" or "OT"/"OT2"
+    // Compact period display for the big yellow center label: "1st"-"4th" or "OT"/"OT2"
     function formatPeriodShort(quarter) {
-        if (quarter == null) return '1';
-        if (quarter <= 4) return String(quarter);
+        var ordinals = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th' };
+        if (quarter == null) return ordinals[1];
+        if (quarter <= 4) return ordinals[quarter];
         var n = quarter - 4;
         return n === 1 ? 'OT' : 'OT' + n;
     }
@@ -163,6 +164,9 @@
         active: false,
         finished: false
     };
+    // Break overlay state — when active, the clock + period labels are overridden
+    // with the inter-period break countdown (set by 'break' broadcast messages)
+    var breakState = { active: false, seconds: 0, lastQuarter: null };
 
     function startLocalClock() {
         stopLocalClock();
@@ -171,12 +175,19 @@
             var now = performance.now();
             var delta = (now - lastTick) / 1000;
             lastTick = now;
+            // Don't tick the regular clock while a break overlay is showing
+            if (breakState.active) return;
             if (localClock.active && localClock.timeLeft > 0) {
                 localClock.timeLeft -= delta;
                 if (localClock.timeLeft < 0) localClock.timeLeft = 0;
                 $('sb-clock').textContent = formatClock(localClock.timeLeft);
             }
         }, 100);
+    }
+
+    function applyBreakOverlay() {
+        $('sb-clock').textContent = formatClock(breakState.seconds);
+        $('sb-period').textContent = 'BRK';
     }
 
     function stopLocalClock() {
@@ -334,7 +345,20 @@
             if (!msg) return;
             if (msg.type === 'state' && msg.payload) {
                 renderScoreboard(msg.payload, true);
+                if (breakState.active) applyBreakOverlay();
+            } else if (msg.type === 'break') {
+                if (msg.breakCountdown != null && msg.breakCountdown > 0) {
+                    breakState.active = true;
+                    breakState.seconds = msg.breakCountdown;
+                    breakState.lastQuarter = msg.currentQuarter;
+                    applyBreakOverlay();
+                } else {
+                    breakState.active = false;
+                    breakState.seconds = 0;
+                    // The next state broadcast will restore the regular display
+                }
             } else if (msg.type === 'end') {
+                breakState.active = false;
                 renderScoreboard(msg.payload || { boxScore: {} }, true);
                 var c = $('sb-conn');
                 c.textContent = 'GAME ENDED';
