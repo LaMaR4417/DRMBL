@@ -2284,12 +2284,12 @@ body {
 }
 
 .btn-divider.indicator {
-  cursor: default;
+  cursor: pointer;
 }
 
-.btn-divider.indicator:hover {
-  color: inherit;
-  border-color: inherit;
+.btn-divider.indicator.user-off {
+  opacity: 0.55;
+  text-decoration: line-through;
 }
 
 /* ── Skip break button ── */

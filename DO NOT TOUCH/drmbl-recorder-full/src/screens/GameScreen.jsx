@@ -28,6 +28,9 @@ export default function GameScreen() {
   const { t } = useTranslation();
   const [pendingAction, setPendingAction] = useState(null);
   const [chord, setChord] = useState({ side: null, category: null });
+  // User toggle to suppress auto-stop even when stoppages settings say it should fire.
+  // false = follow settings (default); true = force off (clock keeps running through actions).
+  const [autoStopDisabled, setAutoStopDisabled] = useState(false);
   const [correctionMode, setCorrectionMode] = useState(false);
   const [clockEdit, setClockEdit] = useState(null); // null | { minutes, seconds }
   const [suggestRebound, setSuggestRebound] = useState(false);
@@ -171,9 +174,13 @@ export default function GameScreen() {
     return false;
   })();
 
+  // Effective: settings say auto-stop should fire AND the user hasn't toggled it off
+  const isAutoStopOn = isAutoStopActive && !autoStopDisabled;
+
   // Auto-stop clock or suggest based on action and stoppages settings
   function maybeAutoStop(actionName) {
     if (!isActive) return;
+    if (autoStopDisabled) return; // user-disabled — let the clock keep running
     const entry = game.settings.stoppages.for.find(e => e.action === actionName);
     if (!entry) return;
     if (entry.always || isAutoStopActive) {
@@ -1458,7 +1465,12 @@ export default function GameScreen() {
             </button>
           )}
 
-          <button className={`btn-divider indicator ${isAutoStopActive ? 'on' : 'off'}`}>
+          <button
+            type="button"
+            className={`btn-divider indicator ${isAutoStopOn ? 'on' : 'off'} ${autoStopDisabled ? 'user-off' : ''}`}
+            onClick={() => setAutoStopDisabled((v) => !v)}
+            title={autoStopDisabled ? 'Auto-stop disabled — click to follow settings' : 'Auto-stop follows settings — click to disable'}
+          >
             <span>{t('game', 'auto')}</span>
             <span>{t('game', 'stop')}</span>
           </button>
