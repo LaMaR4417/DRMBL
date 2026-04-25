@@ -1060,9 +1060,12 @@ export default function GameScreen() {
     // Only enter full player-selection mode for concrete (non-parent) actions
     const isSelecting = hasPending && !isParent;
     const isOtherSelecting = otherHasPending && !isParent;
-    // Chord side selection dims the opposite half until the chord finishes
-    const chordTargetsThis = chord.side === side;
-    const chordTargetsOther = chord.side != null && chord.side !== side;
+    // Chord side selection dims the opposite half until the chord finishes.
+    // Once a pendingAction exists (mouse click or chord completion), the chord
+    // visuals are subordinate to pendingAction-based dim — no double-state.
+    const chordActive = pendingAction == null;
+    const chordTargetsThis = chordActive && chord.side === side;
+    const chordTargetsOther = chordActive && chord.side != null && chord.side !== side;
     // After a category is picked, dim the other categories within this half
     const chordCat = chordTargetsThis ? chord.category : null;
     const dimScoring = chordCat != null && chordCat !== 'scoring';

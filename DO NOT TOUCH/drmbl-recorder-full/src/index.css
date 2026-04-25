@@ -1626,10 +1626,10 @@ body {
   opacity: 0.95;
 }
 
-/* Section-level dim while a chord category is selected (e.g., picking Stats dims Scoring + Game) */
+/* Section-level dim while a chord category is selected (e.g., picking Stats dims Scoring + Game).
+   Visual only — mouse clicks still pass through so the user can switch context with the cursor. */
 .game-section.chord-dimmed {
   opacity: 0.25;
-  pointer-events: none;
   transition: opacity 0.12s ease-out;
 }
 
@@ -1892,7 +1892,6 @@ body {
 
 .game-half.dimmed {
   opacity: 0.4;
-  pointer-events: none;
 }
 
 .game-half.selecting {
