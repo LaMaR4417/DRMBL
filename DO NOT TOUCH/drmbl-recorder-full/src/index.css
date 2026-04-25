@@ -1742,7 +1742,8 @@ body {
 .tipoff-warmup-time.running {
   color: #2fae5f;
 }
-.tipoff-warmup-actions {
+.tipoff-warmup-actions,
+.tipoff-warmup-adjust {
   display: flex;
   gap: 6px;
 }

@@ -54,8 +54,10 @@ export default function TipOffOverlay() {
   }, [warmupRunning, warmupLeft, liveSync]);
 
   function startWarmup() {
-    warmupRef.current = WARMUP_DEFAULT_SECONDS;
-    setWarmupLeft(WARMUP_DEFAULT_SECONDS);
+    if (warmupRef.current <= 0) {
+      warmupRef.current = WARMUP_DEFAULT_SECONDS;
+      setWarmupLeft(WARMUP_DEFAULT_SECONDS);
+    }
     setWarmupRunning(true);
   }
   function pauseWarmup() {
@@ -68,6 +70,11 @@ export default function TipOffOverlay() {
     warmupRef.current = WARMUP_DEFAULT_SECONDS;
     setWarmupLeft(WARMUP_DEFAULT_SECONDS);
     setWarmupRunning(false);
+  }
+  function adjustWarmup(deltaSeconds) {
+    const next = Math.max(0, warmupRef.current + deltaSeconds);
+    warmupRef.current = next;
+    setWarmupLeft(next);
   }
 
   function pickWinner(side) {
@@ -148,20 +155,18 @@ export default function TipOffOverlay() {
             <span className={`tipoff-warmup-time ${warmupRunning ? 'running' : ''}`}>
               {formatWarmup(warmupLeft)}
             </span>
+            <div className="tipoff-warmup-adjust">
+              <button type="button" className="btn btn-small btn-ghost" onClick={() => adjustWarmup(-60)} title="Subtract 1 minute">−1m</button>
+              <button type="button" className="btn btn-small btn-ghost" onClick={() => adjustWarmup(60)} title="Add 1 minute">+1m</button>
+            </div>
             <div className="tipoff-warmup-actions">
-              {!warmupRunning && warmupLeft === WARMUP_DEFAULT_SECONDS && (
-                <button type="button" className="btn btn-small" onClick={startWarmup}>
-                  Start 5:00
+              {!warmupRunning ? (
+                <button type="button" className="btn btn-small" onClick={startWarmup} disabled={warmupLeft <= 0}>
+                  {warmupLeft === WARMUP_DEFAULT_SECONDS ? 'Start' : (warmupLeft > 0 ? 'Resume' : 'Start')}
                 </button>
-              )}
-              {warmupRunning && (
+              ) : (
                 <button type="button" className="btn btn-small" onClick={pauseWarmup}>
                   Pause
-                </button>
-              )}
-              {!warmupRunning && warmupLeft > 0 && warmupLeft < WARMUP_DEFAULT_SECONDS && (
-                <button type="button" className="btn btn-small" onClick={resumeWarmup}>
-                  Resume
                 </button>
               )}
               {warmupLeft !== WARMUP_DEFAULT_SECONDS && (

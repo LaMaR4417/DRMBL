@@ -164,9 +164,10 @@
         active: false,
         finished: false
     };
-    // Overlay state — when either is active, the clock + period labels are overridden
+    // Overlay state — when active, the clock + period labels are overridden
     var breakState = { active: false, seconds: 0, lastQuarter: null };
     var timeoutState = { active: false, seconds: 0, type: null, side: null };
+    var warmupState = { active: false, seconds: 0 };
 
     function startLocalClock() {
         stopLocalClock();
@@ -175,8 +176,8 @@
             var now = performance.now();
             var delta = (now - lastTick) / 1000;
             lastTick = now;
-            // Don't tick the regular clock while a break or timeout overlay is showing
-            if (breakState.active || timeoutState.active) return;
+            // Don't tick the regular clock while any overlay is showing
+            if (breakState.active || timeoutState.active || warmupState.active) return;
             if (localClock.active && localClock.timeLeft > 0) {
                 localClock.timeLeft -= delta;
                 if (localClock.timeLeft < 0) localClock.timeLeft = 0;
@@ -187,12 +188,40 @@
 
     function applyBreakOverlay() {
         $('sb-clock').textContent = formatClock(breakState.seconds);
-        $('sb-period').textContent = 'BRK';
+        var sub = $('sb-period-sub');
+        sub.textContent = 'BREAK';
+        sub.classList.add('active');
+    }
+
+    function clearBreakSub() {
+        $('sb-period-sub').classList.remove('active');
+    }
+
+    function applyWarmupOverlay() {
+        $('sb-clock').textContent = formatClock(warmupState.seconds);
+        var sub = $('sb-period-sub');
+        sub.textContent = 'WARM-UP';
+        sub.classList.add('active');
+    }
+
+    function clearWarmupSub() {
+        $('sb-period-sub').classList.remove('active');
     }
 
     function applyTimeoutOverlay() {
         $('sb-clock').textContent = formatClock(timeoutState.seconds);
-        $('sb-period').textContent = 'TO';
+        // Period stays as the actual period — TIMEOUT shows as a tag below the calling team's name
+        setTimeoutTag(timeoutState.side);
+    }
+
+    function setTimeoutTag(side) {
+        $('sb-home-timeout-tag').classList.toggle('active', side === 'home');
+        $('sb-away-timeout-tag').classList.toggle('active', side === 'away');
+    }
+
+    function clearTimeoutTag() {
+        $('sb-home-timeout-tag').classList.remove('active');
+        $('sb-away-timeout-tag').classList.remove('active');
     }
 
     function stopLocalClock() {
@@ -208,6 +237,10 @@
         var away = (bs.teamInfo && bs.teamInfo.away) || {};
 
         $('sb-period').textContent = formatPeriodShort(state.currentQuarter);
+
+        // Clear overlays — they get re-applied below by applyTimeoutOverlay/applyBreakOverlay if still active
+        clearTimeoutTag();
+        clearBreakSub();
 
         // Sync local clock from server. In broadcast mode the source is in-browser
         // (zero latency) so we trust every payload. In polled mode we only sync on
@@ -350,18 +383,30 @@
             if (msg.type === 'state' && msg.payload) {
                 renderScoreboard(msg.payload, true);
                 // Re-apply any active overlay since renderScoreboard rewrote clock/period
+                // Priority: timeout > warmup > break
                 if (timeoutState.active) applyTimeoutOverlay();
+                else if (warmupState.active) applyWarmupOverlay();
                 else if (breakState.active) applyBreakOverlay();
             } else if (msg.type === 'break') {
                 if (msg.breakCountdown != null && msg.breakCountdown > 0) {
                     breakState.active = true;
                     breakState.seconds = msg.breakCountdown;
                     breakState.lastQuarter = msg.currentQuarter;
-                    if (!timeoutState.active) applyBreakOverlay();
+                    if (!timeoutState.active && !warmupState.active) applyBreakOverlay();
                 } else {
                     breakState.active = false;
                     breakState.seconds = 0;
-                    // The next state broadcast will restore the regular display
+                    if (!timeoutState.active && !warmupState.active) clearBreakSub();
+                }
+            } else if (msg.type === 'warmup') {
+                if (msg.timeLeft != null && msg.timeLeft > 0) {
+                    warmupState.active = true;
+                    warmupState.seconds = msg.timeLeft;
+                    if (!timeoutState.active) applyWarmupOverlay();
+                } else {
+                    warmupState.active = false;
+                    warmupState.seconds = 0;
+                    if (!timeoutState.active && !breakState.active) clearWarmupSub();
                 }
             } else if (msg.type === 'timeout') {
                 if (msg.timeLeft != null && msg.timeLeft > 0) {
@@ -373,12 +418,17 @@
                 } else {
                     timeoutState.active = false;
                     timeoutState.seconds = 0;
-                    // Restore: break overlay if still active, else next state will fix clock
-                    if (breakState.active) applyBreakOverlay();
+                    clearTimeoutTag();
+                    // Restore higher-priority remaining overlay
+                    if (warmupState.active) applyWarmupOverlay();
+                    else if (breakState.active) applyBreakOverlay();
                 }
             } else if (msg.type === 'end') {
                 breakState.active = false;
                 timeoutState.active = false;
+                warmupState.active = false;
+                clearTimeoutTag();
+                clearBreakSub();
                 renderScoreboard(msg.payload || { boxScore: {} }, true);
                 var c = $('sb-conn');
                 c.textContent = 'GAME ENDED';
