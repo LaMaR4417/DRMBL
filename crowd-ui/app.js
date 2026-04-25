@@ -38,6 +38,14 @@
         return 'OT' + (quarter - 4);
     }
 
+    // Compact period display for the big yellow center label: "1"-"4" or "OT"/"OT2"
+    function formatPeriodShort(quarter) {
+        if (quarter == null) return '1';
+        if (quarter <= 4) return String(quarter);
+        var n = quarter - 4;
+        return n === 1 ? 'OT' : 'OT' + n;
+    }
+
     function quarterKey(q) {
         if (q === 1) return 'first';
         if (q === 2) return 'second';
@@ -175,7 +183,7 @@
         if (clockHandle) { clearInterval(clockHandle); clockHandle = null; }
     }
 
-    function renderScoreboard(payload) {
+    function renderScoreboard(payload, fromBroadcast) {
         var bs = payload && payload.boxScore;
         if (!bs) return;
         var state = (bs.gameInfo && bs.gameInfo.state) || {};
@@ -183,74 +191,78 @@
         var home = (bs.teamInfo && bs.teamInfo.home) || {};
         var away = (bs.teamInfo && bs.teamInfo.away) || {};
 
-        $('sb-period').textContent = formatPeriod(state.currentQuarter);
+        $('sb-period').textContent = formatPeriodShort(state.currentQuarter);
 
-        // Sync local clock from server. Only overwrite the local time when:
-        //  - this is the very first payload, or
-        //  - the local clock has drifted by more than ~1.5s from the server, or
-        //  - the clock is paused on the server (so the local clock should match exactly)
-        // This prevents the tenths digit from flickering back to .0 every poll.
+        // Sync local clock from server. In broadcast mode the source is in-browser
+        // (zero latency) so we trust every payload. In polled mode we only sync on
+        // first payload, when the server is paused, or when drift > ~1.5s — that
+        // prevents the tenths digit from flickering back to .0 on every poll.
         var serverTime = state.clock && state.clock.timeLeft;
         var isFinal = general.status === 'final';
         if (serverTime != null) {
             var drift = Math.abs(localClock.timeLeft - serverTime);
             var firstPayload = lastUpdatedAt == null;
             var serverPaused = !state.active;
-            if (firstPayload || serverPaused || drift > 1.5) {
+            if (fromBroadcast || firstPayload || serverPaused || drift > 1.5) {
                 localClock.timeLeft = serverTime;
             }
             localClock.active = !!state.active && !isFinal;
             localClock.finished = isFinal;
         }
 
+        // Clock color: white by default, red only when stopped mid-period
+        // (between-quarter pauses, pre-game, period-end, and FINAL stay white)
+        var q = state.currentQuarter || 1;
+        var periodLength = (state.clock && (q > 4 ? state.clock.perOT : state.clock.perQuarter)) || null;
+        var t = localClock.timeLeft;
+        var atPeriodStart = periodLength != null && t >= periodLength - 0.05;
+        var atPeriodEnd = t <= 0.05;
+        var stoppedMid = !localClock.active && !isFinal && !atPeriodStart && !atPeriodEnd;
+
         var clockEl = $('sb-clock');
         clockEl.textContent = formatClock(localClock.timeLeft);
-        clockEl.classList.toggle('clock-running', localClock.active);
-        clockEl.classList.toggle('clock-stopped', !localClock.active && !isFinal);
+        clockEl.classList.toggle('clock-stopped-mid', stoppedMid);
 
-        var statusEl = $('sb-status');
-        if (general.status === 'final') {
-            statusEl.textContent = 'FINAL';
-            statusEl.className = 'sb-status';
-        } else if (state.active) {
-            statusEl.textContent = 'CLOCK RUNNING';
-            statusEl.className = 'sb-status running';
-        } else {
-            statusEl.textContent = 'CLOCK STOPPED';
-            statusEl.className = 'sb-status stopped';
-        }
-
-        $('sb-home-name').textContent = (home.name || 'HOME').toUpperCase();
-        $('sb-away-name').textContent = (away.name || 'AWAY').toUpperCase();
+        // Team names + scores
+        $('sb-home-name').textContent = (home.name || 'HOME TEAM').toUpperCase();
+        $('sb-away-name').textContent = (away.name || 'AWAY TEAM').toUpperCase();
         $('sb-home-score').textContent = (home.score && home.score.current) || 0;
         $('sb-away-score').textContent = (away.score && away.score.current) || 0;
 
-        var q = state.currentQuarter || 1;
+        // Possession arrows
+        var poss = state.possession;
+        $('sb-home-arrow').classList.toggle('active', poss === 'home');
+        $('sb-away-arrow').classList.toggle('active', poss === 'away');
+
+        // Bonus dots — level driven by opponent's quarter fouls vs settings thresholds
         var homeFouls = getQuarterFouls('home', q, bs);
         var awayFouls = getQuarterFouls('away', q, bs);
+        var bonusCfg = getBonusConfig(payload);
+        function bonusLevel(oppFouls) {
+            if (bonusCfg.doubleBonus != null && oppFouls >= bonusCfg.doubleBonus) return 2;
+            if (bonusCfg.oneAndOne != null && oppFouls >= bonusCfg.oneAndOne) return 1;
+            return 0;
+        }
+        function applyBonus(side, level) {
+            $('sb-' + side + '-bonus').setAttribute('data-level', level);
+            var lbl = $('sb-' + side + '-bonus-label');
+            lbl.textContent = level === 2 ? 'DOUBLE BONUS' : (level === 1 ? 'BONUS' : '');
+            lbl.classList.toggle('active', level > 0);
+        }
+        applyBonus('home', bonusLevel(awayFouls));
+        applyBonus('away', bonusLevel(homeFouls));
+
+        // Foul counts (this team's fouls this quarter)
         $('sb-home-fouls').textContent = homeFouls;
         $('sb-away-fouls').textContent = awayFouls;
 
-        // Bonus: if opponent's fouls >= threshold, this team is in bonus
-        var bonusCfg = getBonusConfig(payload);
-        function bonusLabel(oppFouls) {
-            if (bonusCfg.doubleBonus != null && oppFouls >= bonusCfg.doubleBonus) return 'DOUBLE BONUS';
-            if (bonusCfg.oneAndOne != null && oppFouls >= bonusCfg.oneAndOne) return 'BONUS';
-            return '';
-        }
-        $('sb-home-bonus').textContent = bonusLabel(awayFouls);
-        $('sb-away-bonus').textContent = bonusLabel(homeFouls);
-
-        // Possession
-        var poss = state.possession;
-        $('sb-home-poss').classList.toggle('active', poss === 'home');
-        $('sb-away-poss').classList.toggle('active', poss === 'away');
-
-        // Timeouts
-        var homeTO = home.stats && home.stats.timeouts && home.stats.timeouts.remaining;
-        var awayTO = away.stats && away.stats.timeouts && away.stats.timeouts.remaining;
-        $('sb-home-timeouts').textContent = 'TO ' + ((homeTO && homeTO.full) || 0) + 'F / ' + ((homeTO && homeTO.short) || 0) + 'S';
-        $('sb-away-timeouts').textContent = 'TO ' + ((awayTO && awayTO.full) || 0) + 'F / ' + ((awayTO && awayTO.short) || 0) + 'S';
+        // Timeouts (FULL # / SHORT # remaining)
+        var homeTO = (home.stats && home.stats.timeouts && home.stats.timeouts.remaining) || {};
+        var awayTO = (away.stats && away.stats.timeouts && away.stats.timeouts.remaining) || {};
+        $('sb-home-to-full').textContent = homeTO.full || 0;
+        $('sb-home-to-short').textContent = homeTO.short || 0;
+        $('sb-away-to-full').textContent = awayTO.full || 0;
+        $('sb-away-to-short').textContent = awayTO.short || 0;
 
         // Connection indicator
         var conn = $('sb-conn');
@@ -258,12 +270,9 @@
             lastUpdatedAt = payload.updatedAt;
             conn.textContent = 'LIVE';
             conn.className = 'sb-conn ok';
-        } else {
-            // No new data this poll — keep status but mark slightly stale if extended
-            if (!conn.classList.contains('ok')) {
-                conn.textContent = 'LIVE';
-                conn.className = 'sb-conn ok';
-            }
+        } else if (!conn.classList.contains('ok')) {
+            conn.textContent = 'LIVE';
+            conn.className = 'sb-conn ok';
         }
     }
 
@@ -324,9 +333,9 @@
             var msg = ev && ev.data;
             if (!msg) return;
             if (msg.type === 'state' && msg.payload) {
-                renderScoreboard(msg.payload);
+                renderScoreboard(msg.payload, true);
             } else if (msg.type === 'end') {
-                renderScoreboard(msg.payload || { boxScore: {} });
+                renderScoreboard(msg.payload || { boxScore: {} }, true);
                 var c = $('sb-conn');
                 c.textContent = 'GAME ENDED';
                 c.className = 'sb-conn';

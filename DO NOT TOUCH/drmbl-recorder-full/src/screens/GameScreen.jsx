@@ -293,18 +293,26 @@ export default function GameScreen() {
           }
           return;
         }
-        // Player select
+        // Player select — use display order (courtPlayers, then bench for sub flow)
         const pIdx = PLAYER_KEYS.indexOf(key);
         if (pIdx === -1) return;
         const team = bs.teamInfo[pendingAction.side];
-        const slot = team && team.roster.inGame[pIdx];
-        if (!slot || !slot.playerID) return;
+        if (!team) return;
+        const inGame = team.roster.inGame;
+        const courtPlayers = inGame.filter((p) => p.playerID !== null && p.onCourt);
+        const benchPlayers = inGame.filter((p) => p.playerID !== null && !p.onCourt);
+        const isSubFlow = pendingAction.action === 'substitution';
+        const ordered = isSubFlow ? [...courtPlayers, ...benchPlayers] : courtPlayers;
+        const player = ordered[pIdx];
+        if (!player) return;
+        const actualIndex = inGame.findIndex((p) => p.playerID === player.playerID);
+        if (actualIndex === -1) return;
         e.preventDefault();
-        if (pendingAction.action === 'substitution') {
-          if (pendingAction.outIndex == null) handleSubOut(pendingAction.side, pIdx);
-          else handleSubIn(pendingAction.side, pIdx);
+        if (isSubFlow) {
+          if (pendingAction.outIndex == null) handleSubOut(pendingAction.side, actualIndex);
+          else handleSubIn(pendingAction.side, actualIndex);
         } else {
-          handlePlayerSelect(pendingAction.side, pIdx);
+          handlePlayerSelect(pendingAction.side, actualIndex);
         }
         return;
       }
@@ -881,7 +889,7 @@ export default function GameScreen() {
 
           <div className="sub-section-label">{t('game', 'onCourt')}</div>
           <div className="player-grid">
-            {courtPlayers.map((player) => {
+            {courtPlayers.map((player, displayIdx) => {
               const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
               const isOut = subStep === 2 && actualIndex === pendingAction.outIndex;
               return renderPlayerCard(player, team, {
@@ -889,18 +897,20 @@ export default function GameScreen() {
                 onClick: () => handleSubOut(side, actualIndex),
                 highlighted: isOut,
                 dimmed: subStep === 2 && !isOut,
+                hotkey: subStep === 1 ? PLAYER_HOTKEYS[displayIdx] : null,
               });
             })}
           </div>
 
           <div className="sub-section-label">{t('game', 'onBench')}</div>
           <div className="player-grid">
-            {benchPlayers.length > 0 ? benchPlayers.map((player) => {
+            {benchPlayers.length > 0 ? benchPlayers.map((player, displayIdx) => {
               const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
               return renderPlayerCard(player, team, {
                 selectable: subStep === 2,
                 onClick: () => handleSubIn(side, actualIndex),
                 dimmed: subStep === 1,
+                hotkey: subStep === 2 ? PLAYER_HOTKEYS[displayIdx] : null,
               });
             }) : (
               <div className="sub-empty-bench">{t('game', 'noBench')}</div>
