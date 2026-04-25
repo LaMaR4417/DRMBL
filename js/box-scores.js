@@ -582,6 +582,18 @@
             return '';
         }
 
+        // Helper to get division label for a game from its season
+        function getGameDivision(game) {
+            if (!game._seasonId) return '';
+            for (var i = 0; i < seasons.length; i++) {
+                if (seasons[i].id === game._seasonId && seasons[i].league) {
+                    var entries = getDivisionsFromLeague(seasons[i].league);
+                    return entries.length > 0 ? entries[0] : '';
+                }
+            }
+            return '';
+        }
+
         function renderGameCard(game) {
             var isSelected = game.id === selectedBoxScoreId;
             var isScheduled = game.status === 'scheduled';
@@ -717,7 +729,15 @@
                         var suffix = suffixOrder[s];
                         out += '<div class="bs-court-col">';
                         if (suffix) {
-                            out += '<div class="bs-court-label">' + suffix + '</div>';
+                            // Collect unique divisions for games in this court column
+                            var courtDivs = [];
+                            for (var d = 0; d < suffixMap[suffix].length; d++) {
+                                var div = getGameDivision(suffixMap[suffix][d]);
+                                if (div && courtDivs.indexOf(div) === -1) courtDivs.push(div);
+                            }
+                            var courtLabel = suffix;
+                            if (courtDivs.length > 0) courtLabel += ' &mdash; ' + courtDivs.join(', ');
+                            out += '<div class="bs-court-label">' + courtLabel + '</div>';
                         }
                         out += '<div class="bs-games-grid">';
                         for (var i = 0; i < suffixMap[suffix].length; i++) {
