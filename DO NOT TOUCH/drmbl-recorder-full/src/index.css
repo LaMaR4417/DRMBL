@@ -1603,15 +1603,14 @@ body {
 .chord-hud {
   position: fixed;
   top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 12px;
   z-index: 1000;
   background: rgba(20, 16, 10, 0.96);
   border: 1px solid var(--court-wood, #c8a45c);
   border-radius: 6px;
   padding: 10px 16px;
-  min-width: 360px;
-  max-width: 90vw;
+  min-width: 280px;
+  max-width: 360px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
   font-size: 13px;
   pointer-events: none;
@@ -1637,15 +1636,17 @@ body {
 }
 .chord-keys {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
+  flex-direction: column;
+  gap: 4px;
   color: rgba(255, 255, 255, 0.85);
 }
 .chord-key {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .chord-key kbd {
   display: inline-block;
