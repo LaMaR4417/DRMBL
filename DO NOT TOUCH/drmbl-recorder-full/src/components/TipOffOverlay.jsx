@@ -114,6 +114,14 @@ export default function TipOffOverlay() {
   return (
     <div className="tipoff-overlay-backdrop">
       <div className="tipoff-overlay">
+        <button
+          type="button"
+          className="tipoff-open-scoreboard"
+          onClick={liveSync && liveSync.openScoreboard}
+          title="Open the crowd-facing scoreboard popup"
+        >
+          Open Scoreboard
+        </button>
         <h2 className="tipoff-overlay-title">{t('tipoff', 'screenTitle')}</h2>
 
         <section className="tipoff-section">

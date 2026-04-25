@@ -1774,6 +1774,28 @@ body {
   width: 100%;
 }
 
+/* Open Scoreboard button in the tip-off overlay (top-right corner) */
+.tipoff-overlay {
+  position: relative;
+}
+.tipoff-open-scoreboard {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--court-wood, #c8a45c);
+  color: #1a1209;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.tipoff-open-scoreboard:hover { filter: brightness(1.1); }
+
 /* Scoreboard */
 .game-scoreboard {
   display: grid;
