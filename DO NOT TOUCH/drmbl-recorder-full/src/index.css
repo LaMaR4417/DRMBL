@@ -353,6 +353,28 @@ body {
   cursor: pointer;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
+.resume-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn-kill {
+  background: transparent;
+  color: #ff6262;
+  border: 1px solid rgba(255, 98, 98, 0.5);
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.btn-kill:hover {
+  background: rgba(255, 98, 98, 0.12);
+  border-color: #ff6262;
+  color: #ff8a8a;
+}
 .resume-card:hover {
   border-color: var(--court-wood);
   box-shadow: 0 0 12px rgba(200, 164, 92, 0.3);

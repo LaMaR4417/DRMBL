@@ -48,6 +48,18 @@ export async function fetchLiveGames() {
   return data.games || [];
 }
 
+// Delete a live-game doc from Cosmos (used to abandon/kill an in-progress game).
+export async function deleteLiveGame(gameId) {
+  const res = await fetch('/api/live-game?id=' + encodeURIComponent(gameId), {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to delete live game');
+  }
+  return true;
+}
+
 // Live-sync status pub/sub so the UI can show "saving / saved / error" indicators
 const liveSyncListeners = new Set();
 export function subscribeLiveSync(fn) {

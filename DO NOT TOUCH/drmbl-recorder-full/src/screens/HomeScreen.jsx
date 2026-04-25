@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGameDispatch } from '../context/GameContext';
-import { fetchLiveGames } from '../data/api';
+import { fetchLiveGames, deleteLiveGame } from '../data/api';
 import { useTranslation } from '../i18n/useTranslation';
 
 function formatQuarter(q) {
@@ -59,6 +59,21 @@ export default function HomeScreen() {
     });
   }
 
+  async function handleKill(game) {
+    const home = game.boxScore?.teamInfo?.home?.name || 'Home';
+    const away = game.boxScore?.teamInfo?.away?.name || 'Away';
+    const confirmed = window.confirm(
+      `Permanently delete the live game "${home} vs ${away}"? This removes it from the Live Games container — there's no undo.`
+    );
+    if (!confirmed) return;
+    try {
+      await deleteLiveGame(game.gameId);
+      setGames((prev) => prev.filter((g) => g.gameId !== game.gameId));
+    } catch (e) {
+      window.alert('Failed to delete game: ' + (e?.message || 'unknown error'));
+    }
+  }
+
   return (
     <div className="screen home-screen">
       <div className="home-content">
@@ -103,7 +118,19 @@ export default function HomeScreen() {
                     <span className="resume-quarter">
                       {formatQuarter(bs.gameInfo.state.currentQuarter)} — {formatClock(bs.gameInfo.state.clock.timeLeft)}
                     </span>
-                    <button className="btn btn-primary btn-large">{t('home', 'resumeGame')}</button>
+                    <div className="resume-card-actions">
+                      <button className="btn btn-primary btn-large" onClick={(e) => { e.stopPropagation(); handleResume(game); }}>
+                        {t('home', 'resumeGame')}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-kill"
+                        title="Delete this live game"
+                        onClick={(e) => { e.stopPropagation(); handleKill(game); }}
+                      >
+                        Kill
+                      </button>
+                    </div>
                   </div>
                 );
               })}
