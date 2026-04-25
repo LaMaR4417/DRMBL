@@ -19,13 +19,19 @@
 
     }
 
-    // Presentation config — maps week numbers to sponsor/label overrides
-    var WEEK_META = {
-        1:  { sponsor: 'Walmart' },
-        2:  { sponsor: 'El Tacon Madre' },
-        3:  { sponsor: 'Chick-fil-A Del Rio' },
-        11: { label: 'Playoff Sunday' }
+    // Presentation config — maps week numbers to sponsor/label overrides, scoped per league
+    var WEEK_META_BY_LEAGUE = {
+        'drmbl': {
+            1: { sponsor: 'Walmart' },
+            2: { sponsor: 'El Tacon Madre' },
+            3: { sponsor: 'Chick-fil-A Del Rio' }
+        },
+        'copa-beta': {
+            11: { label: 'Playoff Sunday' }
+        },
+        'lomba': {}
     };
+    var WEEK_META = WEEK_META_BY_LEAGUE[CURRENT_LEAGUE] || {};
 
     function formatDate(date) {
         if (!date || date === 'TBD') return 'TBD';
