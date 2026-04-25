@@ -285,10 +285,13 @@
         $('sb-home-score').textContent = (home.score && home.score.current) || 0;
         $('sb-away-score').textContent = (away.score && away.score.current) || 0;
 
-        // Possession arrows
-        var poss = state.possession;
-        $('sb-home-arrow').classList.toggle('active', poss === 'home');
-        $('sb-away-arrow').classList.toggle('active', poss === 'away');
+        // Possession arrow: this is the alternating-possession arrow
+        // (which team gets the ball on the next held-ball / jump-ball),
+        // NOT the team currently holding the ball. Read possessionArrow,
+        // not possession. Matches the tracker's scoreboard.
+        var arrow = state.possessionArrow;
+        $('sb-home-arrow').classList.toggle('active', arrow === 'home');
+        $('sb-away-arrow').classList.toggle('active', arrow === 'away');
 
         // Bonus dots — level driven by opponent's quarter fouls vs settings thresholds
         var homeFouls = getQuarterFouls('home', q, bs);
