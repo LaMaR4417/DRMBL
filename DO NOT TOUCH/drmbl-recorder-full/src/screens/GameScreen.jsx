@@ -250,11 +250,12 @@ export default function GameScreen() {
         return;
       }
 
-      // Spacebar: toggle clock
+      // Spacebar: toggle clock — locked while a timeout is running
       if (e.code === 'Space' || e.key === ' ') {
         if (inField) return;
         if (e.repeat) return;
         e.preventDefault();
+        if (timeoutCountdown) return; // user must end the timeout via the button
         dispatch({ type: 'TOGGLE_CLOCK' });
         shouldSync.current = true;
         return;
@@ -371,15 +372,21 @@ export default function GameScreen() {
   useEffect(() => {
     if (!timeoutCountdown) return;
     toCountdownRef.current = timeoutCountdown;
+    let lastTick = performance.now();
     const id = setInterval(() => {
+      const now = performance.now();
+      const delta = (now - lastTick) / 1000;
+      lastTick = now;
       const cur = toCountdownRef.current;
-      if (!cur || cur.timeLeft <= 1) {
+      if (!cur) { clearInterval(id); return; }
+      const next = cur.timeLeft - delta;
+      if (next <= 0) {
         clearInterval(id);
         setTimeoutCountdown(null);
         return;
       }
-      setTimeoutCountdown({ ...cur, timeLeft: cur.timeLeft - 1 });
-    }, 1000);
+      setTimeoutCountdown({ ...cur, timeLeft: next });
+    }, 100);
     return () => clearInterval(id);
   }, [timeoutCountdown?.side, timeoutCountdown?.type]); // restart only when a new timeout starts
 
@@ -1465,10 +1472,18 @@ export default function GameScreen() {
               <span>{t('game', 'next')}</span>
               <span>{t('game', 'period')}</span>
             </button>
+          ) : timeoutCountdown ? (
+            <button
+              className="btn-clock timeout-end"
+              onClick={() => { setTimeoutCountdown(null); }}
+            >
+              <span>END</span>
+              <span>TIMEOUT</span>
+            </button>
           ) : (
             <button
               className={`btn-clock ${isActive ? 'running' : 'stopped'} ${suggestStopClock && isActive ? 'suggest' : ''}`}
-              onClick={() => { if (!isActive && timeoutCountdown) setTimeoutCountdown(null); dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true; }}
+              onClick={() => { dispatch({ type: 'TOGGLE_CLOCK' }); setSuggestStopClock(false); shouldSync.current = true; }}
             >
               <span>{isActive ? t('game', 'stop') : t('game', 'run')}</span>
               <span>{t('game', 'clock')}</span>
