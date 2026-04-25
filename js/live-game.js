@@ -17,6 +17,7 @@
 
     function formatClock(totalSeconds) {
         if (totalSeconds < 0) totalSeconds = 0;
+        totalSeconds = Math.round(totalSeconds);
         var m = Math.floor(totalSeconds / 60);
         var s = totalSeconds % 60;
         return m + ':' + (s < 10 ? '0' : '') + s;
