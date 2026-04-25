@@ -270,6 +270,10 @@ module.exports = async function (req, res) {
     var homeSlot = body.homeSlot || null;
     var awaySlot = body.awaySlot || null;
     var scheduleGameId = body.scheduleGameId || null;
+    // customGame=true means the user started a one-off matchup that wasn't picked
+    // from the schedule. Skip the season schedule + standings update so we don't
+    // accidentally close out a real upcoming game by team-slot collision.
+    var customGame = !!body.customGame;
     var seasonId = body.seasonId;
     if (!seasonId) {
         return res.status(400).json({ error: "Missing required field: seasonId" });
@@ -300,6 +304,12 @@ module.exports = async function (req, res) {
     var boxScoreID = cleanedBS.id;
 
     // ── B. Update season (IMPORTANT) ──
+    // For custom (off-schedule) games we still want the box score saved (Step A
+    // already ran) and players updated, but the schedule + standings stay
+    // untouched — pretend the season-side update doesn't apply.
+    if (customGame) {
+        // skip
+    } else
     try {
         var seasonResp = await seasonsContainer.item(seasonId, seasonId).read();
         var seasonDoc = seasonResp.resource;
@@ -579,10 +589,11 @@ module.exports = async function (req, res) {
         errors.push("Season update failed: " + err.message);
     }
 
-    // ── C. Update team records (skip for simple tracker) ──
+    // ── C. Update team records (skip for simple tracker AND for custom games) ──
+    // Custom games don't roll into team records or player season totals.
     var isSimple = boxScore.type === "simple";
 
-    if (!isSimple) {
+    if (!isSimple && !customGame) {
     async function updateTeamRecord(teamID, isWinner, ownScore, oppScore) {
         try {
             var teamResp = await teamsContainer.item(teamID, teamID).read();

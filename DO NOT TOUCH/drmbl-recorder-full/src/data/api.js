@@ -94,11 +94,26 @@ export function syncLiveGame(boxScore, meta) {
     .catch(() => emitLiveSync('error'));
 }
 
-export async function saveEndGame(boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId) {
+export async function saveEndGame(boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId, options = {}) {
+  // options:
+  //   scheduleGameId — id of the scheduled game this recording fills (when applicable)
+  //   customGame     — true when this matchup wasn't picked from the schedule;
+  //                    end-game.js will skip schedule + standings updates so a
+  //                    debug recording with real teams doesn't mark a regular-
+  //                    season game complete by accident
   const res = await fetch('/api/end-game', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId }),
+    body: JSON.stringify({
+      boxScore,
+      homeTeamID,
+      awayTeamID,
+      homeSlot,
+      awaySlot,
+      seasonId,
+      scheduleGameId: options.scheduleGameId || null,
+      customGame: !!options.customGame,
+    }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));

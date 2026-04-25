@@ -489,7 +489,18 @@ export default function GameScreen() {
     if (!bs || bs.gameInfo.general.status !== 'final') return;
     setSaveStatus('saving');
 
-    saveEndGame(bs, game.homeTeam.teamID, game.awayTeam.teamID, game.homeTeam.slot, game.awayTeam.slot, game.selectedSeason?.id)
+    saveEndGame(
+      bs,
+      game.homeTeam.teamID,
+      game.awayTeam.teamID,
+      game.homeTeam.slot,
+      game.awayTeam.slot,
+      game.selectedSeason?.id,
+      {
+        scheduleGameId: game.selectedGame?.id || null,
+        customGame: !game.selectedGame,
+      },
+    )
       .then(() => setSaveStatus('saved'))
       .catch((err) => { setSaveStatus('error'); setSaveError(err.message); });
   }, [saveStatus, bs?.gameInfo?.general?.status]);
