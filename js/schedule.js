@@ -63,7 +63,7 @@
             var meta = WEEK_META[w.week] || {};
             var isPlayoff = w.type === 'playoffs';
             var cls = 'week-tab' + (isPlayoff ? ' week-tab-playoff' : '');
-            var label = isPlayoff ? 'Playoffs' : 'Wk ' + w.week;
+            var label = isPlayoff ? (w.playoffWeek ? 'PO Wk ' + w.playoffWeek : 'Playoffs') : 'Wk ' + w.week;
             html += '<button type="button" class="' + cls + '" data-week="' + i + '">' + label + '</button>';
         }
         nav.innerHTML = html;
@@ -130,7 +130,7 @@
             var meta = WEEK_META[w.week] || {};
             var isPlayoff = w.type === 'playoffs';
             var isSeeded = w.type === 'seeded';
-            var label = meta.label || ('Week ' + w.week);
+            var label = meta.label || w.label || ('Week ' + w.week);
             var sectionCls = 'week-section' + (isPlayoff ? ' week-section-playoff' : '') + (isSeeded ? ' week-section-seeded' : '');
 
             html += '<section class="' + sectionCls + '" data-week="' + i + '">';
