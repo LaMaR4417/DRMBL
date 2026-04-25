@@ -1,16 +1,17 @@
 import { GameProvider, useGame } from './context/GameContext';
 import { LanguageProvider } from './context/LanguageContext';
 import LangToggle from './components/LangToggle';
+import TipOffOverlay from './components/TipOffOverlay';
 import HomeScreen from './screens/HomeScreen';
 import LeagueSelectScreen from './screens/LeagueSelectScreen';
 import SeasonSelectScreen from './screens/SeasonSelectScreen';
 import GameSelectScreen from './screens/GameSelectScreen';
 import GameSettingsScreen from './screens/GameSettingsScreen';
 import AttendanceScreen from './screens/AttendanceScreen';
-import TipOffScreen from './screens/TipOffScreen';
 import GameScreen from './screens/GameScreen';
 
-// Flow: 0=Home → 1=League → 2=Season → 3=Game Select → 4=Settings → 5=Attendance → 6=Tip-Off → 7=Game
+// Flow: 0=Home → 1=League → 2=Season → 3=Game Select → 4=Settings → 5=Attendance
+// → 6=GameScreen with TipOff floating overlay → 7=GameScreen (live tracking)
 
 function AppContent() {
   const game = useGame();
@@ -29,7 +30,12 @@ function AppContent() {
     case 5:
       return <AttendanceScreen />;
     case 6:
-      return <TipOffScreen />;
+      return (
+        <>
+          <GameScreen />
+          <TipOffOverlay />
+        </>
+      );
     case 7:
       return <GameScreen />;
     default:

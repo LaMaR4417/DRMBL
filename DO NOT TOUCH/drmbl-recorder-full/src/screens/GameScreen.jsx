@@ -248,6 +248,9 @@ export default function GameScreen() {
       const tag = e.target && e.target.tagName;
       const inField = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable);
 
+      // Pre-game / tip-off overlay is open — don't fire any tracker hotkeys
+      if (game.setupStep !== 7) return;
+
       // Ctrl+Z / Cmd+Z: undo last trackable action
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
         if (inField) return;
@@ -368,7 +371,7 @@ export default function GameScreen() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, chord, pendingAction, bs, correctionMode, timeoutCountdown]);
+  }, [dispatch, chord, pendingAction, bs, correctionMode, timeoutCountdown, game.setupStep]);
 
   // --- Timeout countdown timer ---
   const toCountdownRef = useRef(null);

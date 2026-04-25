@@ -157,7 +157,9 @@ export function buildBoxScore(gameState) {
         status: 'in-progress',
       },
       state: {
-        active: true,
+        // Start paused; the scorekeeper presses space (or the Run button)
+        // after tip-off to begin Q1.
+        active: false,
         currentQuarter: 1,
         clock: {
           timeLeft: minutesPerPeriod * 60,

@@ -368,7 +368,13 @@ export default function AttendanceScreen() {
         <button
           className="btn btn-primary btn-large"
           disabled={!canProceed}
-          onClick={() => dispatch({ type: 'SET_STEP', step: 6 })}
+          onClick={() => {
+            // Initialize the box score with placeholder tip info so the GameScreen
+            // can render behind the floating tip-off overlay. Re-INIT on tip-off
+            // confirmation will fold in the picked winner/possession.
+            dispatch({ type: 'INIT_BOX_SCORE' });
+            dispatch({ type: 'SET_STEP', step: 6 });
+          }}
         >
           {t('attendance', 'nextTipOff')}
         </button>

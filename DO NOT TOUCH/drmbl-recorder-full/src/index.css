@@ -1633,6 +1633,124 @@ body {
   transition: opacity 0.12s ease-out;
 }
 
+/* ===== Tip-Off floating overlay (pre-game) ===== */
+.tipoff-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 24px;
+}
+.tipoff-overlay {
+  background: #14100a;
+  border: 1px solid var(--court-wood, #c8a45c);
+  border-radius: 10px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.tipoff-overlay-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 38px;
+  letter-spacing: 4px;
+  color: var(--court-wood, #c8a45c);
+  text-align: center;
+  margin: 0;
+}
+.tipoff-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tipoff-overlay-prompt {
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+.tipoff-overlay-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.tipoff-overlay-choice {
+  background: rgba(200, 164, 92, 0.12);
+  border: 1px solid rgba(200, 164, 92, 0.4);
+  border-radius: 6px;
+  padding: 18px 12px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.tipoff-overlay-choice:hover {
+  background: rgba(200, 164, 92, 0.22);
+  border-color: var(--court-wood, #c8a45c);
+}
+.tipoff-overlay-choice.selected {
+  background: var(--court-wood, #c8a45c);
+  border-color: var(--court-wood, #c8a45c);
+  color: #14100a;
+  font-weight: 700;
+}
+.tipoff-overlay-team {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 1.5px;
+}
+.tipoff-overlay-side {
+  font-size: 11px;
+  letter-spacing: 2px;
+  opacity: 0.7;
+}
+
+.tipoff-warmup-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(200, 164, 92, 0.2);
+  border-radius: 6px;
+}
+.tipoff-warmup-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.tipoff-warmup-time {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 2px;
+  color: var(--court-wood, #c8a45c);
+  margin-left: auto;
+}
+.tipoff-warmup-time.running {
+  color: #2fae5f;
+}
+.tipoff-warmup-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tipoff-start-game {
+  width: 100%;
+}
+
 /* Scoreboard */
 .game-scoreboard {
   display: grid;
