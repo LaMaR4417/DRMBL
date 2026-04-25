@@ -453,9 +453,15 @@ export default function GameScreen() {
     }
     breakRef.current = breakSec;
     setBreakCountdown(breakSec);
+    let lastTick = performance.now();
     const id = setInterval(() => {
+      const now = performance.now();
+      const delta = (now - lastTick) / 1000;
+      lastTick = now;
       const cur = breakRef.current;
-      if (cur == null || cur <= 1) {
+      if (cur == null) { clearInterval(id); return; }
+      const next = cur - delta;
+      if (next <= 0) {
         clearInterval(id);
         breakRef.current = null;
         setBreakCountdown(null);
@@ -467,9 +473,9 @@ export default function GameScreen() {
         }
         return;
       }
-      breakRef.current = cur - 1;
-      setBreakCountdown(cur - 1);
-    }, 1000);
+      breakRef.current = next;
+      setBreakCountdown(next);
+    }, 100);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodOver, quarter]);
