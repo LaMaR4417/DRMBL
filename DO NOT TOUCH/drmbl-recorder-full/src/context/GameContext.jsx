@@ -437,6 +437,7 @@ function gameReducer(state, action) {
     case 'ADVANCE_QUARTER': {
       const bs = structuredClone(state.boxScore);
       const nextQ = bs.gameInfo.state.currentQuarter + 1;
+      const wasOT = bs.gameInfo.state.currentQuarter > 4;
       bs.gameInfo.state.currentQuarter = nextQ;
       const isOT = nextQ > 4;
       bs.gameInfo.state.clock.timeLeft = isOT
@@ -449,6 +450,24 @@ function gameReducer(state, action) {
       for (const side of ['home', 'away']) {
         for (const p of bs.teamInfo[side].roster.inGame) {
           p._clockTimeAtEntry = null;
+        }
+      }
+
+      // Reset timeouts entering OT (no rollover by default — settings.timeouts.rollover)
+      if (isOT && state.settings?.timeouts) {
+        const otCfg = state.settings.timeouts.overtime || { full: 0, short: 0 };
+        const rollOTtoOT = !!state.settings.timeouts.rollover?.OTtoOT;
+        const rollRegToOT = !!state.settings.timeouts.rollover?.regulationtoOT;
+        const shouldRoll = wasOT ? rollOTtoOT : rollRegToOT;
+        for (const side of ['home', 'away']) {
+          const t = bs.teamInfo[side].stats.timeouts;
+          if (shouldRoll) {
+            t.remaining.full += otCfg.full || 0;
+            t.remaining.short += otCfg.short || 0;
+          } else {
+            t.remaining.full = otCfg.full || 0;
+            t.remaining.short = otCfg.short || 0;
+          }
         }
       }
 

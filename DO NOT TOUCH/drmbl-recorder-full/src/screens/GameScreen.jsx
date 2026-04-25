@@ -585,6 +585,12 @@ export default function GameScreen() {
     setSuggestSteal(null);
     setSuggestStopClock(false);
     const isCorrection = correctionMode;
+    // Block calling a timeout when none remain (correction mode is allowed for fixups)
+    const remaining = bs.teamInfo[side]?.stats?.timeouts?.remaining?.[timeoutType] ?? 0;
+    if (!isCorrection && remaining <= 0) {
+      cancelPending();
+      return;
+    }
     dispatch({ type: 'RECORD_TIMEOUT', side, timeoutType, correction: isCorrection });
     shouldSync.current = true;
     setPendingAction(null);
@@ -996,11 +1002,14 @@ export default function GameScreen() {
             {subChoices.map((choice, i) => {
               const isTimeout = choice.timeoutType != null;
               const remaining = isTimeout ? bs.teamInfo[side].stats.timeouts.remaining[choice.timeoutType] : null;
+              const exhausted = isTimeout && !correctionMode && remaining <= 0;
               return (
                 <button
                   key={choice.action}
                   className="btn btn-sub-choice"
+                  disabled={exhausted}
                   onClick={() => {
+                    if (exhausted) return;
                     if (isTimeout) {
                       handleTimeoutTap(side, choice.timeoutType);
                     } else {
