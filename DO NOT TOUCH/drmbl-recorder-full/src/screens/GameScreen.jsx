@@ -225,15 +225,15 @@ export default function GameScreen() {
   //   Escape pops one level
   useEffect(() => {
     const PLAYER_KEYS = ['q','w','e','r','t','a','s','d','f','g','z','x','c','v','b'];
+    // Mirrors the on-screen button grid: top row of keys = top row of buttons.
     const SCORING_MAP = {
-      q: { points: 1, made: true },
-      w: { points: 1, made: false },
-      e: { points: 2, made: true },
-      r: { points: 2, made: false },
-      t: { points: 3, made: true },
-      y: { points: 3, made: false },
+      q: { points: 1, made: true },  w: { points: 2, made: true },  e: { points: 3, made: true },
+      a: { points: 1, made: false }, s: { points: 2, made: false }, d: { points: 3, made: false },
     };
-    const STATS_MAP = { q: 'rebound', w: 'assist', e: 'steal', r: 'block', t: 'turnover', y: 'foul' };
+    const STATS_MAP = {
+      q: 'rebound', w: 'assist',   e: 'steal',
+      a: 'block',   s: 'turnover', d: 'foul',
+    };
     const SUB_KEYS = ['q', 'w', 'e', 'r'];
 
     function onKeyDown(e) {
@@ -1274,15 +1274,13 @@ export default function GameScreen() {
       ];
     } else if (chord.category === 'scoring') {
       keys = [
-        { key: 'Q', label: '1PT Made' }, { key: 'W', label: '1PT Miss' },
-        { key: 'E', label: '2PT Made' }, { key: 'R', label: '2PT Miss' },
-        { key: 'T', label: '3PT Made' }, { key: 'Y', label: '3PT Miss' },
+        { key: 'Q', label: '1PT Made' }, { key: 'W', label: '2PT Made' }, { key: 'E', label: '3PT Made' },
+        { key: 'A', label: '1PT Miss' }, { key: 'S', label: '2PT Miss' }, { key: 'D', label: '3PT Miss' },
       ];
     } else if (chord.category === 'stats') {
       keys = [
-        { key: 'Q', label: 'Rebound' }, { key: 'W', label: 'Assist' },
-        { key: 'E', label: 'Steal' },   { key: 'R', label: 'Block' },
-        { key: 'T', label: 'Turnover' },{ key: 'Y', label: 'Foul' },
+        { key: 'Q', label: 'Rebound' }, { key: 'W', label: 'Assist' },   { key: 'E', label: 'Steal' },
+        { key: 'A', label: 'Block' },   { key: 'S', label: 'Turnover' }, { key: 'D', label: 'Foul' },
       ];
     } else if (chord.category === 'game') {
       keys = [
