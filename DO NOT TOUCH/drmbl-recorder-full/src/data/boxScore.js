@@ -139,13 +139,25 @@ export function buildBoxScore(gameState) {
   const timestamp = now.toISOString();
   const homeName = gameState.homeTeam.name;
   const awayName = gameState.awayTeam.name;
+  // Custom = no scheduled game was picked. Tag the IDs so these recordings are
+  // obvious in the Box Scores / Live Games containers and easy to bulk-clean.
+  const isCustom = !gameState.selectedGame;
+  const leaguePrefix = 'DRMBL';
 
   const minutesPerPeriod = gameState.settings.periods?.minutesPerPeriod ?? 10;
   const minutesPerOT = gameState.settings.periods?.minutesPerOvertime ?? 5;
 
+  const id = isCustom
+    ? `${leaguePrefix}.Custom.${homeName}.vs.${awayName} - ${timestamp}`
+    : `${homeName} vs. ${awayName} - ${timestamp}`;
+  const gameId = isCustom
+    ? `${leaguePrefix.toLowerCase()}-custom-${slugify(homeName)}-vs-${slugify(awayName)}`
+    : `${slugify(homeName)}-vs-${slugify(awayName)}`;
+
   return {
-    id: `${homeName} vs. ${awayName} - ${timestamp}`,
-    gameId: `${slugify(homeName)}-vs-${slugify(awayName)}`,
+    id,
+    gameId,
+    customGame: isCustom,
     season: gameState.selectedSeason?.id || null,
     league: gameState.selectedSeason?.league || null,
     gameInfo: {

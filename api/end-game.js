@@ -273,7 +273,11 @@ module.exports = async function (req, res) {
     // customGame=true means the user started a one-off matchup that wasn't picked
     // from the schedule. Skip the season schedule + standings update so we don't
     // accidentally close out a real upcoming game by team-slot collision.
-    var customGame = !!body.customGame;
+    // Detect from request body OR from the box score itself (id prefix / explicit
+    // flag set by buildBoxScore).
+    var customGame = !!body.customGame
+        || !!(body.boxScore && body.boxScore.customGame)
+        || !!(body.boxScore && typeof body.boxScore.id === 'string' && body.boxScore.id.indexOf('.Custom.') !== -1);
     var seasonId = body.seasonId;
     if (!seasonId) {
         return res.status(400).json({ error: "Missing required field: seasonId" });
