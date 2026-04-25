@@ -613,9 +613,9 @@ export default function GameScreen() {
   }
 
   // --- Render sections ---
-  function renderShotSection(side) {
+  function renderShotSection(side, dimmed) {
     return (
-      <div className="game-section">
+      <div className={`game-section ${dimmed ? 'chord-dimmed' : ''}`}>
         <div className="section-label">{t('game', 'scoring')}</div>
         <div className="action-row">
           {[1, 2, 3].map((pts) => (
@@ -643,9 +643,9 @@ export default function GameScreen() {
     );
   }
 
-  function renderStatSection(side) {
+  function renderStatSection(side, dimmed) {
     return (
-      <div className="game-section">
+      <div className={`game-section ${dimmed ? 'chord-dimmed' : ''}`}>
         <div className="section-label">{t('game', 'stats')}</div>
         <div className="action-row action-row-stats">
           <button
@@ -695,10 +695,10 @@ export default function GameScreen() {
     );
   }
 
-  function renderMgmtSection(side) {
+  function renderMgmtSection(side, dimmed) {
     const toActive = timeoutCountdown?.side === side;
     return (
-      <div className="game-section">
+      <div className={`game-section ${dimmed ? 'chord-dimmed' : ''}`}>
         <div className="section-label">{t('game', 'gameLabel')}</div>
         <div className="action-row action-row-mgmt">
           <button
@@ -996,12 +996,17 @@ export default function GameScreen() {
     // Chord side selection dims the opposite half until the chord finishes
     const chordTargetsThis = chord.side === side;
     const chordTargetsOther = chord.side != null && chord.side !== side;
+    // After a category is picked, dim the other categories within this half
+    const chordCat = chordTargetsThis ? chord.category : null;
+    const dimScoring = chordCat != null && chordCat !== 'scoring';
+    const dimStats = chordCat != null && chordCat !== 'stats';
+    const dimGame = chordCat != null && chordCat !== 'game';
 
     return (
       <div className={`game-half ${side} ${(isOtherSelecting || chordTargetsOther) ? 'dimmed' : ''} ${(isSelecting || chordTargetsThis) ? 'selecting' : ''}`}>
-        {!isSelecting && renderShotSection(side)}
-        {!isSelecting && renderStatSection(side)}
-        {!isSelecting && renderMgmtSection(side)}
+        {!isSelecting && renderShotSection(side, dimScoring)}
+        {!isSelecting && renderStatSection(side, dimStats)}
+        {!isSelecting && renderMgmtSection(side, dimGame)}
         {renderPlayerSection(side)}
       </div>
     );
