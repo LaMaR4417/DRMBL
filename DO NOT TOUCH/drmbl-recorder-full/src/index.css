@@ -1599,6 +1599,68 @@ body {
 .livesync-saved { color: rgba(120, 220, 140, 0.95); }
 .livesync-error { color: rgba(255, 90, 90, 0.95); }
 
+/* Chord HUD — appears when keyboard chord is in progress */
+.chord-hud {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(20, 16, 10, 0.96);
+  border: 1px solid var(--court-wood, #c8a45c);
+  border-radius: 6px;
+  padding: 10px 16px;
+  min-width: 360px;
+  max-width: 90vw;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  font-size: 13px;
+  pointer-events: none;
+}
+.chord-breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--court-wood, #c8a45c);
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(200, 164, 92, 0.25);
+  padding-bottom: 6px;
+}
+.chord-esc {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+}
+.chord-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.chord-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.chord-key kbd {
+  display: inline-block;
+  background: rgba(200, 164, 92, 0.18);
+  border: 1px solid rgba(200, 164, 92, 0.55);
+  color: var(--court-wood, #c8a45c);
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+
 /* Scoreboard */
 .game-scoreboard {
   display: grid;

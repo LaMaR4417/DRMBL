@@ -27,6 +27,7 @@ export default function GameScreen() {
   const liveSync = useLiveSync();
   const { t } = useTranslation();
   const [pendingAction, setPendingAction] = useState(null);
+  const [chord, setChord] = useState({ side: null, category: null });
   const [correctionMode, setCorrectionMode] = useState(false);
   const [clockEdit, setClockEdit] = useState(null); // null | { minutes, seconds }
   const [suggestRebound, setSuggestRebound] = useState(false);
@@ -214,8 +215,27 @@ export default function GameScreen() {
     return () => clearInterval(id);
   }, [isActive, dispatch]);
 
-  // --- Spacebar + Ctrl+Z hotkeys ---
+  // --- Hotkeys: spacebar (clock), Ctrl+Z (undo), and chord-tree input ---
+  // Chord tree:
+  //   1/2 → pick side (home/away)
+  //   Q/W/E → pick category (scoring/stats/game)
+  //   Q,W,E,R,T,Y → action within category
+  //   sub-menu Q/W/E/R for rebound/foul/turnover/timeout types
+  //   player select uses 3 rows: QWERT (slots 0-4), ASDFG (5-9), ZXCVB (10-14)
+  //   Escape pops one level
   useEffect(() => {
+    const PLAYER_KEYS = ['q','w','e','r','t','a','s','d','f','g','z','x','c','v','b'];
+    const SCORING_MAP = {
+      q: { points: 1, made: true },
+      w: { points: 1, made: false },
+      e: { points: 2, made: true },
+      r: { points: 2, made: false },
+      t: { points: 3, made: true },
+      y: { points: 3, made: false },
+    };
+    const STATS_MAP = { q: 'rebound', w: 'assist', e: 'steal', r: 'block', t: 'turnover', y: 'foul' };
+    const SUB_KEYS = ['q', 'w', 'e', 'r'];
+
     function onKeyDown(e) {
       const tag = e.target && e.target.tagName;
       const inField = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable);
@@ -236,11 +256,102 @@ export default function GameScreen() {
         e.preventDefault();
         dispatch({ type: 'TOGGLE_CLOCK' });
         shouldSync.current = true;
+        return;
+      }
+
+      if (inField) return;
+
+      // Escape: pop one chord level
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (pendingAction) {
+          cancelPending();
+        } else if (chord.category) {
+          setChord((c) => ({ ...c, category: null }));
+        } else if (chord.side) {
+          setChord({ side: null, category: null });
+        }
+        return;
+      }
+
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+
+      // Player / sub-menu selection (when an action is pending)
+      if (pendingAction) {
+        const subChoices = SUB_MENU_CHOICES[pendingAction.action];
+        if (subChoices) {
+          // Sub-menu open (rebound/foul/turnover/timeout type)
+          const idx = SUB_KEYS.indexOf(key);
+          if (idx === -1 || idx >= subChoices.length) return;
+          e.preventDefault();
+          const choice = subChoices[idx];
+          if (pendingAction.action === 'timeout') {
+            handleTimeoutTap(pendingAction.side, choice.timeoutType);
+          } else {
+            handleSubMenuTap(pendingAction.side, choice.action);
+          }
+          return;
+        }
+        // Player select
+        const pIdx = PLAYER_KEYS.indexOf(key);
+        if (pIdx === -1) return;
+        const team = bs.teamInfo[pendingAction.side];
+        const slot = team && team.roster.inGame[pIdx];
+        if (!slot || !slot.playerID) return;
+        e.preventDefault();
+        if (pendingAction.action === 'substitution') {
+          if (pendingAction.outIndex == null) handleSubOut(pendingAction.side, pIdx);
+          else handleSubIn(pendingAction.side, pIdx);
+        } else {
+          handlePlayerSelect(pendingAction.side, pIdx);
+        }
+        return;
+      }
+
+      // Side selection (1/2)
+      if (!chord.side) {
+        if (key === '1') { e.preventDefault(); setChord({ side: 'home', category: null }); }
+        else if (key === '2') { e.preventDefault(); setChord({ side: 'away', category: null }); }
+        return;
+      }
+
+      // Category selection (Q/W/E)
+      if (!chord.category) {
+        if (key === 'q') { e.preventDefault(); setChord((c) => ({ ...c, category: 'scoring' })); }
+        else if (key === 'w') { e.preventDefault(); setChord((c) => ({ ...c, category: 'stats' })); }
+        else if (key === 'e') { e.preventDefault(); setChord((c) => ({ ...c, category: 'game' })); }
+        return;
+      }
+
+      // Action selection within category
+      if (chord.category === 'scoring') {
+        const x = SCORING_MAP[key];
+        if (!x) return;
+        e.preventDefault();
+        handleShotTap(chord.side, x.points, x.made);
+        setChord({ side: null, category: null });
+      } else if (chord.category === 'stats') {
+        const action = STATS_MAP[key];
+        if (!action) return;
+        e.preventDefault();
+        handleStatTap(chord.side, action);
+        setChord({ side: null, category: null });
+      } else if (chord.category === 'game') {
+        if (key === 'q') {
+          e.preventDefault();
+          handleStatTap(chord.side, 'timeout');
+          setChord({ side: null, category: null });
+        } else if (key === 'w') {
+          e.preventDefault();
+          handleStatTap(chord.side, 'substitution');
+          setChord({ side: null, category: null });
+        }
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [dispatch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, chord, pendingAction, bs, correctionMode]);
 
   // --- Timeout countdown timer ---
   const toCountdownRef = useRef(null);
@@ -1124,6 +1235,81 @@ export default function GameScreen() {
     }
   })();
 
+  // --- Chord HUD: show current chord state and valid keys ---
+  function renderChordHud() {
+    const sideLabel = chord.side === 'home' ? bs.teamInfo.home.name : chord.side === 'away' ? bs.teamInfo.away.name : null;
+    const breadcrumbs = [];
+    if (sideLabel) breadcrumbs.push(sideLabel);
+    if (chord.category) breadcrumbs.push(chord.category.toUpperCase());
+    if (pendingAction) {
+      if (sideLabel == null) {
+        const pSide = pendingAction.side === 'home' ? bs.teamInfo.home.name : bs.teamInfo.away.name;
+        breadcrumbs.push(pSide);
+      }
+      breadcrumbs.push((pendingAction.action || '').replace('-', ' ').toUpperCase());
+    }
+
+    let keys = [];
+    if (pendingAction) {
+      const subChoices = SUB_MENU_CHOICES[pendingAction.action];
+      if (subChoices) {
+        keys = subChoices.map((c, i) => ({ key: ['Q','W','E','R'][i], label: c.label }));
+      } else {
+        // Player select — show on-court roster with player keys
+        const team = bs.teamInfo[pendingAction.side];
+        const slots = team.roster.inGame.slice(0, 15);
+        const PK = ['Q','W','E','R','T','A','S','D','F','G','Z','X','C','V','B'];
+        keys = slots.map((p, i) => p && p.playerID ? { key: PK[i], label: `#${p.number ?? '—'} ${p.name}` } : null).filter(Boolean);
+      }
+    } else if (!chord.side) {
+      keys = [
+        { key: '1', label: bs.teamInfo.home.name },
+        { key: '2', label: bs.teamInfo.away.name },
+      ];
+    } else if (!chord.category) {
+      keys = [
+        { key: 'Q', label: 'Scoring' },
+        { key: 'W', label: 'Stats' },
+        { key: 'E', label: 'Game' },
+      ];
+    } else if (chord.category === 'scoring') {
+      keys = [
+        { key: 'Q', label: '1PT Made' }, { key: 'W', label: '1PT Miss' },
+        { key: 'E', label: '2PT Made' }, { key: 'R', label: '2PT Miss' },
+        { key: 'T', label: '3PT Made' }, { key: 'Y', label: '3PT Miss' },
+      ];
+    } else if (chord.category === 'stats') {
+      keys = [
+        { key: 'Q', label: 'Rebound' }, { key: 'W', label: 'Assist' },
+        { key: 'E', label: 'Steal' },   { key: 'R', label: 'Block' },
+        { key: 'T', label: 'Turnover' },{ key: 'Y', label: 'Foul' },
+      ];
+    } else if (chord.category === 'game') {
+      keys = [
+        { key: 'Q', label: 'Timeout' },
+        { key: 'W', label: 'Substitution' },
+      ];
+    }
+
+    if (breadcrumbs.length === 0 && keys.length === 0) return null;
+
+    return (
+      <div className="chord-hud">
+        <div className="chord-breadcrumb">
+          {breadcrumbs.length > 0 ? breadcrumbs.join(' › ') : 'Press 1 or 2'}
+          <span className="chord-esc">ESC to back out</span>
+        </div>
+        <div className="chord-keys">
+          {keys.map((k) => (
+            <span key={k.key} className="chord-key">
+              <kbd>{k.key}</kbd> {k.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`screen game-screen ${correctionMode ? 'correction-mode' : ''}`}>
       {/* Live-sync bar: open crowd scoreboard + show save status */}
@@ -1133,6 +1319,9 @@ export default function GameScreen() {
         </button>
         <span className={`livesync-status livesync-${liveSync.saveStatus}`}>{liveStatusLabel}</span>
       </div>
+
+      {/* Chord HUD: shown whenever a chord is in progress */}
+      {(chord.side || pendingAction) && renderChordHud()}
 
       {/* Scoreboard */}
       <div className="game-scoreboard">
