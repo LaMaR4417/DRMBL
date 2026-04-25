@@ -360,22 +360,16 @@
         pollOnce(gameId);
         if (pollHandle) clearInterval(pollHandle);
         pollHandle = setInterval(function () { pollOnce(gameId); }, POLL_INTERVAL);
+        // Also subscribe to BroadcastChannel so break/timeout/warmup overlays
+        // appear in polled mode when the tracker is on the same browser.
+        attachBroadcastListener({ requestState: false });
     }
 
     // ── Broadcast scoreboard (zero-latency in-browser sync) ──
     var bc = null;
-    function startBroadcastScoreboard() {
-        show('scoreboard-view');
-        startLocalClock();
-        var conn = $('sb-conn');
-        conn.textContent = 'WAITING FOR TRACKER';
-        conn.className = 'sb-conn';
-
-        if (typeof BroadcastChannel === 'undefined') {
-            setConnError('BROADCASTCHANNEL UNSUPPORTED');
-            return;
-        }
-
+    function attachBroadcastListener(options) {
+        if (typeof BroadcastChannel === 'undefined') return false;
+        if (bc) return true; // already attached
         bc = new BroadcastChannel('drmbl-live-game');
         bc.onmessage = function (ev) {
             var msg = ev && ev.data;
@@ -436,7 +430,23 @@
             }
         };
         // Ask the tracker for current state so we render immediately on open
-        try { bc.postMessage({ type: 'request-state' }); } catch (e) { /* ignore */ }
+        // (only meaningful in dedicated broadcast mode — polled mode already
+        // has fresh state via the API).
+        if (options && options.requestState) {
+            try { bc.postMessage({ type: 'request-state' }); } catch (e) { /* ignore */ }
+        }
+        return true;
+    }
+
+    function startBroadcastScoreboard() {
+        show('scoreboard-view');
+        startLocalClock();
+        var conn = $('sb-conn');
+        conn.textContent = 'WAITING FOR TRACKER';
+        conn.className = 'sb-conn';
+        if (!attachBroadcastListener({ requestState: true })) {
+            setConnError('BROADCASTCHANNEL UNSUPPORTED');
+        }
     }
 
     function stopBroadcast() {
