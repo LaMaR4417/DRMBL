@@ -56,6 +56,11 @@ const initialState = {
   // Box score: initialized after tip-off, before game tracking
   boxScore: null,
 
+  // Pre-game warm-up timer (seconds). null = not active. Lives outside boxScore
+  // because it's transient pre-game state, but in reducer state so the main
+  // GameScreen clock can override its display when active.
+  warmupCountdown: null,
+
   // Undo history: stack of previous boxScore snapshots (most recent last). Capped at HISTORY_LIMIT.
   pastBoxScores: [],
 };
@@ -297,6 +302,15 @@ function gameReducer(state, action) {
 
     case 'INIT_BOX_SCORE':
       return { ...state, boxScore: buildBoxScore(state) };
+
+    case 'SET_WARMUP_COUNTDOWN':
+      return { ...state, warmupCountdown: action.value };
+
+    case 'TICK_WARMUP_COUNTDOWN': {
+      // Decrement by delta seconds; clamp at 0; preserve null (inactive) state.
+      if (state.warmupCountdown == null) return state;
+      return { ...state, warmupCountdown: Math.max(0, state.warmupCountdown - (action.delta || 0)) };
+    }
 
     case 'RECORD_MADE_SHOT': {
       const bs = structuredClone(state.boxScore);

@@ -20,11 +20,28 @@ export default function TipOffOverlay() {
   const isManual = game.settings?.tipOff?.possessionRule === 'manual';
   const [tipWinner, setTipWinner] = useState(null);
   const [possession, setPossession] = useState(null);
-  const [warmupLeft, setWarmupLeft] = useState(WARMUP_DEFAULT_SECONDS);
+  // warmupRunning is local — only the countdown number is shared via reducer state
+  // (game.warmupCountdown) so GameScreen can override its main-clock display.
   const [warmupRunning, setWarmupRunning] = useState(false);
-  const warmupRef = useRef(WARMUP_DEFAULT_SECONDS);
+  // Initialize the reducer countdown to the default on mount if it's not set.
+  // Reset on unmount (i.e., user clicks Start Game / leaves overlay).
+  const initRef = useRef(false);
+  useEffect(() => {
+    if (initRef.current) return undefined;
+    initRef.current = true;
+    if (game.warmupCountdown == null) {
+      dispatch({ type: 'SET_WARMUP_COUNTDOWN', value: WARMUP_DEFAULT_SECONDS });
+    }
+    return () => {
+      dispatch({ type: 'SET_WARMUP_COUNTDOWN', value: null });
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Warm-up countdown (sub-second precision via performance.now delta)
+  const warmupLeft = game.warmupCountdown != null ? game.warmupCountdown : WARMUP_DEFAULT_SECONDS;
+
+  // Warm-up countdown (sub-second precision via performance.now delta).
+  // Reducer reads its own latest value, so we don't have stale-closure issues.
   useEffect(() => {
     if (!warmupRunning) return undefined;
     let lastTick = performance.now();
@@ -32,16 +49,16 @@ export default function TipOffOverlay() {
       const now = performance.now();
       const delta = (now - lastTick) / 1000;
       lastTick = now;
-      const next = Math.max(0, warmupRef.current - delta);
-      warmupRef.current = next;
-      setWarmupLeft(next);
-      if (next <= 0) {
-        clearInterval(id);
-        setWarmupRunning(false);
-      }
+      dispatch({ type: 'TICK_WARMUP_COUNTDOWN', delta });
     }, 100);
     return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [warmupRunning]);
+
+  // Auto-stop the running flag when the countdown hits 0
+  useEffect(() => {
+    if (warmupRunning && warmupLeft <= 0) setWarmupRunning(false);
+  }, [warmupRunning, warmupLeft]);
 
   // Broadcast warm-up countdown to crowd UI
   useEffect(() => {
@@ -54,27 +71,21 @@ export default function TipOffOverlay() {
   }, [warmupRunning, warmupLeft, liveSync]);
 
   function startWarmup() {
-    if (warmupRef.current <= 0) {
-      warmupRef.current = WARMUP_DEFAULT_SECONDS;
-      setWarmupLeft(WARMUP_DEFAULT_SECONDS);
+    if (warmupLeft <= 0) {
+      dispatch({ type: 'SET_WARMUP_COUNTDOWN', value: WARMUP_DEFAULT_SECONDS });
     }
     setWarmupRunning(true);
   }
   function pauseWarmup() {
     setWarmupRunning(false);
   }
-  function resumeWarmup() {
-    if (warmupRef.current > 0) setWarmupRunning(true);
-  }
   function resetWarmup() {
-    warmupRef.current = WARMUP_DEFAULT_SECONDS;
-    setWarmupLeft(WARMUP_DEFAULT_SECONDS);
+    dispatch({ type: 'SET_WARMUP_COUNTDOWN', value: WARMUP_DEFAULT_SECONDS });
     setWarmupRunning(false);
   }
   function adjustWarmup(deltaSeconds) {
-    const next = Math.max(0, warmupRef.current + deltaSeconds);
-    warmupRef.current = next;
-    setWarmupLeft(next);
+    const next = Math.max(0, warmupLeft + deltaSeconds);
+    dispatch({ type: 'SET_WARMUP_COUNTDOWN', value: next });
   }
 
   function pickWinner(side) {

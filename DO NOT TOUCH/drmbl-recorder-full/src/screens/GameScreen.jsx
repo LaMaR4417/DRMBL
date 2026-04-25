@@ -1427,7 +1427,9 @@ export default function GameScreen() {
                 }
               }}
             >
-              {timeoutCountdown && timeoutCountdown.timeLeft > 0
+              {game.warmupCountdown != null
+                ? formatClock(game.warmupCountdown)
+                : timeoutCountdown && timeoutCountdown.timeLeft > 0
                 ? formatClock(timeoutCountdown.timeLeft)
                 : (periodOver && breakCountdown != null && breakCountdown > 0
                     ? formatClock(breakCountdown)
