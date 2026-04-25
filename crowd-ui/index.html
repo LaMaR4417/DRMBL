@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0602">
+    <title>DRMBL Live Scoreboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Game selector view -->
+    <section id="selector-view" class="view hidden">
+        <div class="selector-wrap">
+            <h1 class="selector-title">Pick a Game</h1>
+            <p class="selector-sub">Choose a live game to display on the scoreboard.</p>
+            <div id="selector-status" class="selector-status">Loading live games&hellip;</div>
+            <div id="game-list" class="game-list"></div>
+        </div>
+    </section>
+
+    <!-- Scoreboard view -->
+    <section id="scoreboard-view" class="view hidden">
+        <a href="?" class="sb-back" title="Back to game selector">&larr; Games</a>
+
+        <header class="sb-top">
+            <div class="sb-period" id="sb-period">Q1</div>
+            <div class="sb-clock" id="sb-clock">10:00</div>
+            <div class="sb-status" id="sb-status">CLOCK STOPPED</div>
+        </header>
+
+        <main class="sb-main">
+            <div class="sb-team sb-home">
+                <div class="sb-team-name" id="sb-home-name">HOME</div>
+                <div class="sb-score" id="sb-home-score">0</div>
+                <div class="sb-meta">
+                    <div class="sb-poss" id="sb-home-poss">&#9664;</div>
+                    <div class="sb-fouls">FOULS <span id="sb-home-fouls">0</span></div>
+                    <div class="sb-bonus" id="sb-home-bonus"></div>
+                    <div class="sb-timeouts" id="sb-home-timeouts">TO 0F / 0S</div>
+                </div>
+            </div>
+
+            <div class="sb-divider"></div>
+
+            <div class="sb-team sb-away">
+                <div class="sb-team-name" id="sb-away-name">AWAY</div>
+                <div class="sb-score" id="sb-away-score">0</div>
+                <div class="sb-meta">
+                    <div class="sb-poss" id="sb-away-poss">&#9654;</div>
+                    <div class="sb-fouls">FOULS <span id="sb-away-fouls">0</span></div>
+                    <div class="sb-bonus" id="sb-away-bonus"></div>
+                    <div class="sb-timeouts" id="sb-away-timeouts">TO 0F / 0S</div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="sb-foot">
+            <div class="sb-league">DRMBL</div>
+            <div class="sb-conn" id="sb-conn">Connecting&hellip;</div>
+        </footer>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
