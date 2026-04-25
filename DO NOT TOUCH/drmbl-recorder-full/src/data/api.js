@@ -48,7 +48,20 @@ export async function fetchLiveGames() {
   return data.games || [];
 }
 
+// Live-sync status pub/sub so the UI can show "saving / saved / error" indicators
+const liveSyncListeners = new Set();
+export function subscribeLiveSync(fn) {
+  liveSyncListeners.add(fn);
+  return () => liveSyncListeners.delete(fn);
+}
+function emitLiveSync(status) {
+  liveSyncListeners.forEach((fn) => {
+    try { fn(status); } catch (e) { /* ignore */ }
+  });
+}
+
 export function syncLiveGame(boxScore, meta) {
+  emitLiveSync('saving');
   fetch('/api/live-game', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -64,7 +77,9 @@ export function syncLiveGame(boxScore, meta) {
         awayTeam: meta.awayTeam,
       } : null,
     }),
-  }).catch(() => {});
+  })
+    .then((res) => emitLiveSync(res && res.ok ? 'saved' : 'error'))
+    .catch(() => emitLiveSync('error'));
 }
 
 export async function saveEndGame(boxScore, homeTeamID, awayTeamID, homeSlot, awaySlot, seasonId) {

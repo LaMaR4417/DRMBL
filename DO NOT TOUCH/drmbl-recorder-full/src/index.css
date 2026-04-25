@@ -1563,6 +1563,42 @@ body {
   background: var(--bg-page);
 }
 
+/* Live-sync bar: open crowd scoreboard + show save status */
+.livesync-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 6px 14px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-light);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.livesync-btn {
+  background: var(--court-wood, #c8a45c);
+  color: #1a1209;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.livesync-btn:hover { filter: brightness(1.1); }
+.livesync-status {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.livesync-saving { color: rgba(255, 220, 100, 0.95); }
+.livesync-saved { color: rgba(120, 220, 140, 0.95); }
+.livesync-error { color: rgba(255, 90, 90, 0.95); }
+
 /* Scoreboard */
 .game-scoreboard {
   display: grid;

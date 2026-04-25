@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useGame, useGameDispatch } from '../context/GameContext';
+import { useGame, useGameDispatch, useLiveSync } from '../context/GameContext';
 import { syncLiveGame, saveEndGame } from '../data/api';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -17,6 +17,7 @@ function formatQuarter(q) {
 export default function GameScreen() {
   const game = useGame();
   const dispatch = useGameDispatch();
+  const liveSync = useLiveSync();
   const { t } = useTranslation();
   const [pendingAction, setPendingAction] = useState(null);
   const [correctionMode, setCorrectionMode] = useState(false);
@@ -1069,8 +1070,25 @@ export default function GameScreen() {
   const homeInfo = getSideInfo('home');
   const awayInfo = getSideInfo('away');
 
+  const liveStatusLabel = (() => {
+    switch (liveSync.saveStatus) {
+      case 'saving': return 'Saving…';
+      case 'saved': return 'Saved';
+      case 'error': return 'Save failed';
+      default: return 'Idle';
+    }
+  })();
+
   return (
     <div className={`screen game-screen ${correctionMode ? 'correction-mode' : ''}`}>
+      {/* Live-sync bar: open crowd scoreboard + show save status */}
+      <div className="livesync-bar">
+        <button type="button" className="livesync-btn" onClick={liveSync.openScoreboard}>
+          Open Scoreboard
+        </button>
+        <span className={`livesync-status livesync-${liveSync.saveStatus}`}>{liveStatusLabel}</span>
+      </div>
+
       {/* Scoreboard */}
       <div className="game-scoreboard">
         <div className="scoreboard-team home">

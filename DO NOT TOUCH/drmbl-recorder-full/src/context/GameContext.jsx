@@ -1,10 +1,13 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState, useRef, useCallback } from 'react';
 import { buildBoxScore, buildEmptyPlayerStats } from '../data/boxScore';
+import { subscribeLiveSync } from '../data/api';
 
 const STORAGE_KEY = 'drmbl-tracker-active-game';
+const BROADCAST_CHANNEL = 'drmbl-live-game';
 
 const GameContext = createContext(null);
 const GameDispatchContext = createContext(null);
+const LiveSyncContext = createContext(null);
 
 const initialState = {
   // Pre-game setup step tracking
@@ -723,6 +726,10 @@ function setNestedValue(obj, path, value) {
 
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const bcRef = useRef(null);
+  const scoreboardWindowRef = useRef(null);
 
   // Persist game state to localStorage whenever boxScore changes during active game
   useEffect(() => {
@@ -741,10 +748,85 @@ export function GameProvider({ children }) {
     } catch (e) { /* quota exceeded or private browsing — ignore */ }
   }, [state.boxScore, state.setupStep]);
 
+  // Initialize BroadcastChannel once
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return undefined;
+    bcRef.current = new BroadcastChannel(BROADCAST_CHANNEL);
+    return () => {
+      try { bcRef.current?.close(); } catch (e) { /* ignore */ }
+      bcRef.current = null;
+    };
+  }, []);
+
+  // Build a broadcast/save payload from current state (only valid in step 7 with a boxScore)
+  const buildPayload = useCallback(() => {
+    if (!state.boxScore) return null;
+    return {
+      gameId: state.boxScore.gameId,
+      boxScore: state.boxScore,
+      trackerState: { settings: state.settings },
+    };
+  }, [state.boxScore, state.settings]);
+
+  // Broadcast box-score state on every change so the scoreboard popup re-renders instantly
+  useEffect(() => {
+    if (state.setupStep !== 7 || !state.boxScore || !bcRef.current) return;
+    const payload = buildPayload();
+    if (!payload) return;
+    try {
+      bcRef.current.postMessage({
+        type: 'state',
+        payload: { ...payload, updatedAt: new Date().toISOString() },
+      });
+    } catch (e) { /* ignore */ }
+  }, [state.boxScore, state.setupStep, buildPayload]);
+
+  // Respond to a fresh scoreboard popup asking for current state
+  useEffect(() => {
+    if (!bcRef.current) return undefined;
+    const channel = bcRef.current;
+    const handler = (ev) => {
+      if (!ev || !ev.data || ev.data.type !== 'request-state') return;
+      const payload = buildPayload();
+      if (!payload) return;
+      try {
+        channel.postMessage({
+          type: 'state',
+          payload: { ...payload, updatedAt: new Date().toISOString() },
+        });
+      } catch (e) { /* ignore */ }
+    };
+    channel.addEventListener('message', handler);
+    return () => channel.removeEventListener('message', handler);
+  }, [buildPayload]);
+
+  // Track save status emitted by syncLiveGame() (saves are dispatched from GameScreen)
+  useEffect(() => {
+    return subscribeLiveSync((status) => {
+      setSaveStatus(status);
+      if (status === 'saved') setLastSavedAt(Date.now());
+    });
+  }, []);
+
+  // Open the crowd-facing scoreboard in a popup window. Subsequent clicks refocus the existing window.
+  const openScoreboard = useCallback(() => {
+    if (scoreboardWindowRef.current && !scoreboardWindowRef.current.closed) {
+      scoreboardWindowRef.current.focus();
+      return;
+    }
+    scoreboardWindowRef.current = window.open(
+      '/crowd-ui/?source=broadcast',
+      'drmbl-scoreboard',
+      'width=1280,height=720'
+    );
+  }, []);
+
   return (
     <GameContext.Provider value={state}>
       <GameDispatchContext.Provider value={dispatch}>
-        {children}
+        <LiveSyncContext.Provider value={{ saveStatus, lastSavedAt, openScoreboard }}>
+          {children}
+        </LiveSyncContext.Provider>
       </GameDispatchContext.Provider>
     </GameContext.Provider>
   );
@@ -764,4 +846,8 @@ export function useGame() {
 
 export function useGameDispatch() {
   return useContext(GameDispatchContext);
+}
+
+export function useLiveSync() {
+  return useContext(LiveSyncContext);
 }

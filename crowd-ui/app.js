@@ -19,7 +19,14 @@
     // ── Formatting ──────────────────────────
     function formatClock(seconds) {
         if (seconds == null || isNaN(seconds)) return '0:00';
-        var s = Math.max(0, Math.floor(seconds));
+        var t = Math.max(0, seconds);
+        if (t < 60) {
+            // Last minute: show SS.t
+            var whole = Math.floor(t);
+            var tenths = Math.floor((t - whole) * 10);
+            return whole + '.' + tenths;
+        }
+        var s = Math.floor(t);
         var m = Math.floor(s / 60);
         var rem = s % 60;
         return m + ':' + (rem < 10 ? '0' : '') + rem;
@@ -141,7 +148,32 @@
 
     // ── Scoreboard view ──────────────────────────
     var pollHandle = null;
+    var clockHandle = null;
     var lastUpdatedAt = null;
+    var localClock = {
+        timeLeft: 0,
+        active: false,
+        finished: false
+    };
+
+    function startLocalClock() {
+        stopLocalClock();
+        var lastTick = performance.now();
+        clockHandle = setInterval(function () {
+            var now = performance.now();
+            var delta = (now - lastTick) / 1000;
+            lastTick = now;
+            if (localClock.active && localClock.timeLeft > 0) {
+                localClock.timeLeft -= delta;
+                if (localClock.timeLeft < 0) localClock.timeLeft = 0;
+                $('sb-clock').textContent = formatClock(localClock.timeLeft);
+            }
+        }, 100);
+    }
+
+    function stopLocalClock() {
+        if (clockHandle) { clearInterval(clockHandle); clockHandle = null; }
+    }
 
     function renderScoreboard(payload) {
         var bs = payload && payload.boxScore;
@@ -153,10 +185,28 @@
 
         $('sb-period').textContent = formatPeriod(state.currentQuarter);
 
+        // Sync local clock from server. Only overwrite the local time when:
+        //  - this is the very first payload, or
+        //  - the local clock has drifted by more than ~1.5s from the server, or
+        //  - the clock is paused on the server (so the local clock should match exactly)
+        // This prevents the tenths digit from flickering back to .0 every poll.
+        var serverTime = state.clock && state.clock.timeLeft;
+        var isFinal = general.status === 'final';
+        if (serverTime != null) {
+            var drift = Math.abs(localClock.timeLeft - serverTime);
+            var firstPayload = lastUpdatedAt == null;
+            var serverPaused = !state.active;
+            if (firstPayload || serverPaused || drift > 1.5) {
+                localClock.timeLeft = serverTime;
+            }
+            localClock.active = !!state.active && !isFinal;
+            localClock.finished = isFinal;
+        }
+
         var clockEl = $('sb-clock');
-        clockEl.textContent = formatClock(state.clock && state.clock.timeLeft);
-        clockEl.classList.toggle('clock-running', !!state.active);
-        clockEl.classList.toggle('clock-stopped', !state.active);
+        clockEl.textContent = formatClock(localClock.timeLeft);
+        clockEl.classList.toggle('clock-running', localClock.active);
+        clockEl.classList.toggle('clock-stopped', !localClock.active && !isFinal);
 
         var statusEl = $('sb-status');
         if (general.status === 'final') {
@@ -249,26 +299,70 @@
 
     function startScoreboard(gameId) {
         show('scoreboard-view');
+        startLocalClock();
         pollOnce(gameId);
         if (pollHandle) clearInterval(pollHandle);
         pollHandle = setInterval(function () { pollOnce(gameId); }, POLL_INTERVAL);
     }
 
-    // Pause polling when tab is hidden to save bandwidth
+    // ── Broadcast scoreboard (zero-latency in-browser sync) ──
+    var bc = null;
+    function startBroadcastScoreboard() {
+        show('scoreboard-view');
+        startLocalClock();
+        var conn = $('sb-conn');
+        conn.textContent = 'WAITING FOR TRACKER';
+        conn.className = 'sb-conn';
+
+        if (typeof BroadcastChannel === 'undefined') {
+            setConnError('BROADCASTCHANNEL UNSUPPORTED');
+            return;
+        }
+
+        bc = new BroadcastChannel('drmbl-live-game');
+        bc.onmessage = function (ev) {
+            var msg = ev && ev.data;
+            if (!msg) return;
+            if (msg.type === 'state' && msg.payload) {
+                renderScoreboard(msg.payload);
+            } else if (msg.type === 'end') {
+                renderScoreboard(msg.payload || { boxScore: {} });
+                var c = $('sb-conn');
+                c.textContent = 'GAME ENDED';
+                c.className = 'sb-conn';
+            }
+        };
+        // Ask the tracker for current state so we render immediately on open
+        try { bc.postMessage({ type: 'request-state' }); } catch (e) { /* ignore */ }
+    }
+
+    function stopBroadcast() {
+        if (bc) { try { bc.close(); } catch (e) {} bc = null; }
+    }
+
+    // Pause polling + local clock when tab is hidden to save bandwidth
     document.addEventListener('visibilitychange', function () {
         var gameId = getQueryParam('game');
-        if (!gameId) return;
+        var source = getQueryParam('source');
+        if (!gameId && source !== 'broadcast') return;
         if (document.hidden) {
             if (pollHandle) { clearInterval(pollHandle); pollHandle = null; }
-        } else if (!pollHandle) {
-            pollHandle = setInterval(function () { pollOnce(gameId); }, POLL_INTERVAL);
-            pollOnce(gameId);
+            stopLocalClock();
+        } else {
+            if (gameId && !pollHandle) {
+                pollHandle = setInterval(function () { pollOnce(gameId); }, POLL_INTERVAL);
+                pollOnce(gameId);
+            }
+            startLocalClock();
         }
     });
 
     // ── Boot ──────────────────────────
+    var source = getQueryParam('source');
     var gameId = getQueryParam('game');
-    if (gameId) {
+    if (source === 'broadcast') {
+        startBroadcastScoreboard();
+    } else if (gameId) {
         startScoreboard(gameId);
     } else {
         loadSelector();
