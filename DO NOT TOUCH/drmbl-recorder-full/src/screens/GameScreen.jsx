@@ -398,6 +398,22 @@ export default function GameScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [breakCountdown, quarter]);
 
+  // --- Broadcast timeout countdown to crowd UI ---
+  useEffect(() => {
+    if (!liveSync || typeof liveSync.broadcast !== 'function') return;
+    if (timeoutCountdown && timeoutCountdown.timeLeft > 0) {
+      liveSync.broadcast({
+        type: 'timeout',
+        side: timeoutCountdown.side,
+        timeoutType: timeoutCountdown.type,
+        timeLeft: timeoutCountdown.timeLeft,
+      });
+    } else {
+      liveSync.broadcast({ type: 'timeout', timeLeft: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeoutCountdown]);
+
   // --- Break countdown timer (between periods) ---
   const breakRef = useRef(null);
   useEffect(() => {
@@ -1365,9 +1381,11 @@ export default function GameScreen() {
                 }
               }}
             >
-              {periodOver && breakCountdown != null && breakCountdown > 0
-                ? formatClock(breakCountdown)
-                : formatClock(timeLeft)}
+              {timeoutCountdown && timeoutCountdown.timeLeft > 0
+                ? formatClock(timeoutCountdown.timeLeft)
+                : (periodOver && breakCountdown != null && breakCountdown > 0
+                    ? formatClock(breakCountdown)
+                    : formatClock(timeLeft))}
             </span>
           )}
           {periodOver && !isGameOver && !isFinal && (

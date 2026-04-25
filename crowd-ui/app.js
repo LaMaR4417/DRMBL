@@ -164,9 +164,9 @@
         active: false,
         finished: false
     };
-    // Break overlay state — when active, the clock + period labels are overridden
-    // with the inter-period break countdown (set by 'break' broadcast messages)
+    // Overlay state — when either is active, the clock + period labels are overridden
     var breakState = { active: false, seconds: 0, lastQuarter: null };
+    var timeoutState = { active: false, seconds: 0, type: null, side: null };
 
     function startLocalClock() {
         stopLocalClock();
@@ -175,8 +175,8 @@
             var now = performance.now();
             var delta = (now - lastTick) / 1000;
             lastTick = now;
-            // Don't tick the regular clock while a break overlay is showing
-            if (breakState.active) return;
+            // Don't tick the regular clock while a break or timeout overlay is showing
+            if (breakState.active || timeoutState.active) return;
             if (localClock.active && localClock.timeLeft > 0) {
                 localClock.timeLeft -= delta;
                 if (localClock.timeLeft < 0) localClock.timeLeft = 0;
@@ -188,6 +188,11 @@
     function applyBreakOverlay() {
         $('sb-clock').textContent = formatClock(breakState.seconds);
         $('sb-period').textContent = 'BRK';
+    }
+
+    function applyTimeoutOverlay() {
+        $('sb-clock').textContent = formatClock(timeoutState.seconds);
+        $('sb-period').textContent = 'TO';
     }
 
     function stopLocalClock() {
@@ -255,9 +260,8 @@
             return 0;
         }
         function applyBonus(side, level) {
-            $('sb-' + side + '-bonus').setAttribute('data-level', level);
-            var lbl = $('sb-' + side + '-bonus-label');
-            lbl.textContent = level === 2 ? 'DOUBLE BONUS' : (level === 1 ? 'BONUS' : '');
+            var lbl = $('sb-' + side + '-bonus-text');
+            lbl.textContent = level === 2 ? 'DOUBLE BONUS' : 'BONUS';
             lbl.classList.toggle('active', level > 0);
         }
         applyBonus('home', bonusLevel(awayFouls));
@@ -345,20 +349,36 @@
             if (!msg) return;
             if (msg.type === 'state' && msg.payload) {
                 renderScoreboard(msg.payload, true);
-                if (breakState.active) applyBreakOverlay();
+                // Re-apply any active overlay since renderScoreboard rewrote clock/period
+                if (timeoutState.active) applyTimeoutOverlay();
+                else if (breakState.active) applyBreakOverlay();
             } else if (msg.type === 'break') {
                 if (msg.breakCountdown != null && msg.breakCountdown > 0) {
                     breakState.active = true;
                     breakState.seconds = msg.breakCountdown;
                     breakState.lastQuarter = msg.currentQuarter;
-                    applyBreakOverlay();
+                    if (!timeoutState.active) applyBreakOverlay();
                 } else {
                     breakState.active = false;
                     breakState.seconds = 0;
                     // The next state broadcast will restore the regular display
                 }
+            } else if (msg.type === 'timeout') {
+                if (msg.timeLeft != null && msg.timeLeft > 0) {
+                    timeoutState.active = true;
+                    timeoutState.seconds = msg.timeLeft;
+                    timeoutState.type = msg.timeoutType || null;
+                    timeoutState.side = msg.side || null;
+                    applyTimeoutOverlay();
+                } else {
+                    timeoutState.active = false;
+                    timeoutState.seconds = 0;
+                    // Restore: break overlay if still active, else next state will fix clock
+                    if (breakState.active) applyBreakOverlay();
+                }
             } else if (msg.type === 'end') {
                 breakState.active = false;
+                timeoutState.active = false;
                 renderScoreboard(msg.payload || { boxScore: {} }, true);
                 var c = $('sb-conn');
                 c.textContent = 'GAME ENDED';
