@@ -361,7 +361,7 @@ export default function GameScreen() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, chord, pendingAction, bs, correctionMode]);
+  }, [dispatch, chord, pendingAction, bs, correctionMode, timeoutCountdown]);
 
   // --- Timeout countdown timer ---
   const toCountdownRef = useRef(null);
