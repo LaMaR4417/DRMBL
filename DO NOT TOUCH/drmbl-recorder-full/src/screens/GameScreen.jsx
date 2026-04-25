@@ -412,14 +412,21 @@ export default function GameScreen() {
       const cur = breakRef.current;
       if (cur == null || cur <= 1) {
         clearInterval(id);
-        breakRef.current = 0;
-        setBreakCountdown(0);
+        breakRef.current = null;
+        setBreakCountdown(null);
+        // Auto-advance to next period so the clock shows 10:00 (or OT time)
+        // paused, waiting for the user to press space/Start.
+        if (!isGameOver && !isFinal) {
+          dispatch({ type: 'ADVANCE_QUARTER' });
+          shouldSync.current = true;
+        }
         return;
       }
       breakRef.current = cur - 1;
       setBreakCountdown(cur - 1);
     }, 1000);
     return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodOver, quarter]);
 
   // --- End game save (fires once when END_GAME dispatch settles) ---
@@ -1397,7 +1404,14 @@ export default function GameScreen() {
           {breakCountdown != null && breakCountdown > 0 && (
             <button
               className="btn-divider skip-break"
-              onClick={() => { breakRef.current = 0; setBreakCountdown(0); }}
+              onClick={() => {
+                breakRef.current = null;
+                setBreakCountdown(null);
+                if (!isGameOver && !isFinal) {
+                  dispatch({ type: 'ADVANCE_QUARTER' });
+                  shouldSync.current = true;
+                }
+              }}
             >
               <span>{t('game', 'skip')}</span>
               <span>{t('game', 'breakLabel')}</span>
