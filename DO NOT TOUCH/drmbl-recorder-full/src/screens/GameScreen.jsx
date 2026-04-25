@@ -214,17 +214,29 @@ export default function GameScreen() {
     return () => clearInterval(id);
   }, [isActive, dispatch]);
 
-  // --- Spacebar hotkey: toggle clock ---
+  // --- Spacebar + Ctrl+Z hotkeys ---
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.code !== 'Space' && e.key !== ' ') return;
-      // Ignore when typing in an input (clock edit, etc.) or while a sub-menu is open
       const tag = e.target && e.target.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
-      if (e.repeat) return;
-      e.preventDefault();
-      dispatch({ type: 'TOGGLE_CLOCK' });
-      shouldSync.current = true;
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable);
+
+      // Ctrl+Z / Cmd+Z: undo last trackable action
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+        if (inField) return;
+        e.preventDefault();
+        dispatch({ type: 'UNDO' });
+        shouldSync.current = true;
+        return;
+      }
+
+      // Spacebar: toggle clock
+      if (e.code === 'Space' || e.key === ' ') {
+        if (inField) return;
+        if (e.repeat) return;
+        e.preventDefault();
+        dispatch({ type: 'TOGGLE_CLOCK' });
+        shouldSync.current = true;
+      }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);

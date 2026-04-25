@@ -55,6 +55,9 @@ const initialState = {
 
   // Box score: initialized after tip-off, before game tracking
   boxScore: null,
+
+  // Undo history: stack of previous boxScore snapshots (most recent last). Capped at HISTORY_LIMIT.
+  pastBoxScores: [],
 };
 
 // Helpers for game tracking reducers
@@ -714,6 +717,60 @@ function gameReducer(state, action) {
   }
 }
 
+// Actions whose box-score mutation should be undoable via Ctrl+Z
+const TRACKABLE_ACTIONS = new Set([
+  'RECORD_MADE_SHOT',
+  'RECORD_MISSED_SHOT',
+  'RECORD_REBOUND',
+  'RECORD_ASSIST',
+  'RECORD_STEAL',
+  'RECORD_BLOCK',
+  'RECORD_TURNOVER',
+  'RECORD_FOUL',
+  'RECORD_TIMEOUT',
+  'RECORD_SUBSTITUTION',
+  'LATE_ADD_PLAYER',
+  'SUB_IN_PLAYER',
+  'JUMP_BALL',
+  'ADVANCE_QUARTER',
+  'REVERT_QUARTER',
+  'TOGGLE_CLOCK',
+  'SET_POSSESSION',
+  'END_GAME',
+]);
+
+const HISTORY_LIMIT = 50;
+
+// Wraps gameReducer with a box-score history stack so UNDO can roll back the last trackable action.
+function undoableReducer(state, action) {
+  if (action.type === 'UNDO') {
+    const past = state.pastBoxScores || [];
+    if (past.length === 0) return state;
+    return {
+      ...state,
+      boxScore: past[past.length - 1],
+      pastBoxScores: past.slice(0, -1),
+    };
+  }
+
+  const prevBoxScore = state.boxScore;
+  const next = gameReducer(state, action);
+
+  // Reset history when starting / restoring / resetting a game
+  if (action.type === 'INIT_BOX_SCORE' || action.type === 'RESTORE_GAME' || action.type === 'RESET_GAME') {
+    return { ...next, pastBoxScores: [] };
+  }
+
+  // Push prior box-score snapshot for trackable actions that actually changed it
+  if (TRACKABLE_ACTIONS.has(action.type) && prevBoxScore && next.boxScore !== prevBoxScore) {
+    const stack = (state.pastBoxScores || []).concat([prevBoxScore]);
+    if (stack.length > HISTORY_LIMIT) stack.shift();
+    return { ...next, pastBoxScores: stack };
+  }
+
+  return next;
+}
+
 // Helper to set a nested value by dot-path (e.g. "periods.minutesPerPeriod")
 function setNestedValue(obj, path, value) {
   const keys = path.split('.');
@@ -725,7 +782,7 @@ function setNestedValue(obj, path, value) {
 }
 
 export function GameProvider({ children }) {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [state, dispatch] = useReducer(undoableReducer, initialState);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const bcRef = useRef(null);
