@@ -202,7 +202,7 @@ export const es = {
     short: 'CORTO',
 
     // Scoreboard
-    doubleBonus: '2x BONUS',
+    doubleBonus: 'DOBLE BONUS',
     bonus: 'BONUS',
     foulsLabel: 'FALTAS: {count}',
     timeoutsLabel: 'Tiempos Fuera:',

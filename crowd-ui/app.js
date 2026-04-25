@@ -234,7 +234,7 @@
         // Bonus: if opponent's fouls >= threshold, this team is in bonus
         var bonusCfg = getBonusConfig(payload);
         function bonusLabel(oppFouls) {
-            if (bonusCfg.doubleBonus != null && oppFouls >= bonusCfg.doubleBonus) return '2X BONUS';
+            if (bonusCfg.doubleBonus != null && oppFouls >= bonusCfg.doubleBonus) return 'DOUBLE BONUS';
             if (bonusCfg.oneAndOne != null && oppFouls >= bonusCfg.oneAndOne) return 'BONUS';
             return '';
         }
