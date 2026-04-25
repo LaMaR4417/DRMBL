@@ -983,9 +983,12 @@ export default function GameScreen() {
     // Only enter full player-selection mode for concrete (non-parent) actions
     const isSelecting = hasPending && !isParent;
     const isOtherSelecting = otherHasPending && !isParent;
+    // Chord side selection dims the opposite half until the chord finishes
+    const chordTargetsThis = chord.side === side;
+    const chordTargetsOther = chord.side != null && chord.side !== side;
 
     return (
-      <div className={`game-half ${side} ${isOtherSelecting ? 'dimmed' : ''} ${isSelecting ? 'selecting' : ''}`}>
+      <div className={`game-half ${side} ${(isOtherSelecting || chordTargetsOther) ? 'dimmed' : ''} ${(isSelecting || chordTargetsThis) ? 'selecting' : ''}`}>
         {!isSelecting && renderShotSection(side)}
         {!isSelecting && renderStatSection(side)}
         {!isSelecting && renderMgmtSection(side)}
