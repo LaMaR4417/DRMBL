@@ -1,0 +1,302 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --court-wood: #c8a45c;
+    --accent: #c9302c;
+    --bg-page: #0d0d0d;
+    --bg-card: #111;
+    --bg-header: #0a0602;
+    --border: rgba(255,255,255,0.07);
+    --border-med: rgba(255,255,255,0.15);
+    --text-primary: rgba(255,255,255,0.85);
+    --text-secondary: rgba(255,255,255,0.5);
+    --text-muted: rgba(255,255,255,0.3);
+    --green: #2e7d32;
+    --transition: 0.2s ease;
+}
+
+body {
+    background: #1a1209;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+}
+
+.admin-header {
+    background: var(--bg-header);
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #fff;
+    line-height: 1;
+}
+
+.admin-tabs {
+    display: flex;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+}
+
+.admin-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 14px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all var(--transition);
+}
+
+.admin-tab:hover { color: var(--text-primary); }
+.admin-tab.active { color: var(--court-wood); border-bottom-color: var(--court-wood); }
+
+.admin-main {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.admin-panel { display: none; }
+.admin-panel.active { display: block; }
+
+.admin-form-group {
+    margin-bottom: 16px;
+}
+
+.admin-form-group label {
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    margin-bottom: 6px;
+}
+
+.admin-form-group input,
+.admin-form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-med);
+    border-radius: 4px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color-scheme: dark;
+}
+
+.admin-form-group input:focus,
+.admin-form-group select:focus {
+    border-color: var(--court-wood);
+    outline: none;
+}
+
+.admin-form-group input:disabled,
+.admin-form-group select:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.admin-row {
+    display: flex;
+    gap: 12px;
+}
+
+.admin-row .admin-form-group {
+    flex: 1;
+}
+
+.admin-fieldset {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.admin-fieldset legend {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    padding: 0 8px;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-btn {
+    padding: 10px 18px;
+    background: transparent;
+    border: 1px solid var(--border-med);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.admin-btn:hover { border-color: var(--court-wood); color: var(--court-wood); }
+.admin-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.admin-btn:disabled:hover { border-color: var(--border-med); color: var(--text-primary); }
+
+.admin-btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+.admin-btn-primary:hover:not(:disabled) {
+    background: #a02525;
+    border-color: #a02525;
+    color: #fff;
+}
+
+.admin-btn-danger {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.admin-btn-danger:hover { background: rgba(201,48,44,0.15); color: var(--accent); }
+
+.admin-status {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+}
+
+.admin-status.success {
+    display: block;
+    background: rgba(46,125,50,0.15);
+    border: 1px solid rgba(46,125,50,0.4);
+    color: var(--green);
+}
+
+.admin-status.error {
+    display: block;
+    background: rgba(201,48,44,0.15);
+    border: 1px solid rgba(201,48,44,0.4);
+    color: var(--accent);
+}
+
+.roster-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.roster-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color var(--transition);
+}
+
+.roster-row:hover {
+    border-color: var(--court-wood);
+}
+
+.roster-row .player-name {
+    font-size: 14px;
+    color: #fff;
+}
+
+.roster-row .player-id {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.edit-form {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: none;
+}
+
+.edit-form.visible { display: block; }
+
+.hint {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 4px;
+}
+
+.admin-form-group select[multiple] {
+    height: auto;
+    min-height: 110px;
+}
+
+.position-checkboxes {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.position-chk {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-med);
+    border-radius: 4px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.position-chk:hover { border-color: var(--court-wood); }
+.position-chk input[type="checkbox"] { accent-color: var(--court-wood); cursor: pointer; }
+.position-chk:has(input:checked) {
+    border-color: var(--court-wood);
+    background: rgba(200, 164, 92, 0.1);
+    color: var(--court-wood);
+}
+
+.edit-form h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    margin-bottom: 16px;
+}
