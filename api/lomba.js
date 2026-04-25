@@ -139,6 +139,72 @@ module.exports = async function (req, res) {
         }
     }
 
+    // POST /api/lomba?action=schedule-games
+    if (req.method === "POST" && action === "schedule-games") {
+        var assignments = req.body.assignments;
+        if (!assignments || !Array.isArray(assignments) || assignments.length === 0) {
+            return res.status(400).json({ error: "Missing assignments" });
+        }
+
+        try {
+            // Group assignments by seasonId
+            var bySeasonId = {};
+            for (var a = 0; a < assignments.length; a++) {
+                var asgn = assignments[a];
+                if (!bySeasonId[asgn.seasonId]) bySeasonId[asgn.seasonId] = [];
+                bySeasonId[asgn.seasonId].push(asgn);
+            }
+
+            for (var sid in bySeasonId) {
+                var { resource: season } = await seasonsContainer.item(sid, sid).read();
+                if (!season) continue;
+
+                var sAssignments = bySeasonId[sid];
+                for (var ai = 0; ai < sAssignments.length; ai++) {
+                    var assign = sAssignments[ai];
+
+                    if (assign.type === 'playoff') {
+                        // Find the playoff game
+                        var series;
+                        if (assign.round === 'championship') {
+                            series = season.playoffs.championship;
+                        } else {
+                            series = season.playoffs[assign.round][assign.seriesIndex];
+                        }
+                        if (series && series.games[assign.gameIndex]) {
+                            series.games[assign.gameIndex].date = assign.date;
+                            series.games[assign.gameIndex].time = assign.time;
+                            series.games[assign.gameIndex].court = assign.court;
+                        }
+                    } else {
+                        // Regular season: find game by ID
+                        var found = false;
+                        for (var si = 0; si < (season.schedule || []).length; si++) {
+                            var games = season.schedule[si].games || [];
+                            for (var gi = 0; gi < games.length; gi++) {
+                                if (games[gi].id === assign.gameId) {
+                                    games[gi].date = assign.date;
+                                    games[gi].time = assign.time;
+                                    games[gi].court = assign.court;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (found) break;
+                        }
+                    }
+                }
+
+                await seasonsContainer.items.upsert(season);
+            }
+
+            return res.status(200).json({ success: true, count: assignments.length });
+        } catch (err) {
+            console.error("LOMBA schedule games error:", err.message);
+            return res.status(500).json({ error: "Failed to schedule games" });
+        }
+    }
+
     // POST /api/lomba?action=edit-game
     if (req.method === "POST" && action === "edit-game") {
         var gameId = req.body.gameId;
