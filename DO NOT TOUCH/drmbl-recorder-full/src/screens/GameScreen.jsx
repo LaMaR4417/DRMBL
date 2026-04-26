@@ -883,10 +883,16 @@ export default function GameScreen() {
 
   function renderPlayerCard(player, team, opts = {}) {
     const { selectable, onClick, highlighted, dimmed, hotkey } = opts;
+    // Live-derived fouled-out / ejected flag for visual overlay
+    const foulOutLimit = game.settings.fouls?.foulOutLimit ?? 5;
+    const ejectionLimit = game.settings.fouls?.technicalEjectionLimit ?? 2;
+    const personals = player?.stats?.general?.fouls?.personal?.total ?? 0;
+    const techs = player?.stats?.general?.fouls?.technical ?? 0;
+    const isFouledOut = personals >= foulOutLimit || techs >= ejectionLimit;
     return (
       <div
         key={player.playerID}
-        className={`player-card ${selectable ? 'selectable' : ''} ${highlighted ? 'highlighted' : ''} ${dimmed ? 'dimmed' : ''}`}
+        className={`player-card ${selectable ? 'selectable' : ''} ${highlighted ? 'highlighted' : ''} ${dimmed ? 'dimmed' : ''} ${isFouledOut ? 'fouled-out' : ''}`}
         onClick={selectable ? onClick : undefined}
       >
         {selectable && hotkey && <span className="hotkey-badge player-hotkey">{hotkey}</span>}
@@ -1455,16 +1461,6 @@ export default function GameScreen() {
                     #{a.number ?? '?'} {a.name} <span className="foul-alert-team">({teamName})</span>
                   </span>
                 </div>
-                <button
-                  type="button"
-                  className="foul-alert-action"
-                  onClick={() => {
-                    handleStatTap(a.side, 'substitution');
-                    dismissFoulAlert(a.key);
-                  }}
-                >
-                  Substitute
-                </button>
                 <button
                   type="button"
                   className="foul-alert-dismiss"
