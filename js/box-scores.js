@@ -2,7 +2,7 @@
     // ── STATE ──
     var leagues = [];
     var seasons = [];
-    var selectedLeagueId = null;   // null = "All"
+    var selectedLeagueId = 'DRMBL'; // default to DRMBL
     var selectedDivision = null;   // null = "All"
     var selectedSeasonId = null;   // null = "All"
     var selectedTeam = null;       // null = "All"
@@ -22,6 +22,11 @@
         var m = Math.floor(totalSeconds / 60);
         var s = totalSeconds % 60;
         return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function formatMinutes(totalSeconds) {
+        if (!totalSeconds || totalSeconds < 0) return '0.0';
+        return (totalSeconds / 60).toFixed(1);
     }
 
     function formatQuarter(q) {
@@ -478,6 +483,12 @@
     function getFilteredGames() {
         var games = allGamesData;
 
+        // Only completed games for now
+        games = games.filter(function (g) { return g.status === 'final'; });
+
+        // Hide games with no scheduled date for now (commented-out / TBD bucket)
+        games = games.filter(function (g) { return gameCardDateValue(g) !== 'TBD'; });
+
         // Filter by team
         if (selectedTeam) {
             games = games.filter(function (g) {
@@ -801,8 +812,17 @@
         }
     }
 
-    function selectGame(boxScoreId) {
+    function selectGame(boxScoreId, opts) {
         selectedBoxScoreId = boxScoreId;
+
+        // Push the shareable URL (?id=...) so the user can copy/share it.
+        // opts.skipHistory = true when called from popstate / initial URL read.
+        if (!opts || !opts.skipHistory) {
+            var newSearch = '?id=' + encodeURIComponent(boxScoreId);
+            if (window.location.search !== newSearch) {
+                history.pushState({ boxScoreId: boxScoreId }, '', window.location.pathname + newSearch);
+            }
+        }
 
         // Update card selection
         var cards = els.gameCards.querySelectorAll('.bs-game-card');
@@ -815,6 +835,26 @@
         }
 
         loadBoxScore(boxScoreId);
+    }
+
+    function clearBoxScoreUrl() {
+        if (window.location.search) {
+            history.replaceState(null, '', window.location.pathname);
+        }
+    }
+
+    function applyUrlBoxScore() {
+        var params = new URLSearchParams(window.location.search);
+        var id = params.get('id');
+        if (id) {
+            selectGame(id, { skipHistory: true });
+        } else {
+            selectedBoxScoreId = null;
+            hideDetail();
+            // Clear any lingering selected highlight
+            var cards = els.gameCards.querySelectorAll('.bs-game-card.selected');
+            for (var i = 0; i < cards.length; i++) cards[i].classList.remove('selected');
+        }
     }
 
     // ── RENDER: BOX SCORE DISPLAY ──
@@ -976,7 +1016,7 @@
             html += '<tr>';
             html += '<td class="ept-num">' + (p.number || '?') + '</td>';
             html += '<td class="ept-name">' + p.name + '</td>';
-            html += '<td>' + formatClock(p.stats.general.minutesPlayed) + '</td>';
+            html += '<td>' + formatMinutes(p.stats.general.minutesPlayed) + '</td>';
             html += '<td>' + p.stats.offense.points + '</td>';
             html += '<td>' + fg.totalMade + '/' + fg.totalAttempted + '</td>';
             html += '<td>' + fg.totalPercentage + '%</td>';
@@ -1050,6 +1090,7 @@
             selectedDate = null;
             selectedWeek = null;
             selectedBoxScoreId = null;
+            clearBoxScoreUrl();
             hideDetail();
             els.leagueSelect.value = '';
             renderLeagueDropdown();
@@ -1070,6 +1111,7 @@
             selectedDate = null;
             selectedWeek = null;
             selectedBoxScoreId = null;
+            clearBoxScoreUrl();
             hideDetail();
             renderDivisionDropdown();
             renderSeasonDropdown();
@@ -1087,6 +1129,7 @@
             selectedDate = null;
             selectedWeek = null;
             selectedBoxScoreId = null;
+            clearBoxScoreUrl();
             hideDetail();
             renderSeasonDropdown();
             renderTeamDropdown();
@@ -1102,6 +1145,7 @@
             selectedDate = null;
             selectedWeek = null;
             selectedBoxScoreId = null;
+            clearBoxScoreUrl();
             hideDetail();
             renderTeamDropdown();
             renderDateDropdown();
@@ -1114,6 +1158,7 @@
             selectedTeam = this.value || null;
             selectedWeek = null;
             selectedBoxScoreId = null;
+            clearBoxScoreUrl();
             hideDetail();
             updateClearAllVisibility();
             renderGameCards();
@@ -1124,12 +1169,20 @@
             selectedDate = this.value || null;
             selectedWeek = null;
             selectedBoxScoreId = null;
+            clearBoxScoreUrl();
             hideDetail();
             updateClearAllVisibility();
             renderGameCards();
         });
 
+        // Browser back/forward should swap the visible box score
+        window.addEventListener('popstate', applyUrlBoxScore);
+
         loadLeaguesAndSeasons();
+
+        // If the user opened a deep link (?id=...), render that box score now.
+        // Runs in parallel with the list fetch — the detail doesn't depend on it.
+        applyUrlBoxScore();
     }
 
     if (document.readyState === 'loading') {

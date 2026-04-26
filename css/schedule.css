@@ -275,6 +275,30 @@
     flex-shrink: 0;
 }
 
+.game-vs.is-final {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.game-team-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 19px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.game-team-away .game-team-score {
+    margin-left: 10px;
+}
+
+.game-team-home .game-team-score {
+    margin-right: 10px;
+}
+
+.game-team.winner .game-team-name,
+.game-team.winner .game-team-score {
+    color: var(--court-wood);
+}
+
 .game-label {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 13px;

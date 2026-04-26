@@ -127,9 +127,10 @@
         scrollTimer = setTimeout(updateActiveTab, 50);
     });
 
-    function buildScheduleSkeleton(weeks) {
+    function buildScheduleSkeleton(weeks, teams) {
         var container = document.getElementById('schedule-content');
         var html = '';
+        teams = teams || [];
 
         for (var i = 0; i < weeks.length; i++) {
             var w = weeks[i];
@@ -167,12 +168,34 @@
                 var homeSlot = (isPlayoff || isSeeded) ? game.home : game.home;
                 var cardCls = 'game-card' + (isPlayoff ? ' game-card-playoff' : '');
                 var showSlot = !(isPlayoff || isSeeded);
+                var hasScore = game.completion === true && game.homeScore != null && game.awayScore != null;
+                // Compare resolved name to game.winner to mark the winning side
+                var awayName = showSlot ? getTeamName(teams, awaySlot) : awaySlot;
+                var homeName = showSlot ? getTeamName(teams, homeSlot) : homeSlot;
+                var awayWon = hasScore && game.winner === awayName;
+                var homeWon = hasScore && game.winner === homeName;
 
                 html += '<div class="' + cardCls + '">';
                 html += '<div class="game-time">' + game.time + '</div>';
-                html += '<div class="game-team game-team-away" ' + (showSlot ? 'data-slot="' + awaySlot + '"' : '') + '>' + (showSlot ? '<span class="team-name-loading"></span>' : awaySlot) + '</div>';
-                html += '<div class="game-vs">VS</div>';
-                html += '<div class="game-team game-team-home" ' + (showSlot ? 'data-slot="' + homeSlot + '"' : '') + '>' + (showSlot ? '<span class="team-name-loading"></span>' : homeSlot) + '</div>';
+
+                // Away
+                html += '<div class="game-team game-team-away' + (awayWon ? ' winner' : '') + '">';
+                html += '<span class="game-team-name"' + (showSlot ? ' data-slot="' + awaySlot + '"' : '') + '>';
+                html += showSlot ? '<span class="team-name-loading"></span>' : awaySlot;
+                html += '</span>';
+                if (hasScore) html += '<span class="game-team-score">' + game.awayScore + '</span>';
+                html += '</div>';
+
+                // Center divider
+                html += '<div class="game-vs' + (hasScore ? ' is-final' : '') + '">' + (hasScore ? 'FINAL' : 'VS') + '</div>';
+
+                // Home
+                html += '<div class="game-team game-team-home' + (homeWon ? ' winner' : '') + '">';
+                if (hasScore) html += '<span class="game-team-score">' + game.homeScore + '</span>';
+                html += '<span class="game-team-name"' + (showSlot ? ' data-slot="' + homeSlot + '"' : '') + '>';
+                html += showSlot ? '<span class="team-name-loading"></span>' : homeSlot;
+                html += '</span>';
+                html += '</div>';
 
                 if (isPlayoff && game.round) {
                     var roundCls = 'game-round';
@@ -215,7 +238,7 @@
                 var season = data && data.season;
                 if (!season || !season.weeklySchedule) return;
                 buildWeekNav(season.weeklySchedule);
-                buildScheduleSkeleton(season.weeklySchedule);
+                buildScheduleSkeleton(season.weeklySchedule, season.teams);
                 if (season.teams) fillTeamNames(season.teams);
             })
             .catch(function () {
