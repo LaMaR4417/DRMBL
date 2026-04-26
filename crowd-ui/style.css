@@ -217,21 +217,24 @@ html, body {
 
 .sb-timeout-tag {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(20px, 2.6vw, 50px);
+    font-size: clamp(20px, 3vw, 56px);
     letter-spacing: 0.1em;
     color: var(--yellow);
     line-height: 1;
-    padding: 0.3em 0.8em;
+    padding: 0.35em 0.7em;
     border: 2px solid currentColor;
     opacity: 0;
     transition: opacity 0.2s;
     white-space: nowrap;
     position: absolute;
-    top: calc(100% + 0.6vh);
+    top: calc(100% + 0.5vh);
     left: 50%;
     transform: translateX(-50%);
 }
 .sb-timeout-tag.active { opacity: 1; }
+/* While TIMEOUT is showing on a side, hide the BONUS badge on that side
+   so the timeout badge cleanly takes its place. */
+.sb-timeout-tag.active ~ .sb-bonus-text { opacity: 0 !important; }
 
 /* Main score row: rail | home score | period | away score | rail */
 .sb-main {
@@ -291,9 +294,14 @@ html, body {
 
 /* ─────────────────────────────────────────── */
 /*   WARM-UP CLOCK-ONLY VIEW                    */
-/*   When the tracker is in warm-up, hide       */
-/*   everything except the giant clock.         */
+/*   Giant clock, centered both axes.           */
 /* ─────────────────────────────────────────── */
+#scoreboard-view.warmup-mode {
+    justify-content: center;
+    align-items: center;
+    gap: 2vh;
+}
+
 #scoreboard-view.warmup-mode .sb-divider-line,
 #scoreboard-view.warmup-mode .sb-team-row,
 #scoreboard-view.warmup-mode .sb-rail,
@@ -302,21 +310,32 @@ html, body {
 #scoreboard-view.warmup-mode .sb-arrow {
     display: none;
 }
-/* Center the WARM-UP label below the clock now that the score grid is hidden */
+
+#scoreboard-view.warmup-mode .sb-clock-row {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 0;
+}
+
 #scoreboard-view.warmup-mode .sb-main {
+    flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    padding: 0;
 }
+
+#scoreboard-view.warmup-mode .sb-clock {
+    font-size: min(60vw, 75vh);
+    line-height: 0.85;
+}
+
 #scoreboard-view.warmup-mode .sb-period-sub {
     position: static;
     transform: none;
-    font-size: clamp(28px, 4vw, 64px);
+    font-size: clamp(36px, 5vw, 96px);
     margin-top: 1vh;
-}
-/* Bigger clock since it's the only thing on screen */
-#scoreboard-view.warmup-mode .sb-clock {
-    font-size: clamp(140px, 30vw, 480px);
 }
 
 /* Side rails (arrow / bonus dots / fouls / timeouts) */
