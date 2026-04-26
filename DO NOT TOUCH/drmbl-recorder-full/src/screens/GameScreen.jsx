@@ -42,6 +42,11 @@ export default function GameScreen() {
   const [timeoutCountdown, setTimeoutCountdown] = useState(null); // { side, type, timeLeft }
   const [breakCountdown, setBreakCountdown] = useState(null); // seconds remaining in period break
   const [lateAddNumbers, setLateAddNumbers] = useState({}); // { playerID: 'number' }
+  // Foul-out alerts: queued banners + set of playerIDs we've already alerted for.
+  // Re-alerting after Ctrl+Z that drops a player below the limit is allowed
+  // because we sync the alerted set to whoever is currently at/over the limit.
+  const [foulAlerts, setFoulAlerts] = useState([]); // [{ side, playerID, name, number, reason, count }]
+  const alertedRef = useRef(new Set());
   const [sortCol, setSortCol] = useState({ home: 'PTS', away: 'PTS' });
   const [sortDir, setSortDir] = useState({ home: 'desc', away: 'desc' });
   const [saveStatus, setSaveStatus] = useState(null); // null | 'pending' | 'saving' | 'saved' | 'error'
@@ -430,6 +435,73 @@ export default function GameScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeoutCountdown]);
+
+  // --- Foul-out / ejection detection ---
+  // Build a compact signature of every player's foul counts so the effect only
+  // fires when fouls actually change (not on every clock tick).
+  const foulSig = (() => {
+    if (!bs) return '';
+    const parts = [];
+    for (const side of ['home', 'away']) {
+      const team = bs.teamInfo[side];
+      if (!team) continue;
+      for (const p of team.roster.inGame) {
+        if (!p.playerID) continue;
+        const f = p.stats.general.fouls;
+        parts.push(`${side}:${p.playerID}:${f.personal.total}:${f.technical}`);
+      }
+    }
+    return parts.join('|');
+  })();
+
+  useEffect(() => {
+    if (!bs || game.setupStep !== 7) return;
+    const foulOutLimit = game.settings.fouls?.foulOutLimit ?? 5;
+    const ejectionLimit = game.settings.fouls?.technicalEjectionLimit ?? 2;
+
+    const currentlyAlerted = new Set();
+    const newAlerts = [];
+
+    for (const side of ['home', 'away']) {
+      const team = bs.teamInfo[side];
+      if (!team) continue;
+      for (const p of team.roster.inGame) {
+        if (!p.playerID) continue;
+        const personals = p.stats.general.fouls.personal.total;
+        const techs = p.stats.general.fouls.technical;
+        const fouledOut = personals >= foulOutLimit;
+        const ejected = techs >= ejectionLimit;
+        if (!fouledOut && !ejected) continue;
+
+        const key = side + ':' + p.playerID;
+        currentlyAlerted.add(key);
+        if (!alertedRef.current.has(key)) {
+          newAlerts.push({
+            key,
+            side,
+            playerID: p.playerID,
+            name: p.name,
+            number: p.number,
+            reason: ejected ? 'ejected' : 'fouled-out',
+            count: ejected ? techs : personals,
+          });
+        }
+      }
+    }
+
+    // Sync the alerted set so undoing a foul (which drops a player below the
+    // limit) lets us re-alert if they hit it again later.
+    alertedRef.current = currentlyAlerted;
+
+    if (newAlerts.length > 0) {
+      setFoulAlerts((prev) => [...prev, ...newAlerts]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foulSig, game.setupStep]);
+
+  function dismissFoulAlert(key) {
+    setFoulAlerts((prev) => prev.filter((a) => a.key !== key));
+  }
 
   // --- Break countdown timer (between periods) ---
   const breakRef = useRef(null);
@@ -1366,6 +1438,46 @@ export default function GameScreen() {
         </button>
         <span className={`livesync-status livesync-${liveSync.saveStatus}`}>{liveStatusLabel}</span>
       </div>
+
+      {/* Foul-out / ejection alerts (stacked banners; click X to dismiss) */}
+      {foulAlerts.length > 0 && (
+        <div className="foul-alerts">
+          {foulAlerts.map((a) => {
+            const teamName = bs.teamInfo[a.side]?.name || (a.side === 'home' ? 'HOME' : 'AWAY');
+            const headline = a.reason === 'ejected'
+              ? `EJECTED — ${a.count} TECHNICALS`
+              : `FOULED OUT — ${a.count} PERSONALS`;
+            return (
+              <div key={a.key} className={`foul-alert foul-alert-${a.reason}`}>
+                <div className="foul-alert-body">
+                  <span className="foul-alert-headline">{headline}</span>
+                  <span className="foul-alert-player">
+                    #{a.number ?? '?'} {a.name} <span className="foul-alert-team">({teamName})</span>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="foul-alert-action"
+                  onClick={() => {
+                    handleStatTap(a.side, 'substitution');
+                    dismissFoulAlert(a.key);
+                  }}
+                >
+                  Substitute
+                </button>
+                <button
+                  type="button"
+                  className="foul-alert-dismiss"
+                  onClick={() => dismissFoulAlert(a.key)}
+                  aria-label="Dismiss"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
 
       {/* Scoreboard */}

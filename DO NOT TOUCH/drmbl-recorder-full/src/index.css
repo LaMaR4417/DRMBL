@@ -1621,6 +1621,80 @@ body {
 .livesync-saved { color: rgba(120, 220, 140, 0.95); }
 .livesync-error { color: rgba(255, 90, 90, 0.95); }
 
+/* Foul-out / ejection alert banners (stacked under the livesync bar) */
+.foul-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 14px 0;
+  flex-shrink: 0;
+}
+.foul-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(201, 48, 44, 0.15);
+  border: 1px solid var(--accent, #c9302c);
+  border-radius: 4px;
+  color: #ffd9d8;
+  animation: foul-alert-in 0.18s ease-out;
+}
+.foul-alert-ejected {
+  background: rgba(255, 70, 70, 0.22);
+  border-color: #ff4646;
+  color: #fff;
+}
+@keyframes foul-alert-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.foul-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.foul-alert-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.foul-alert-player {
+  font-size: 13px;
+  font-weight: 600;
+}
+.foul-alert-team {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+  margin-left: 4px;
+}
+.foul-alert-action {
+  background: var(--court-wood, #c8a45c);
+  color: #1a1209;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.foul-alert-action:hover { filter: brightness(1.1); }
+.foul-alert-dismiss {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.foul-alert-dismiss:hover { color: #fff; }
+
 /* Hotkey badge — corner letter on every chord-actionable button / card */
 .btn-action,
 .btn-sub-choice,
