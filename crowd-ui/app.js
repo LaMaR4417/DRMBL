@@ -168,6 +168,11 @@
     var breakState = { active: false, seconds: 0, lastQuarter: null };
     var timeoutState = { active: false, seconds: 0, type: null, side: null };
     var warmupState = { active: false, seconds: 0 };
+    // Tracks when the most recent BroadcastChannel state payload arrived. While
+    // broadcasts are flowing the local clock interpolator stands down so the
+    // two don't fight (which causes a 0.1s forward/back stutter on the display).
+    var lastBroadcastAt = 0;
+    var BROADCAST_FRESH_MS = 3000;
 
     function startLocalClock() {
         stopLocalClock();
@@ -178,6 +183,10 @@
             lastTick = now;
             // Don't tick the regular clock while any overlay is showing
             if (breakState.active || timeoutState.active || warmupState.active) return;
+            // Don't fight the broadcast — if a state message arrived recently,
+            // it's authoritative; the interpolator only fills in if broadcast
+            // goes silent (e.g., other tab closed, polled-only mode).
+            if (now - lastBroadcastAt < BROADCAST_FRESH_MS) return;
             if (localClock.active && localClock.timeLeft > 0) {
                 localClock.timeLeft -= delta;
                 if (localClock.timeLeft < 0) localClock.timeLeft = 0;
@@ -385,6 +394,7 @@
             var msg = ev && ev.data;
             if (!msg) return;
             if (msg.type === 'state' && msg.payload) {
+                lastBroadcastAt = performance.now();
                 renderScoreboard(msg.payload, true);
                 // Re-apply any active overlay since renderScoreboard rewrote clock/period
                 // Priority: timeout > warmup > break
