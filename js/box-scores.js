@@ -872,6 +872,14 @@
         els.homeScore.textContent = home.score.current;
         els.awayScore.textContent = away.score.current;
 
+        // Winner highlight — gold treatment, matching schedule page convention
+        var homeSide = els.homeName.parentElement;
+        var awaySide = els.awayName.parentElement;
+        homeSide.classList.remove('winner');
+        awaySide.classList.remove('winner');
+        if (home.score.current > away.score.current) homeSide.classList.add('winner');
+        else if (away.score.current > home.score.current) awaySide.classList.add('winner');
+
         // League badge
         var league = bs.league;
         els.leagueBadge.textContent = (league && league.abbreviation) ? league.abbreviation : '';

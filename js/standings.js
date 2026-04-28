@@ -97,9 +97,97 @@
 
     // ── DRMBL ──────────────────────────────────────────
 
+    function buildDRMBLShimmerTable(rowCount) {
+        var html = '<div class="standings-table-wrap">';
+        html += '<table class="standings-table drmbl-table">';
+        html += '<thead><tr>';
+        html += '<th class="col-rank">#</th>';
+        html += '<th class="col-team">Team</th>';
+        html += '<th class="col-w">W</th>';
+        html += '<th class="col-l">L</th>';
+        html += '<th class="col-pct">WL%</th>';
+        html += '<th class="col-pure-pct">P-WL%</th>';
+        html += '<th class="col-diff">+/-</th>';
+        html += '</tr></thead><tbody>';
+
+        for (var i = 0; i < rowCount; i++) {
+            html += '<tr class="standings-shimmer-row">';
+            html += '<td class="col-rank"><span class="shimmer-block shimmer-rank"></span></td>';
+            html += '<td class="col-team"><span class="shimmer-block shimmer-team"></span></td>';
+            html += '<td class="col-w"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-l"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-pct"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-pure-pct"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '<td class="col-diff"><span class="shimmer-block shimmer-stat"></span></td>';
+            html += '</tr>';
+        }
+
+        html += '</tbody></table></div>';
+        return html;
+    }
+
+    function formatDRMBLPct(val) {
+        if (val === null || val === undefined) return '--';
+        return val.toFixed(3).replace(/^0/, '');
+    }
+
+    function buildDRMBLStandingsTable(standings, playoffCutoff) {
+        var html = '<div class="standings-table-wrap">';
+        html += '<table class="standings-table drmbl-table">';
+        html += '<thead><tr>';
+        html += '<th class="col-rank">#</th>';
+        html += '<th class="col-team">Team</th>';
+        html += '<th class="col-w">W</th>';
+        html += '<th class="col-l">L</th>';
+        html += '<th class="col-pct">WL%</th>';
+        html += '<th class="col-pure-pct">P-WL%</th>';
+        html += '<th class="col-diff">+/-</th>';
+        html += '</tr></thead><tbody>';
+
+        for (var i = 0; i < standings.length; i++) {
+            var team = standings[i];
+            var isTBD = team.name === 'TBD';
+            var rank = team.rank != null ? team.rank : (i + 1);
+            var isPlayoff = playoffCutoff && rank <= playoffCutoff;
+            var rankDisplay = team.tied ? 'T-' + rank : '' + rank;
+
+            var rowCls = '';
+            if (isTBD) rowCls += ' tbd-team';
+            if (isPlayoff) rowCls += ' playoff-team';
+            if (team.tied) rowCls += ' tied-rank';
+
+            var winsDisplay = team.wins != null ? team.wins : 0;
+            var lossesDisplay = team.losses != null ? team.losses : 0;
+            var pd = team.pointDiff !== undefined ? team.pointDiff : (team.pointDifferential !== undefined ? team.pointDifferential : null);
+
+            var diffDisplay = '--';
+            var diffCls = 'col-diff';
+            if (pd !== null && pd !== undefined) {
+                if (winsDisplay > 0 || lossesDisplay > 0 || pd !== 0) {
+                    diffDisplay = pd > 0 ? '+' + pd : '' + pd;
+                    if (pd > 0) diffCls += ' positive';
+                    else if (pd < 0) diffCls += ' negative';
+                }
+            }
+
+            html += '<tr class="' + rowCls.trim() + '">';
+            html += '<td class="col-rank">' + rankDisplay + '</td>';
+            html += '<td class="col-team">' + team.name + '</td>';
+            html += '<td class="col-w">' + winsDisplay + '</td>';
+            html += '<td class="col-l">' + lossesDisplay + '</td>';
+            html += '<td class="col-pct">' + formatDRMBLPct(team.wlPct) + '</td>';
+            html += '<td class="col-pure-pct">' + formatDRMBLPct(team.purePct) + '</td>';
+            html += '<td class="' + diffCls + '">' + diffDisplay + '</td>';
+            html += '</tr>';
+        }
+
+        html += '</tbody></table></div>';
+        return html;
+    }
+
     function showDRMBLShimmer() {
         var container = document.getElementById('standings-content');
-        container.innerHTML = buildShimmerTable(8);
+        container.innerHTML = buildDRMBLShimmerTable(8);
     }
 
     function renderDRMBL(standings) {
@@ -108,7 +196,7 @@
             container.innerHTML = '<div class="standings-empty">No teams registered yet.</div>';
             return;
         }
-        container.innerHTML = buildStandingsTable(standings, 4);
+        container.innerHTML = buildDRMBLStandingsTable(standings, 8);
     }
 
     function loadDRMBL() {

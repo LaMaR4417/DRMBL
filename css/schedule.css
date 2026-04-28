@@ -241,6 +241,17 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
     padding: 16px 20px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+/* Completed games are clickable — link to their box score */
+.game-card-clickable {
+    cursor: pointer;
+}
+
+.game-card-clickable:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(200, 164, 92, 0.3);
 }
 
 .game-time {

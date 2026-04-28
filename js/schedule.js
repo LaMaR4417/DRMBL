@@ -174,8 +174,12 @@
                 var homeName = showSlot ? getTeamName(teams, homeSlot) : homeSlot;
                 var awayWon = hasScore && game.winner === awayName;
                 var homeWon = hasScore && game.winner === homeName;
+                // Box-score deep link — only for completed games with a recorded boxScoreID
+                var boxId = game.boxScoreID || null;
+                if (boxId) cardCls += ' game-card-clickable';
+                var dataBoxAttr = boxId ? ' data-box-id="' + boxId + '"' : '';
 
-                html += '<div class="' + cardCls + '">';
+                html += '<div class="' + cardCls + '"' + dataBoxAttr + '>';
                 html += '<div class="game-time">' + game.time + '</div>';
 
                 // Away
@@ -1491,6 +1495,30 @@
 
     function init() {
         initLeagueSwitcher();
+
+        // Delegated handler for game-card → box-score deep links.
+        // Fires only on cards that have a recorded boxScoreID (i.e. completed games).
+        // Honors ctrl/cmd/middle-click for new-tab behavior.
+        document.addEventListener('click', function (e) {
+            var card = e.target.closest && e.target.closest('.game-card[data-box-id]');
+            if (!card) return;
+            var boxId = card.getAttribute('data-box-id');
+            if (!boxId) return;
+            var url = '/box-scores?id=' + encodeURIComponent(boxId);
+            if (e.ctrlKey || e.metaKey) {
+                window.open(url, '_blank');
+            } else {
+                window.location.href = url;
+            }
+        });
+        document.addEventListener('auxclick', function (e) {
+            if (e.button !== 1) return;
+            var card = e.target.closest && e.target.closest('.game-card[data-box-id]');
+            if (!card) return;
+            var boxId = card.getAttribute('data-box-id');
+            if (!boxId) return;
+            window.open('/box-scores?id=' + encodeURIComponent(boxId), '_blank');
+        });
 
         if (CURRENT_LEAGUE === 'copa-beta') {
             loadCopaBeta();

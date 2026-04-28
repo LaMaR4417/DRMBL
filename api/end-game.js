@@ -1,4 +1,6 @@
 var { CosmosClient } = require("@azure/cosmos");
+var { recomputeStandings } = require("./_lib/recomputeStandings");
+var { makeBoxScoreID, buildStructuredFields } = require("./_lib/boxScoreId");
 
 var client = new CosmosClient({
     endpoint: process.env.COSMOS_ENDPOINT,
@@ -291,15 +293,54 @@ module.exports = async function (req, res) {
 
     // ── A. Save box score (CRITICAL) ──
     var cleanedBS = cleanBoxScore(boxScore);
-    // Add season and team references
+    // Add season and team references (legacy display fields, kept for backward compat)
     cleanedBS.season = seasonId;
     cleanedBS.team = {
         home: boxScore.teamInfo.home.name,
         away: boxScore.teamInfo.away.name
     };
+
+    // Add structured top-level fields for indexing/queries (queryable by Cosmos)
+    var structured = buildStructuredFields(cleanedBS, {
+        seasonID: seasonId,
+        homeTeamID: homeTeamID,
+        awayTeamID: awayTeamID
+    });
+    Object.assign(cleanedBS, structured);
+
+    // Rewrite the ID using the new convention: [league].[season].[home_vs_away].[date]
+    // Custom games keep their existing ID convention (they use ".Custom." marker).
+    if (!customGame) {
+        cleanedBS.id = makeBoxScoreID({
+            leagueAbbr: structured.leagueID,
+            seasonID: structured.seasonID,
+            homeTeamID: structured.homeTeamID,
+            awayTeamID: structured.awayTeamID,
+            homeName: cleanedBS.teamInfo.home.name,
+            awayName: cleanedBS.teamInfo.away.name,
+            gameDate: structured.gameDate
+        });
+    }
+
     try {
         var boxScoresContainer = await getBoxScoresContainer();
-        await boxScoresContainer.items.create(cleanedBS);
+        // On collision (same matchup played twice same date), retry with .g2/.g3...
+        var attempt = 0;
+        var baseId = cleanedBS.id;
+        while (true) {
+            try {
+                await boxScoresContainer.items.create(cleanedBS);
+                break;
+            } catch (createErr) {
+                if (createErr && createErr.code === 409 && !customGame) {
+                    attempt++;
+                    if (attempt > 9) throw createErr;
+                    cleanedBS.id = baseId + '.g' + (attempt + 1);
+                    continue;
+                }
+                throw createErr;
+            }
+        }
     } catch (err) {
         console.error("CRITICAL: Box score save failed:", err.message);
         return res.status(500).json({ error: "Failed to save box score." });
@@ -420,60 +461,16 @@ module.exports = async function (req, res) {
                 updated = true;
             }
 
-            // Recompute standings from REGULAR SEASON games only
+            // Recompute standings (DRMBL doubleheader-aware via recomputeStandings helper)
             if (updated && seasonDoc.standings) {
-                var standingsMap = {};
-                var teams = seasonDoc.teams || [];
-                for (var ti = 0; ti < teams.length; ti++) {
-                    var t = teams[ti];
-                    if (t.teamID) {
-                        standingsMap[t.slot] = { slot: t.slot, name: t.name, wins: 0, losses: 0, pointDiff: 0 };
-                    }
-                }
-
-                // Gather ONLY regular season games (exclude seeded/playoffs/rounds)
-                var regularGames = [];
-                if (seasonDoc.weeklySchedule) {
-                    for (var wi = 0; wi < seasonDoc.weeklySchedule.length; wi++) {
-                        var wk = seasonDoc.weeklySchedule[wi];
-                        if (wk.type === "seeded" || wk.type === "playoffs") continue;
-                        if (wk.games) regularGames = regularGames.concat(wk.games);
-                    }
-                }
-                if (seasonDoc.games) {
-                    for (var rgi = 0; rgi < seasonDoc.games.length; rgi++) {
-                        if (!seasonDoc.games[rgi].round) regularGames.push(seasonDoc.games[rgi]);
-                    }
-                }
-
-                for (var ai = 0; ai < regularGames.length; ai++) {
-                    var ag = regularGames[ai];
-                    if (!ag.winner || ag.winner === "") continue;
-                    var hSlot = ag.home;
-                    var aSlot = ag.away;
-                    var hEntry = standingsMap[hSlot];
-                    var aEntry = standingsMap[aSlot];
-                    if (!hEntry || !aEntry) continue;
-                    var hs = ag.homeScore || 0;
-                    var as = ag.awayScore || 0;
-                    if (ag.winner === hEntry.name) {
-                        hEntry.wins++;
-                        aEntry.losses++;
-                    } else {
-                        aEntry.wins++;
-                        hEntry.losses++;
-                    }
-                    hEntry.pointDiff += (hs - as);
-                    aEntry.pointDiff += (as - hs);
-                }
-
-                // Sort: wins desc, then pointDiff desc
-                var standingsArr = Object.values(standingsMap);
-                standingsArr.sort(function (a, b) {
-                    if (b.wins !== a.wins) return b.wins - a.wins;
-                    return b.pointDiff - a.pointDiff;
-                });
+                var standingsArr = recomputeStandings(seasonDoc);
                 seasonDoc.standings = standingsArr;
+
+                // Rebuild slot-keyed map for downstream seed resolution
+                var standingsMap = {};
+                for (var smi = 0; smi < standingsArr.length; smi++) {
+                    standingsMap[standingsArr[smi].slot] = standingsArr[smi];
+                }
 
                 // ── Resolve seed placeholders in upcoming games ──
                 // Build slot-by-seed lookup: standings[0] = #1 Seed, etc.

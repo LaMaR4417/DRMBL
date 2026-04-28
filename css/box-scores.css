@@ -338,7 +338,7 @@
 }
 
 .bs-game-card-team.winner {
-    color: #fff;
+    color: var(--court-wood);
 }
 
 .bs-game-card-score {
@@ -349,7 +349,13 @@
 }
 
 .bs-game-card-score.winner {
-    color: #fff;
+    color: var(--court-wood);
+}
+
+/* Detail scoreboard winner highlight — matches schedule page convention */
+.live-team-side.winner .live-team-name,
+.live-team-side.winner .live-team-score {
+    color: var(--court-wood);
 }
 
 .bs-game-card-score.scheduled-score {
