@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor &middot; Rol Femenil &middot; LOMBA</title>
+    <link rel="icon" href="/assets/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --orange: #ff8c00;
+            --orange-deep: #e36c00;
+            --orange-light: #ffb347;
+            --ink: #0d0d12;
+            --ink-soft: #1a1a24;
+            --ink-card: #15151f;
+            --line: rgba(255, 140, 0, 0.25);
+            --muted: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            background: #2a2a3a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Roboto', sans-serif;
+            padding: 0;
+        }
+
+        /* ===================== EDITOR TOOLBAR ===================== */
+        .editor-toolbar {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #1a1a24 0%, #15151f 100%);
+            color: #fff;
+            border-bottom: 1px solid var(--line);
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .editor-toolbar .toolbar-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            letter-spacing: 4px;
+            color: var(--orange);
+        }
+
+        .editor-toolbar .toolbar-hint {
+            font-family: 'Oswald', sans-serif;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-left: 14px;
+        }
+
+        .editor-toolbar .toolbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .toolbar-btn {
+            padding: 9px 16px;
+            background: rgba(255, 140, 0, 0.12);
+            border: 1px solid rgba(255, 140, 0, 0.45);
+            color: var(--orange);
+            font-family: 'Oswald', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.05s;
+        }
+
+        .toolbar-btn:hover { background: rgba(255, 140, 0, 0.25); }
+        .toolbar-btn:active { transform: translateY(1px); }
+
+        .toolbar-btn.primary {
+            background: var(--orange);
+            color: #fff;
+            border-color: var(--orange);
+        }
+        .toolbar-btn.primary:hover { background: var(--orange-deep); }
+
+        body.export .editor-toolbar { display: none; }
+
+        /* ===================== FLYER (copied from main flyer) ===================== */
+        .flyer-wrap {
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .flyer {
+            width: 9in;
+            background:
+                radial-gradient(ellipse at top right, rgba(255, 140, 0, 0.18) 0%, transparent 55%),
+                radial-gradient(ellipse at bottom left, rgba(255, 140, 0, 0.10) 0%, transparent 60%),
+                linear-gradient(180deg, #0a0a10 0%, #14141e 50%, #0a0a10 100%);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flyer::before {
+            content: '';
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 520px;
+            height: 520px;
+            border: 2px solid rgba(255, 140, 0, 0.07);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .flyer::after {
+            content: '';
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border: 2px solid rgba(255, 140, 0, 0.07);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .header {
+            position: relative;
+            padding: 22px 32px 18px;
+            background: linear-gradient(180deg, rgba(255, 140, 0, 0.10) 0%, transparent 100%);
+            border-bottom: 1px solid var(--line);
+            display: grid;
+            grid-template-columns: 110px 1fr 110px;
+            align-items: center;
+            gap: 16px;
+            z-index: 2;
+        }
+
+        .logo-slot {
+            width: 110px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+        }
+
+        .logo-slot img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            mix-blend-mode: multiply;
+        }
+
+        .logo-slot.lomba img {
+            mix-blend-mode: normal;
+            filter: none;
+        }
+
+        .svg-defs {
+            position: absolute;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .header-title { text-align: center; }
+
+        .header-title .eyebrow {
+            font-family: 'Oswald', sans-serif;
+            font-size: 11px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: var(--orange);
+            margin-bottom: 4px;
+        }
+
+        .header-title h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 44px;
+            line-height: 0.95;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 2px 2px 0 rgba(255, 140, 0, 0.25);
+        }
+
+        .header-title h2 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 4px;
+        }
+
+        .info-strip {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            background: linear-gradient(90deg, var(--orange-deep) 0%, var(--orange) 50%, var(--orange-deep) 100%);
+            color: #fff;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            align-items: center;
+        }
+
+        .info-strip .cell { padding: 14px 18px; position: relative; }
+
+        .info-strip .city-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 14px;
+            height: 100%;
+        }
+
+        .info-strip .city-logo img {
+            height: 56px;
+            width: auto;
+            display: block;
+            mix-blend-mode: multiply;
+        }
+
+        .info-strip .label {
+            font-family: 'Oswald', sans-serif;
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin-bottom: 3px;
+        }
+
+        .info-strip .value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            letter-spacing: 1.5px;
+            line-height: 1;
+        }
+
+        .info-strip .sub {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        .schedule-section {
+            padding: 22px 28px 18px;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 4px;
+            color: var(--orange);
+            text-align: center;
+            margin-bottom: 14px;
+            position: relative;
+        }
+
+        .section-title::before,
+        .section-title::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--orange));
+        }
+
+        .section-title::before {
+            right: calc(50% + 130px);
+            background: linear-gradient(90deg, transparent, var(--orange));
+        }
+
+        .section-title::after {
+            left: calc(50% + 130px);
+            background: linear-gradient(90deg, var(--orange), transparent);
+        }
+
+        .courts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .court {
+            background: rgba(20, 20, 30, 0.7);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .court-header {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-deep) 100%);
+            padding: 10px 16px;
+            text-align: center;
+            position: relative;
+        }
+
+        .court-header h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            letter-spacing: 5px;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        .court-header .court-sub {
+            font-family: 'Oswald', sans-serif;
+            font-size: 9px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 2px;
+        }
+
+        .games {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 6px;
+        }
+
+        .game {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 140, 0, 0.12);
+            border-radius: 10px;
+            padding: 9px 12px;
+            display: grid;
+            grid-template-columns: 56px 1fr;
+            gap: 10px;
+            align-items: center;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .game .time {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            letter-spacing: 1px;
+            color: var(--orange);
+            line-height: 1;
+            text-align: center;
+            border-right: 1px solid rgba(255, 140, 0, 0.2);
+            padding-right: 10px;
+        }
+
+        .game .time .ampm {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: rgba(255, 140, 0, 0.7);
+            margin-top: 2px;
+        }
+
+        .game .matchup {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .game .teams {
+            font-family: 'Oswald', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            text-align: center;
+        }
+
+        .game .vs {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 12px;
+            color: var(--orange);
+            letter-spacing: 1.5px;
+            padding: 1px 6px;
+            background: rgba(255, 140, 0, 0.12);
+            border-radius: 4px;
+        }
+
+        .game .meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .game .category { color: rgba(255, 255, 255, 0.6); }
+
+        .game .badge {
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+        }
+
+        .game .badge.femenil {
+            background: linear-gradient(135deg, #ff4d8d, #c2185b);
+            color: #fff;
+        }
+
+        .game .badge.varonil {
+            background: linear-gradient(135deg, #2196f3, #0d47a1);
+            color: #fff;
+        }
+
+        .footer {
+            padding: 12px 28px 16px;
+            text-align: center;
+            border-top: 1px solid var(--line);
+            background: rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer .footer-text {
+            font-family: 'Oswald', sans-serif;
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .footer .footer-text strong { color: var(--orange); font-weight: 600; }
+
+        /* TRIO LAYOUT */
+        .layout-trio .game {
+            grid-template-columns: 15fr 70fr 15fr;
+            grid-template-rows: auto auto;
+            gap: 0 10px;
+        }
+
+        .layout-trio .game .time {
+            grid-column: 1;
+            grid-row: 1 / span 2;
+            align-self: center;
+        }
+
+        .layout-trio .game .matchup { display: contents; }
+        .layout-trio .game .meta { display: contents; }
+
+        .layout-trio .game .teams {
+            grid-column: 2;
+            grid-row: 1;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            column-gap: 6px;
+            align-items: center;
+            align-self: stretch;
+            font-size: 16px;
+            padding: 0 6px 2px 6px;
+            border-right: 1px solid rgba(255, 140, 0, 0.2);
+        }
+
+        .layout-trio .game .teams .team-a {
+            text-align: right;
+            line-height: 1.15;
+            min-width: 0;
+        }
+
+        .layout-trio .game .teams .team-b {
+            text-align: left;
+            line-height: 1.15;
+            min-width: 0;
+        }
+
+        .layout-trio .game .category {
+            grid-column: 2;
+            grid-row: 2;
+            text-align: center;
+            align-self: stretch;
+            padding: 2px 8px 0 8px;
+            border-right: 1px solid rgba(255, 140, 0, 0.2);
+        }
+
+        .layout-trio .game .badge {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            align-self: center;
+            justify-self: center;
+        }
+
+        /* ===================== EDITOR-ONLY STYLES ===================== */
+        body.editing [contenteditable="true"]:hover {
+            outline: 1px dashed rgba(255, 140, 0, 0.55);
+            outline-offset: 2px;
+            cursor: text;
+            border-radius: 3px;
+        }
+
+        body.editing [contenteditable="true"]:focus {
+            outline: 1px solid var(--orange);
+            outline-offset: 2px;
+            background: rgba(255, 140, 0, 0.08);
+            border-radius: 3px;
+        }
+
+        body.editing .game .badge { cursor: pointer; }
+        body.editing .game .badge:hover {
+            outline: 2px solid #fff;
+            outline-offset: 1px;
+        }
+
+        .row-delete {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #d32f2f;
+            color: #fff;
+            border: 2px solid #15151f;
+            font-size: 14px;
+            line-height: 1;
+            font-weight: 700;
+            cursor: pointer;
+            display: none;
+            z-index: 5;
+            padding: 0;
+        }
+
+        .row-delete:hover { background: #b71c1c; transform: scale(1.1); }
+
+        body.editing .row-delete { display: flex; align-items: center; justify-content: center; }
+
+        .add-row-btn {
+            display: none;
+            margin: 8px;
+            padding: 10px;
+            background: rgba(255, 140, 0, 0.10);
+            border: 1px dashed rgba(255, 140, 0, 0.45);
+            border-radius: 8px;
+            color: var(--orange);
+            font-family: 'Oswald', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.15s;
+        }
+
+        .add-row-btn:hover { background: rgba(255, 140, 0, 0.20); }
+
+        body.editing .add-row-btn { display: block; }
+
+        /* ===================== EDIT/EXPORT VISIBILITY ===================== */
+        body.editing .export-only { display: none !important; }
+        body.export .edit-only { display: none !important; }
+
+        /* ===================== INLINE FORM FIELDS ===================== */
+        .flyer .field-select,
+        .flyer .field-input {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: transparent;
+            border: none;
+            color: inherit;
+            font: inherit;
+            line-height: inherit;
+            text-align: inherit;
+            text-transform: inherit;
+            letter-spacing: inherit;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            border-radius: 3px;
+            min-width: 0;
+        }
+
+        .flyer .field-select { cursor: pointer; }
+        .flyer .field-input { cursor: text; }
+
+        /* Edit-mode affordances on selects/inputs */
+        body.editing .flyer .field-select {
+            background-image:
+                linear-gradient(45deg, transparent 50%, currentColor 50%),
+                linear-gradient(135deg, currentColor 50%, transparent 50%);
+            background-position:
+                calc(100% - 7px) 55%,
+                calc(100% - 3px) 55%;
+            background-size: 4px 4px;
+            background-repeat: no-repeat;
+            padding-right: 12px;
+        }
+
+        body.editing .flyer .field-select:hover,
+        body.editing .flyer .field-input:hover {
+            outline: 1px dashed rgba(255, 140, 0, 0.55);
+            outline-offset: 2px;
+        }
+
+        body.editing .flyer .field-select:focus,
+        body.editing .flyer .field-input:focus {
+            outline: 1px solid var(--orange);
+            background-color: rgba(255, 140, 0, 0.10);
+        }
+
+        /* Dropdown options use system styling so they're readable */
+        .flyer .field-select option {
+            background: #15151f;
+            color: #fff;
+            font-family: 'Roboto', sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+            text-align: left;
+            padding: 4px 10px;
+        }
+
+        /* Date inputs sized for digits */
+        .flyer .field-input.field-num {
+            width: 2.4ch;
+            text-align: center;
+        }
+        .flyer .field-input.field-year {
+            width: 4.4ch;
+            text-align: center;
+        }
+
+        /* Date editor layout: day-name + number + 'de' + month inline */
+        .flyer .info-strip .date-value {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Print */
+        @media print {
+            body { background: #fff; padding: 0; }
+            .flyer { box-shadow: none; }
+            .editor-toolbar, .row-delete, .add-row-btn { display: none !important; }
+            @page { size: 9in auto; margin: 0; }
+        }
+    </style>
+</head>
+<body class="layout-trio editing">
+    <!-- ===================== EDITOR TOOLBAR ===================== -->
+    <div class="editor-toolbar">
+        <div>
+            <span class="toolbar-title">Editor &middot; Rol Femenil</span>
+            <span class="toolbar-hint">Selecciona equipos, categor&iacute;a y fecha de las listas &middot; Clic en el badge para alternar Femenil/Varonil</span>
+        </div>
+        <div class="toolbar-actions">
+            <button class="toolbar-btn" id="resetBtn" type="button">Restablecer</button>
+            <button class="toolbar-btn primary" id="modeBtn" type="button">Modo Exportar</button>
+        </div>
+    </div>
+
+    <svg class="svg-defs" width="0" height="0" aria-hidden="true">
+        <defs>
+            <filter id="key-white" color-interpolation-filters="sRGB">
+                <feColorMatrix type="matrix" values="
+                    1 0 0 0 0
+                    0 1 0 0 0
+                    0 0 1 0 0
+                   -1 -1 -1 3 0"/>
+            </filter>
+        </defs>
+    </svg>
+
+    <div class="flyer-wrap">
+        <div class="flyer">
+            <!-- HEADER -->
+            <div class="header">
+                <div class="logo-slot lomba">
+                    <img src="/PSDs/reduced-logos/white-version.png" alt="LOMBA">
+                </div>
+                <div class="header-title">
+                    <div class="eyebrow" contenteditable="true">Liga Municipal de Acu&ntilde;a &middot; Basquetbol</div>
+                    <h1 contenteditable="true">Temporada 2026</h1>
+                    <h2 contenteditable="true">Lic. Ramon Estrada Rodriguez</h2>
+                </div>
+                <div class="logo-slot">
+                    <img src="/PSDs/reduced-logos/67b392a03b46343d1e78d521_ademeba.png" alt="ADEMEBA">
+                </div>
+            </div>
+
+            <!-- INFO STRIP -->
+            <div class="info-strip">
+                <div class="cell">
+                    <div class="label">Fecha</div>
+                    <div class="value">
+                        <span class="edit-only date-value">
+                            <select class="field-select" data-field="date-day" aria-label="D&iacute;a de la semana">
+                                <option>Lunes</option>
+                                <option>Martes</option>
+                                <option>Mi&eacute;rcoles</option>
+                                <option>Jueves</option>
+                                <option>Viernes</option>
+                                <option selected>S&aacute;bado</option>
+                                <option>Domingo</option>
+                            </select>
+                            <input class="field-input field-num" type="text" inputmode="numeric" maxlength="2" value="2" data-field="date-num" aria-label="D&iacute;a del mes">
+                            <span>de</span>
+                            <select class="field-select" data-field="date-month" aria-label="Mes">
+                                <option>Enero</option>
+                                <option>Febrero</option>
+                                <option>Marzo</option>
+                                <option>Abril</option>
+                                <option selected>Mayo</option>
+                                <option>Junio</option>
+                                <option>Julio</option>
+                                <option>Agosto</option>
+                                <option>Septiembre</option>
+                                <option>Octubre</option>
+                                <option>Noviembre</option>
+                                <option>Diciembre</option>
+                            </select>
+                        </span>
+                        <span class="export-only date-display">S&aacute;bado 2 de Mayo</span>
+                    </div>
+                    <div class="sub">
+                        <input class="field-input field-year edit-only" type="text" inputmode="numeric" maxlength="4" value="2026" data-field="date-year" aria-label="A&ntilde;o">
+                        <span class="export-only year-display">2026</span>
+                    </div>
+                </div>
+                <div class="city-logo">
+                    <img src="/PSDs/reduced-logos/acuna-tiene-con-que.jpg" alt="Acu&ntilde;a">
+                </div>
+                <div class="cell">
+                    <div class="label" contenteditable="true">Sede</div>
+                    <div class="value" contenteditable="true">Prof. Jos&eacute; Antonio</div>
+                    <div class="sub" contenteditable="true">Campos Ontiveros</div>
+                </div>
+            </div>
+
+            <!-- SCHEDULE -->
+            <div class="schedule-section">
+                <div class="section-title" contenteditable="true">Rol de Juegos</div>
+
+                <div class="courts">
+                    <!-- CANCHA A -->
+                    <div class="court" id="court-a">
+                        <div class="court-header">
+                            <h3 contenteditable="true">Cancha A</h3>
+                            <div class="court-sub" contenteditable="true">Rol del D&iacute;a</div>
+                        </div>
+                        <div class="games" data-court="A">
+                            <div class="game">
+                                <button class="row-delete" type="button" aria-label="Eliminar">&times;</button>
+                                <div class="time"><span contenteditable="true">1:00</span><span class="ampm" contenteditable="true">PM</span></div>
+                                <div class="matchup">
+                                    <div class="teams">
+                                        <span class="team-a">
+                                            <select class="field-select edit-only" data-field="team-a" aria-label="Equipo A">
+                                                <option selected>Alfa y Omega</option>
+                                                <option>Amazonas</option>
+                                                <option>Broncas</option>
+                                                <option>CBTIS</option>
+                                                <option>CBTIS B</option>
+                                                <option>CONALEP</option>
+                                                <option>Genesis</option>
+                                                <option>Genesis B</option>
+                                                <option>IMSS</option>
+                                                <option>Linces A</option>
+                                                <option>Mambas</option>
+                                                <option>Mayko Girls A</option>
+                                                <option>Mayko Girls B</option>
+                                                <option>Mayko Girls C</option>
+                                                <option>Panteras</option>
+                                                <option>Spurs</option>
+                                                <option>Totas</option>
+                                                <option>Totas 40</option>
+                                                <option>UA de C</option>
+                                                <option>Valquirias</option>
+                                                <option>West Gold</option>
+                                            </select>
+                                            <span class="field-display export-only">Alfa y Omega</span>
+                                        </span>
+                                        <span class="vs">VS</span>
+                                        <span class="team-b">
+                                            <select class="field-select edit-only" data-field="team-b" aria-label="Equipo B">
+                                                <option>Alfa y Omega</option>
+                                                <option selected>Amazonas</option>
+                                                <option>Broncas</option>
+                                                <option>CBTIS</option>
+                                                <option>CBTIS B</option>
+                                                <option>CONALEP</option>
+                                                <option>Genesis</option>
+                                                <option>Genesis B</option>
+                                                <option>IMSS</option>
+                                                <option>Linces A</option>
+                                                <option>Mambas</option>
+                                                <option>Mayko Girls A</option>
+                                                <option>Mayko Girls B</option>
+                                                <option>Mayko Girls C</option>
+                                                <option>Panteras</option>
+                                                <option>Spurs</option>
+                                                <option>Totas</option>
+                                                <option>Totas 40</option>
+                                                <option>UA de C</option>
+                                                <option>Valquirias</option>
+                                                <option>West Gold</option>
+                                            </select>
+                                            <span class="field-display export-only">Amazonas</span>
+                                        </span>
+                                    </div>
+                                    <div class="meta">
+                                        <span class="category">
+                                            <select class="field-select edit-only" data-field="category" aria-label="Categor&iacute;a">
+                                                <option>Amistoso</option>
+                                                <option>Juvenil</option>
+                                                <option selected>Primera Fuerza</option>
+                                                <option>Segunda Fuerza</option>
+                                            </select>
+                                            <span class="field-display export-only">Primera Fuerza</span>
+                                        </span>
+                                        <span class="badge femenil" data-toggle="badge">Femenil</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="add-row-btn" type="button" data-add="A">+ Agregar partido</button>
+                    </div>
+
+                    <!-- CANCHA B -->
+                    <div class="court" id="court-b">
+                        <div class="court-header">
+                            <h3 contenteditable="true">Cancha B</h3>
+                            <div class="court-sub" contenteditable="true">Rol del D&iacute;a</div>
+                        </div>
+                        <div class="games" data-court="B">
+                            <div class="game">
+                                <button class="row-delete" type="button" aria-label="Eliminar">&times;</button>
+                                <div class="time"><span contenteditable="true">1:00</span><span class="ampm" contenteditable="true">PM</span></div>
+                                <div class="matchup">
+                                    <div class="teams">
+                                        <span class="team-a">
+                                            <select class="field-select edit-only" data-field="team-a" aria-label="Equipo A">
+                                                <option selected>Alfa y Omega</option>
+                                                <option>Amazonas</option>
+                                                <option>Broncas</option>
+                                                <option>CBTIS</option>
+                                                <option>CBTIS B</option>
+                                                <option>CONALEP</option>
+                                                <option>Genesis</option>
+                                                <option>Genesis B</option>
+                                                <option>IMSS</option>
+                                                <option>Linces A</option>
+                                                <option>Mambas</option>
+                                                <option>Mayko Girls A</option>
+                                                <option>Mayko Girls B</option>
+                                                <option>Mayko Girls C</option>
+                                                <option>Panteras</option>
+                                                <option>Spurs</option>
+                                                <option>Totas</option>
+                                                <option>Totas 40</option>
+                                                <option>UA de C</option>
+                                                <option>Valquirias</option>
+                                                <option>West Gold</option>
+                                            </select>
+                                            <span class="field-display export-only">Alfa y Omega</span>
+                                        </span>
+                                        <span class="vs">VS</span>
+                                        <span class="team-b">
+                                            <select class="field-select edit-only" data-field="team-b" aria-label="Equipo B">
+                                                <option>Alfa y Omega</option>
+                                                <option selected>Amazonas</option>
+                                                <option>Broncas</option>
+                                                <option>CBTIS</option>
+                                                <option>CBTIS B</option>
+                                                <option>CONALEP</option>
+                                                <option>Genesis</option>
+                                                <option>Genesis B</option>
+                                                <option>IMSS</option>
+                                                <option>Linces A</option>
+                                                <option>Mambas</option>
+                                                <option>Mayko Girls A</option>
+                                                <option>Mayko Girls B</option>
+                                                <option>Mayko Girls C</option>
+                                                <option>Panteras</option>
+                                                <option>Spurs</option>
+                                                <option>Totas</option>
+                                                <option>Totas 40</option>
+                                                <option>UA de C</option>
+                                                <option>Valquirias</option>
+                                                <option>West Gold</option>
+                                            </select>
+                                            <span class="field-display export-only">Amazonas</span>
+                                        </span>
+                                    </div>
+                                    <div class="meta">
+                                        <span class="category">
+                                            <select class="field-select edit-only" data-field="category" aria-label="Categor&iacute;a">
+                                                <option>Amistoso</option>
+                                                <option>Juvenil</option>
+                                                <option selected>Primera Fuerza</option>
+                                                <option>Segunda Fuerza</option>
+                                            </select>
+                                            <span class="field-display export-only">Primera Fuerza</span>
+                                        </span>
+                                        <span class="badge femenil" data-toggle="badge">Femenil</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="add-row-btn" type="button" data-add="B">+ Agregar partido</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="footer">
+                <div class="footer-text">
+                    <strong>LOMBA</strong> &middot; <span contenteditable="true">Liga Municipal de Acu&ntilde;a Basquetbol</span> &middot; <strong contenteditable="true">Temporada 2026</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for new game rows -->
+    <template id="game-template">
+        <div class="game">
+            <button class="row-delete" type="button" aria-label="Eliminar">&times;</button>
+            <div class="time"><span contenteditable="true">12:00</span><span class="ampm" contenteditable="true">PM</span></div>
+            <div class="matchup">
+                <div class="teams">
+                    <span class="team-a">
+                        <select class="field-select edit-only" data-field="team-a" aria-label="Equipo A">
+                            <option selected>Alfa y Omega</option>
+                            <option>Amazonas</option>
+                            <option>Broncas</option>
+                            <option>CBTIS</option>
+                            <option>CBTIS B</option>
+                            <option>CONALEP</option>
+                            <option>Genesis</option>
+                            <option>Genesis B</option>
+                            <option>IMSS</option>
+                            <option>Linces A</option>
+                            <option>Mambas</option>
+                            <option>Mayko Girls A</option>
+                            <option>Mayko Girls B</option>
+                            <option>Mayko Girls C</option>
+                            <option>Panteras</option>
+                            <option>Spurs</option>
+                            <option>Totas</option>
+                            <option>Totas 40</option>
+                            <option>UA de C</option>
+                            <option>Valquirias</option>
+                            <option>West Gold</option>
+                        </select>
+                        <span class="field-display export-only">Alfa y Omega</span>
+                    </span>
+                    <span class="vs">VS</span>
+                    <span class="team-b">
+                        <select class="field-select edit-only" data-field="team-b" aria-label="Equipo B">
+                            <option>Alfa y Omega</option>
+                            <option selected>Amazonas</option>
+                            <option>Broncas</option>
+                            <option>CBTIS</option>
+                            <option>CBTIS B</option>
+                            <option>CONALEP</option>
+                            <option>Genesis</option>
+                            <option>Genesis B</option>
+                            <option>IMSS</option>
+                            <option>Linces A</option>
+                            <option>Mambas</option>
+                            <option>Mayko Girls A</option>
+                            <option>Mayko Girls B</option>
+                            <option>Mayko Girls C</option>
+                            <option>Panteras</option>
+                            <option>Spurs</option>
+                            <option>Totas</option>
+                            <option>Totas 40</option>
+                            <option>UA de C</option>
+                            <option>Valquirias</option>
+                            <option>West Gold</option>
+                        </select>
+                        <span class="field-display export-only">Amazonas</span>
+                    </span>
+                </div>
+                <div class="meta">
+                    <span class="category">
+                        <select class="field-select edit-only" data-field="category" aria-label="Categor&iacute;a">
+                            <option>Amistoso</option>
+                            <option>Juvenil</option>
+                            <option selected>Primera Fuerza</option>
+                            <option>Segunda Fuerza</option>
+                        </select>
+                        <span class="field-display export-only">Primera Fuerza</span>
+                    </span>
+                    <span class="badge femenil" data-toggle="badge">Femenil</span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        const body = document.body;
+        const modeBtn = document.getElementById('modeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const template = document.getElementById('game-template');
+
+        function setEditableAll(enabled) {
+            document.querySelectorAll('[contenteditable]').forEach(el => {
+                el.setAttribute('contenteditable', enabled ? 'true' : 'false');
+            });
+        }
+
+        // Sync display spans with their paired form fields
+        function syncFieldDisplays(scope) {
+            const root = scope || document;
+            // Per-row fields (team-a, team-b, category): each form field's nearest .field-display sibling
+            root.querySelectorAll('.field-select, .field-input').forEach(field => {
+                if (field.classList.contains('field-year')) return; // handled separately
+                if (field.dataset.field === 'date-day') return;
+                if (field.dataset.field === 'date-num') return;
+                if (field.dataset.field === 'date-month') return;
+                const wrapper = field.parentElement;
+                if (!wrapper) return;
+                const display = wrapper.querySelector('.field-display');
+                if (display) display.textContent = field.value;
+            });
+            // Date display (combined)
+            syncDateDisplay();
+        }
+
+        function syncDateDisplay() {
+            const dayEl = document.querySelector('[data-field="date-day"]');
+            const numEl = document.querySelector('[data-field="date-num"]');
+            const monthEl = document.querySelector('[data-field="date-month"]');
+            const yearEl = document.querySelector('[data-field="date-year"]');
+            const dateDisplay = document.querySelector('.date-display');
+            const yearDisplay = document.querySelector('.year-display');
+            if (dayEl && numEl && monthEl && dateDisplay) {
+                dateDisplay.textContent = `${dayEl.value} ${numEl.value} de ${monthEl.value}`;
+            }
+            if (yearEl && yearDisplay) {
+                yearDisplay.textContent = yearEl.value;
+            }
+        }
+
+        // Mode toggle
+        modeBtn.addEventListener('click', () => {
+            const wasEditing = body.classList.contains('editing');
+            if (wasEditing) {
+                body.classList.remove('editing');
+                body.classList.add('export');
+                setEditableAll(false);
+                modeBtn.textContent = 'Modo Editor';
+            } else {
+                body.classList.remove('export');
+                body.classList.add('editing');
+                setEditableAll(true);
+                modeBtn.textContent = 'Modo Exportar';
+            }
+        });
+
+        // Reset (reload page — discards edits)
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Esto descarta todos tus cambios. ¿Continuar?')) {
+                location.reload();
+            }
+        });
+
+        // Compute the next hour from a "H:MM" + "AM/PM" pair (12-hour clock)
+        function nextHour(timeStr, ampm) {
+            const parts = (timeStr || '').split(':');
+            let hour = parseInt(parts[0], 10);
+            const minute = (parts[1] || '00').replace(/\D/g, '').padStart(2, '0').slice(0, 2);
+            let period = (ampm || 'PM').toUpperCase().trim();
+            if (isNaN(hour) || hour < 1 || hour > 12) hour = 12;
+            hour += 1;
+            if (hour === 12) {
+                // 11→12 crosses the AM/PM boundary
+                period = (period === 'AM') ? 'PM' : 'AM';
+            } else if (hour === 13) {
+                hour = 1;
+            }
+            return { time: `${hour}:${minute}`, ampm: period };
+        }
+
+        // Add row (event delegation on add buttons)
+        document.querySelectorAll('.add-row-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const courtKey = btn.dataset.add;
+                const games = document.querySelector(`.games[data-court="${courtKey}"]`);
+                const clone = template.content.firstElementChild.cloneNode(true);
+                // Set time to one hour after the last game in this court (if any)
+                const lastGame = games.querySelector('.game:last-child');
+                if (lastGame) {
+                    const lastSpans = lastGame.querySelectorAll('.time > span');
+                    const lastTime = lastSpans[0] ? lastSpans[0].textContent.trim() : '12:00';
+                    const lastAmpm = lastSpans[1] ? lastSpans[1].textContent.trim() : 'PM';
+                    const next = nextHour(lastTime, lastAmpm);
+                    const newSpans = clone.querySelectorAll('.time > span');
+                    if (newSpans[0]) newSpans[0].textContent = next.time;
+                    if (newSpans[1]) newSpans[1].textContent = next.ampm;
+                }
+                games.appendChild(clone);
+                syncFieldDisplays(clone);
+            });
+        });
+
+        // Keep displays in sync as user changes form fields
+        document.addEventListener('change', (e) => {
+            if (e.target.matches('.field-select, .field-input')) syncFieldDisplays();
+        });
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('.field-input')) syncFieldDisplays();
+        });
+
+        // Initial sync on load
+        syncFieldDisplays();
+
+        // Delegated handler: delete + badge toggle
+        document.addEventListener('click', (e) => {
+            // Delete row
+            if (e.target.classList.contains('row-delete')) {
+                if (confirm('¿Eliminar este partido?')) {
+                    e.target.closest('.game').remove();
+                }
+                return;
+            }
+            // Badge toggle (only in editing mode)
+            if (e.target.matches('.badge[data-toggle="badge"]') && body.classList.contains('editing')) {
+                if (e.target.classList.contains('femenil')) {
+                    e.target.classList.replace('femenil', 'varonil');
+                    e.target.textContent = 'Varonil';
+                } else {
+                    e.target.classList.replace('varonil', 'femenil');
+                    e.target.textContent = 'Femenil';
+                }
+            }
+        });
+
+        // Prevent Enter from inserting <br> in single-line fields — collapse to space then blur
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.matches('[contenteditable="true"]')) {
+                e.preventDefault();
+                e.target.blur();
+            }
+        });
+    </script>
+</body>
+</html>
