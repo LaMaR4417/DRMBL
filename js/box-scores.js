@@ -124,11 +124,14 @@
                 return;
             }
 
-            selectedBoxScoreId = null;
+            // Preserve deep-link state: if applyUrlBoxScore() already set
+            // selectedBoxScoreId from ?id=, don't clobber it or hide the detail.
+            var preserveSelection = !!selectedBoxScoreId;
+            if (!preserveSelection) selectedBoxScoreId = null;
             hideSpotlightMsg();
             loadLiveGames();
             renderGameCards();
-            hideDetail();
+            if (!preserveSelection) hideDetail();
         });
     }
 
