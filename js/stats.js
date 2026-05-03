@@ -15,6 +15,7 @@
     ];
 
     // Stats available in the detail data-grid (sortable columns).
+    // Totals trail the per-game/percentage stats; visually separated by an emphasized header.
     var DETAIL_STATS = [
         { key: 'gp',        label: 'GP',     accessor: function (p) { return p.gamesPlayed; } },
         { key: 'ppg',       label: 'PPG',    accessor: function (p) { return p.averages.ppg; },          fmt: oneDec },
@@ -28,7 +29,26 @@
         { key: 'twoPct',    label: '2P%',    accessor: function (p) { return p.averages.twoPct; },       fmt: pctFmt },
         { key: 'threePct',  label: '3P%',    accessor: function (p) { return p.averages.threePct; },     fmt: pctFmt },
         { key: 'ftPct',     label: 'FT%',    accessor: function (p) { return p.averages.ftPct; },        fmt: pctFmt },
-        { key: 'plusMinus', label: '+/-',    accessor: function (p) { return p.averages.plusMinusAvg; }, fmt: signedDec }
+        { key: 'plusMinus', label: '+/-',    accessor: function (p) { return p.averages.plusMinusAvg; }, fmt: signedDec },
+        // Totals — raw season counts, sortable like the rest.
+        // Shooting-split columns sort by makes; display "made/attempted".
+        { key: 'totalPts',  label: 'PTS',    accessor: function (p) { return p.totals.points; },         fmt: intFmt, group: 'totals' },
+        { key: 'totalReb',  label: 'REB',    accessor: function (p) { return p.totals.rebounds.total; }, fmt: intFmt, group: 'totals' },
+        { key: 'totalOreb', label: 'OREB',   accessor: function (p) { return p.totals.rebounds.offensive; }, fmt: intFmt, group: 'totals' },
+        { key: 'totalDreb', label: 'DREB',   accessor: function (p) { return p.totals.rebounds.defensive; }, fmt: intFmt, group: 'totals' },
+        { key: 'totalAst',  label: 'AST',    accessor: function (p) { return p.totals.assists; },        fmt: intFmt, group: 'totals' },
+        { key: 'totalStl',  label: 'STL',    accessor: function (p) { return p.totals.steals; },         fmt: intFmt, group: 'totals' },
+        { key: 'totalBlk',  label: 'BLK',    accessor: function (p) { return p.totals.blocks; },         fmt: intFmt, group: 'totals' },
+        { key: 'totalTo',   label: 'TO',     accessor: function (p) { return p.totals.turnovers; },      fmt: intFmt, group: 'totals' },
+        { key: 'totalMin',  label: 'MIN',    accessor: function (p) { return (p.totals.minutesPlayed || 0) / 60; }, fmt: oneDec, group: 'totals' },
+        { key: 'fgm',   label: 'FGM',    accessor: function (p) { return p.totals.fieldGoals.totalMade; },           fmt: intFmt, group: 'totals' },
+        { key: 'fga',   label: 'FGA',    accessor: function (p) { return p.totals.fieldGoals.totalAttempted; },      fmt: intFmt, group: 'totals' },
+        { key: '2ptm',  label: '2PTM',   accessor: function (p) { return p.totals.fieldGoals.twoPoint.made; },       fmt: intFmt, group: 'totals' },
+        { key: '2pta',  label: '2PTA',   accessor: function (p) { return p.totals.fieldGoals.twoPoint.attempted; },  fmt: intFmt, group: 'totals' },
+        { key: '3ptm',  label: '3PTM',   accessor: function (p) { return p.totals.fieldGoals.threePoint.made; },     fmt: intFmt, group: 'totals' },
+        { key: '3pta',  label: '3PTA',   accessor: function (p) { return p.totals.fieldGoals.threePoint.attempted; },fmt: intFmt, group: 'totals' },
+        { key: 'ftm',   label: 'FTM',    accessor: function (p) { return p.totals.freeThrows.made; },                fmt: intFmt, group: 'totals' },
+        { key: 'fta',   label: 'FTA',    accessor: function (p) { return p.totals.freeThrows.attempted; },           fmt: intFmt, group: 'totals' }
     ];
 
     // Team leaderboard stats (landing display)
@@ -48,6 +68,12 @@
         if (v == null) return '--';
         var rounded = Math.round(v * 10) / 10;
         return (rounded > 0 ? '+' : '') + rounded.toFixed(1);
+    }
+    function intFmt(v) { return (v == null) ? '--' : Math.round(v).toString(); }
+    function signedInt(v) {
+        if (v == null) return '--';
+        var n = Math.round(v);
+        return (n > 0 ? '+' : '') + n;
     }
 
     // ── Fetch ──
@@ -239,7 +265,9 @@
             .filter(function (p) { return !search || p.name.toLowerCase().indexOf(search) !== -1; })
             .sort(function (a, b) { return statDef.accessor(b) - statDef.accessor(a); });
 
-        var html = '<div class="stats-table-wrap">';
+        var html = '<div class="stats-table-area">';
+        html += '<div class="stats-scroll-top"><div class="stats-scroll-top-inner"></div></div>';
+        html += '<div class="stats-table-wrap">';
         html += '<table class="stats-table">';
         html += '<thead><tr>';
         html += '<th class="st-rank">#</th>';
@@ -248,7 +276,9 @@
         for (var i = 0; i < DETAIL_STATS.length; i++) {
             var s = DETAIL_STATS[i];
             var isActive = s.key === activeStatKey;
-            var cls = 'st-stat st-sortable' + (isActive ? ' st-active' : '');
+            var prevGroup = i > 0 ? DETAIL_STATS[i - 1].group : null;
+            var isGroupStart = s.group && s.group !== prevGroup;
+            var cls = 'st-stat st-sortable' + (isActive ? ' st-active' : '') + (isGroupStart ? ' st-group-start' : '');
             html += '<th class="' + cls + '" data-sort="' + s.key + '" title="Sort by ' + s.label + '">' + s.label + (isActive ? ' <span class="st-arrow">&#9660;</span>' : '') + '</th>';
         }
         html += '</tr></thead>';
@@ -262,22 +292,59 @@
             html += '<td class="st-team">' + escapeHtml(p.teamName) + '</td>';
             for (var si = 0; si < DETAIL_STATS.length; si++) {
                 var sd = DETAIL_STATS[si];
-                var val = sd.accessor(p);
-                var fmt = sd.fmt ? sd.fmt(val) : (val == null ? '--' : val);
-                var tdCls = 'st-stat' + (sd.key === activeStatKey ? ' st-active' : '');
-                html += '<td class="' + tdCls + '">' + fmt + '</td>';
+                var fmtVal;
+                if (sd.displayFn) {
+                    fmtVal = sd.displayFn(p);
+                } else {
+                    var val = sd.accessor(p);
+                    fmtVal = sd.fmt ? sd.fmt(val) : (val == null ? '--' : val);
+                }
+                var prevGroupTd = si > 0 ? DETAIL_STATS[si - 1].group : null;
+                var isGroupStartTd = sd.group && sd.group !== prevGroupTd;
+                var tdCls = 'st-stat' + (sd.key === activeStatKey ? ' st-active' : '') + (isGroupStartTd ? ' st-group-start' : '');
+                html += '<td class="' + tdCls + '">' + fmtVal + '</td>';
             }
             html += '</tr>';
         }
 
         html += '</tbody></table>';
-        html += '</div>';
+        html += '</div>'; // .stats-table-wrap
+        html += '</div>'; // .stats-table-area
 
         if (players.length === 0) {
             html = '<div class="stats-empty">No players match the current filters.</div>';
         }
 
         els.detailTable.innerHTML = html;
+
+        // Sync sticky top scrollbar with the actual table-wrap scroll
+        var topBar = els.detailTable.querySelector('.stats-scroll-top');
+        var topInner = els.detailTable.querySelector('.stats-scroll-top-inner');
+        var wrap = els.detailTable.querySelector('.stats-table-wrap');
+        var table = wrap && wrap.querySelector('table');
+        if (topBar && topInner && wrap && table) {
+            // Match the inner spacer to the table's natural width so the scroll
+            // ranges line up. Re-measured on resize.
+            function syncWidth() {
+                topInner.style.width = table.scrollWidth + 'px';
+            }
+            syncWidth();
+            window.addEventListener('resize', syncWidth);
+
+            var locked = false;
+            topBar.addEventListener('scroll', function () {
+                if (locked) return;
+                locked = true;
+                wrap.scrollLeft = topBar.scrollLeft;
+                locked = false;
+            });
+            wrap.addEventListener('scroll', function () {
+                if (locked) return;
+                locked = true;
+                topBar.scrollLeft = wrap.scrollLeft;
+                locked = false;
+            });
+        }
 
         // Header click → re-sort by clicked stat (also syncs the dropdown + URL)
         var headers = els.detailTable.querySelectorAll('th[data-sort]');

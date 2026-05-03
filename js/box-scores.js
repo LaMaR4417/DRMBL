@@ -898,8 +898,24 @@
         }
 
         renderQuarterScores(bs);
-        renderTeamStats(bs);
-        renderPlayerStats(bs);
+
+        // scoreOnly: this game's per-player + team-detail stats weren't reliably tracked.
+        // Score (W/L, final + per-quarter) still counts; everything else gets a banner.
+        if (bs.scoreOnly === true) {
+            var notTrackedHTML = '<div class="bs-untracked-banner">' +
+                '<div class="bs-untracked-icon">&#9888;</div>' +
+                '<div class="bs-untracked-text">' +
+                    '<strong>Stats not tracked for this game</strong>' +
+                    '<p>Detailed player and team stats were not recorded. Final score and W/L stand, but per-game stats are excluded from season leaderboards.</p>' +
+                '</div>' +
+            '</div>';
+            els.teamStats.innerHTML = notTrackedHTML;
+            els.awayPlayerStats.innerHTML = '';
+            els.homePlayerStats.innerHTML = '';
+        } else {
+            renderTeamStats(bs);
+            renderPlayerStats(bs);
+        }
 
         // Scroll detail into view
         els.detail.scrollIntoView({ behavior: 'smooth', block: 'start' });

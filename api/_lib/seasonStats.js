@@ -103,8 +103,17 @@ function accumulatePlayer(totals, p) {
     totals.freeThrows.missed += ft.missed || 0;
 }
 
-// Add a team's per-game aggregate stats into their season totals
+// Score-only contribution: just points scored + allowed.
+// Used for games marked scoreOnly (untrackable detail stats — only the score is reliable).
+function accumulateTeamScoreOnly(totals, teamSide, oppSide) {
+    totals.pointsScored += (teamSide.score && teamSide.score.current) || 0;
+    totals.pointsAllowed += (oppSide.score && oppSide.score.current) || 0;
+}
+
+// Full per-game aggregate (points scored/allowed PLUS all detail stats).
 function accumulateTeam(totals, teamSide, oppSide) {
+    accumulateTeamScoreOnly(totals, teamSide, oppSide);
+
     var s = teamSide.stats || {};
     var fg = (s.shootingBreakdown && s.shootingBreakdown.fieldGoals) || {};
     var fg2 = fg['2-PointShots'] || {};
@@ -113,8 +122,6 @@ function accumulateTeam(totals, teamSide, oppSide) {
     var reb = s.rebounds || {};
     var def = s.defense || {};
 
-    totals.pointsScored += (teamSide.score && teamSide.score.current) || 0;
-    totals.pointsAllowed += (oppSide.score && oppSide.score.current) || 0;
     totals.assists += s.assists || 0;
     totals.rebounds.total += reb.total || 0;
     totals.rebounds.offensive += reb.offensive || 0;
@@ -155,20 +162,22 @@ function computePlayerAverages(t, gp) {
     };
 }
 
-function computeTeamAverages(t, gp) {
+// gpAll: every game (used for score-related averages — score-only games still count here).
+// gpFull: only fully-tracked games (used for detail stats so they aren't diluted).
+function computeTeamAverages(t, gpAll, gpFull) {
     return {
-        ppgScored: avg(t.pointsScored, gp),
-        ppgAllowed: avg(t.pointsAllowed, gp),
-        netRating: avg(t.pointsScored - t.pointsAllowed, gp),
-        apg: avg(t.assists, gp),
-        rpg: avg(t.rebounds.total, gp),
-        spg: avg(t.steals, gp),
-        bpg: avg(t.blocks, gp),
-        topg: avg(t.turnovers, gp),
-        fgPct: pct(t.fieldGoals.totalMade, t.fieldGoals.totalAttempted),
-        twoPct: pct(t.fieldGoals.twoPoint.made, t.fieldGoals.twoPoint.attempted),
-        threePct: pct(t.fieldGoals.threePoint.made, t.fieldGoals.threePoint.attempted),
-        ftPct: pct(t.freeThrows.made, t.freeThrows.attempted)
+        ppgScored:  avg(t.pointsScored, gpAll),
+        ppgAllowed: avg(t.pointsAllowed, gpAll),
+        netRating:  avg(t.pointsScored - t.pointsAllowed, gpAll),
+        apg:        avg(t.assists, gpFull),
+        rpg:        avg(t.rebounds.total, gpFull),
+        spg:        avg(t.steals, gpFull),
+        bpg:        avg(t.blocks, gpFull),
+        topg:       avg(t.turnovers, gpFull),
+        fgPct:      pct(t.fieldGoals.totalMade, t.fieldGoals.totalAttempted),
+        twoPct:     pct(t.fieldGoals.twoPoint.made, t.fieldGoals.twoPoint.attempted),
+        threePct:   pct(t.fieldGoals.threePoint.made, t.fieldGoals.threePoint.attempted),
+        ftPct:      pct(t.freeThrows.made, t.freeThrows.attempted)
     };
 }
 
@@ -189,7 +198,8 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
             teamMap[t.teamID] = {
                 teamID: t.teamID,
                 teamName: t.name,
-                gamesPlayed: 0,
+                gamesPlayed: 0,        // every game (used for W/L + score averages)
+                gamesWithFullStats: 0, // only fully-tracked games (used for detail averages)
                 wins: 0,
                 losses: 0,
                 totals: emptyTeamTotals(),
@@ -209,6 +219,10 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
         if (status !== 'final') continue;
         processed++;
 
+        // scoreOnly: this game's per-player stats and team detail aggregates are excluded
+        // from the season totals. Only the score (W/L + points scored/allowed) counts.
+        var isScoreOnly = bs.scoreOnly === true;
+
         var sides = ['home', 'away'];
         for (var si = 0; si < sides.length; si++) {
             var sideName = sides[si];
@@ -216,11 +230,16 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
             var opp = bs.teamInfo[sideName === 'home' ? 'away' : 'home'];
             var teamID = sideName === 'home' ? bs.homeTeamID : bs.awayTeamID;
 
-            // Per-team accumulate
+            // Per-team accumulate (always: at minimum the score counts)
             if (teamID && teamMap[teamID]) {
                 var tEntry = teamMap[teamID];
                 tEntry.gamesPlayed++;
-                accumulateTeam(tEntry.totals, side, opp);
+                if (isScoreOnly) {
+                    accumulateTeamScoreOnly(tEntry.totals, side, opp);
+                } else {
+                    tEntry.gamesWithFullStats++;
+                    accumulateTeam(tEntry.totals, side, opp);
+                }
                 var winnerSide = bs.gameInfo && bs.gameInfo.state && bs.gameInfo.state.winner;
                 if (winnerSide === sideName) tEntry.wins++;
                 else if (winnerSide && winnerSide !== sideName) tEntry.losses++;
@@ -230,11 +249,14 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
                     opponent: opp.name,
                     result: winnerSide === sideName ? 'W' : (winnerSide ? 'L' : ''),
                     pointsScored: (side.score && side.score.current) || 0,
-                    pointsAllowed: (opp.score && opp.score.current) || 0
+                    pointsAllowed: (opp.score && opp.score.current) || 0,
+                    scoreOnly: isScoreOnly
                 });
             }
 
-            // Per-player accumulate (only inGame players who actually have a playerID)
+            // Per-player accumulate — skip entirely for scoreOnly games (stats untrustworthy)
+            if (isScoreOnly) continue;
+
             var inGame = (side.roster && side.roster.inGame) || [];
             for (var pi = 0; pi < inGame.length; pi++) {
                 var p = inGame[pi];
@@ -286,7 +308,7 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
         te.totals.fieldGoals.twoPoint.percentage = pct(te.totals.fieldGoals.twoPoint.made, te.totals.fieldGoals.twoPoint.attempted);
         te.totals.fieldGoals.threePoint.percentage = pct(te.totals.fieldGoals.threePoint.made, te.totals.fieldGoals.threePoint.attempted);
         te.totals.freeThrows.percentage = pct(te.totals.freeThrows.made, te.totals.freeThrows.attempted);
-        te.averages = computeTeamAverages(te.totals, te.gamesPlayed);
+        te.averages = computeTeamAverages(te.totals, te.gamesPlayed, te.gamesWithFullStats);
     }
 
     var statsId = leagueAbbr + '.' +

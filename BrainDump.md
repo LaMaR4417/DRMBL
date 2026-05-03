@@ -9,7 +9,7 @@ Running list of pending items from brain-dump sessions. Update statuses as work 
 | 1 | **Box Score page** — polish/build out | Pending | Currently basic. Foundation for #2. |
 | 2 | **Schedule → Box Score deep link** | ✓ Done (2026-04-27) | DRMBL only. Completed games (with `boxScoreID`) get a `game-card-clickable` class + delegated handler navigating to `/box-scores?id=<boxScoreID>`. Honors ctrl/cmd-click + middle-click for new-tab. LOMBA / Copa Beta untouched. |
 | 3 | **Player stats corrections** | DONE (Week 1) — see "Stat correction notes" below | All 3 teams (Wonderland, Reapers, Heat) corrected for Week 1. New corrections will appear here as they come up. |
-| 4 | **Stats page** | Pending — placeholder currently | |
+| 4 | **Stats page** | ✓ Done (2026-04-27) | New `Season Stats` Cosmos container (one doc per season) populated by `recomputeSeasonStats` helper. `/api/stats` endpoint reads it. Frontend: 2K-style top-5 leaderboard cards (6 player + 6 team) on landing; click → sortable data grid with stat tabs, team filter, player search, sortable column headers, URL state. Mobile-responsive (PC-first). end-game.js auto-recomputes on every game save. |
 | 5 | **Owner page** | Pending — placeholder currently | |
 | 6 | **Free Agents page** | Pending — lowest priority | New page (doesn't exist yet). |
 
@@ -37,6 +37,8 @@ Running list of pending items from brain-dump sessions. Update statuses as work 
 | Box-score winner highlight (gold, schedule-style) | 2026-04-27 | Detail scoreboard + game-card list now use `var(--court-wood)` for winners, matching schedule page. |
 | Box-score naming convention rename (DRMBL) | 2026-04-27 | All 4 DRMBL Week 1 box scores renamed to new `[league].[season].[home_vs_away].[date]` format. Added structured query fields. Established `push-workspace.js` (with DELETE support) and discovered SDK quirk: deleted docs return `{resource: undefined}` not 404. |
 | Schedule → Box Score deep link (DRMBL) | 2026-04-27 | Completed schedule games are now clickable, navigate to `/box-scores?id=<boxScoreID>`. Includes hover style + ctrl/cmd/middle-click new-tab support. |
+| Box-score deep-link race fix | 2026-04-27 | Fixed bug where opening a box score from a schedule deep link would flash briefly then revert — async summaries fetch was clobbering URL-set selection. |
+| Stats page (DRMBL) | 2026-04-27 | New Cosmos `Season Stats` container, `recomputeSeasonStats` helper, `/api/stats` endpoint, 2K-style leaderboards landing + sortable detail grid. End-game.js auto-recomputes on each save. |
 
 ## Stat correction notes (item #3)
 
