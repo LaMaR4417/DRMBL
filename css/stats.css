@@ -1,0 +1,453 @@
+/* ── STATS PAGE ── */
+
+.stats-hero {
+    padding: 200px 20px 40px;
+    text-align: center;
+    background: #0a0602;
+}
+
+/* League switcher (mirrors standings + schedule pages) */
+.league-switcher {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 16px;
+}
+
+.league-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: border-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+    text-decoration: none;
+    opacity: 0.4;
+    overflow: hidden;
+}
+
+.league-btn:hover {
+    opacity: 0.7;
+    transform: scale(1.05);
+}
+
+.league-btn.active {
+    opacity: 1;
+    border-color: var(--accent);
+    transform: scale(1.15);
+    box-shadow: 0 0 20px rgba(200, 164, 92, 0.3), 0 0 40px rgba(200, 164, 92, 0.1);
+}
+
+.league-logo-img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+}
+
+/* Body */
+.stats-section {
+    padding: 60px 20px 80px;
+    background: #0d0d0d;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.stats-view.hidden { display: none; }
+
+.stats-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    text-align: center;
+    margin: 8px 0 32px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(200, 164, 92, 0.2);
+}
+
+.stats-section-title:not(:first-child) {
+    margin-top: 64px;
+}
+
+/* ── Leaderboard cards (landing) ── */
+.stats-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.stats-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 18px 18px 14px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.stats-card-team {
+    cursor: default;
+}
+
+.stats-card:not(.stats-card-team):hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(200, 164, 92, 0.4);
+    transform: translateY(-2px);
+}
+
+.stats-card:not(.stats-card-team):focus {
+    outline: 2px solid var(--court-wood);
+    outline-offset: 2px;
+}
+
+.stats-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stats-card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+}
+
+.stats-card-arrow {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.stats-card:not(.stats-card-team):hover .stats-card-arrow {
+    color: var(--court-wood);
+}
+
+.stats-card-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.stats-card-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    column-gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.stats-card-row:last-child {
+    border-bottom: none;
+}
+
+.stats-card-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--court-wood);
+    text-align: center;
+}
+
+.stats-card-name {
+    font-size: 14px;
+    color: #fff;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stats-card-row-team {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: right;
+    padding-right: 6px;
+}
+
+.stats-card-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: #fff;
+    letter-spacing: 1px;
+    min-width: 56px;
+    text-align: right;
+}
+
+.stats-card-row:first-child .stats-card-value {
+    color: var(--court-wood);
+}
+
+.stats-card-empty {
+    text-align: center;
+    padding: 20px 0;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* ── Detail view (sortable data grid) ── */
+.stats-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stats-back-btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    background: transparent;
+    border: 1px solid rgba(200, 164, 92, 0.3);
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.stats-back-btn:hover {
+    background: rgba(200, 164, 92, 0.08);
+    border-color: var(--court-wood);
+}
+
+.stats-detail-controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.stats-select,
+.stats-search {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--white);
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.stats-search {
+    cursor: text;
+    font-family: 'Inter', system-ui, sans-serif;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.stats-select:focus,
+.stats-search:focus {
+    outline: none;
+    border-color: var(--court-wood);
+}
+
+.stats-select option {
+    background: #111;
+    color: var(--white);
+}
+
+/* Data grid */
+.stats-table-wrap {
+    overflow-x: auto;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.stats-table thead th {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    padding: 12px 10px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    position: sticky;
+    top: 0;
+}
+
+.stats-table thead th.st-rank,
+.stats-table thead th.st-player,
+.stats-table thead th.st-team {
+    text-align: left;
+}
+
+.stats-table th.st-active {
+    color: var(--court-wood);
+    background: rgba(200, 164, 92, 0.06);
+}
+
+.stats-table th.st-sortable {
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.stats-table th.st-sortable:hover {
+    background: rgba(200, 164, 92, 0.08);
+    color: var(--court-wood);
+}
+
+.st-arrow {
+    font-size: 10px;
+    margin-left: 2px;
+    color: var(--court-wood);
+}
+
+.stats-table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.15s;
+}
+
+.stats-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.stats-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.stats-table td {
+    padding: 12px 10px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: center;
+}
+
+.stats-table td.st-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: var(--court-wood);
+    text-align: center;
+    width: 50px;
+}
+
+.stats-table td.st-player {
+    text-align: left;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.stats-table td.st-team {
+    text-align: left;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.stats-table td.st-active {
+    color: var(--court-wood);
+    font-weight: 600;
+    background: rgba(200, 164, 92, 0.04);
+}
+
+.stats-empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 16px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+    .stats-hero {
+        padding: 180px 16px 24px;
+    }
+
+    .league-btn {
+        width: 80px;
+        height: 80px;
+    }
+
+    .league-btn.active {
+        transform: scale(1.1);
+    }
+
+    .stats-section {
+        padding: 40px 12px 60px;
+    }
+
+    .stats-section-title {
+        font-size: 22px;
+        letter-spacing: 3px;
+    }
+
+    .stats-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .stats-card {
+        padding: 14px;
+    }
+
+    .stats-card-row {
+        column-gap: 8px;
+    }
+
+    .stats-card-name {
+        font-size: 13px;
+    }
+
+    .stats-card-team {
+        font-size: 11px;
+    }
+
+    .stats-card-value {
+        font-size: 18px;
+        min-width: 48px;
+    }
+
+    .stats-detail-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .stats-detail-controls {
+        flex-direction: column;
+    }
+
+    .stats-select,
+    .stats-search {
+        width: 100%;
+    }
+
+    .stats-table {
+        font-size: 12px;
+        min-width: 800px;
+    }
+
+    .stats-table thead th,
+    .stats-table td {
+        padding: 10px 6px;
+        font-size: 12px;
+    }
+}

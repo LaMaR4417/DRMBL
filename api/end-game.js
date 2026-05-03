@@ -1,6 +1,7 @@
 var { CosmosClient } = require("@azure/cosmos");
 var { recomputeStandings } = require("./_lib/recomputeStandings");
 var { makeBoxScoreID, buildStructuredFields } = require("./_lib/boxScoreId");
+var { recomputeSeasonStats } = require("./_lib/seasonStats");
 
 var client = new CosmosClient({
     endpoint: process.env.COSMOS_ENDPOINT,
@@ -14,6 +15,7 @@ var teamsContainer = database.container("Teams");
 var BOX_SCORES_CONTAINER_ID = "Box Scores";
 var PLAYERS_CONTAINER_ID = "Players";
 var LIVE_GAMES_CONTAINER_ID = "Live Games";
+var SEASON_STATS_CONTAINER_ID = "Season Stats";
 
 async function getBoxScoresContainer() {
     var { container } = await database.containers.createIfNotExists({
@@ -26,6 +28,14 @@ async function getBoxScoresContainer() {
 async function getPlayersContainer() {
     var { container } = await database.containers.createIfNotExists({
         id: PLAYERS_CONTAINER_ID,
+        partitionKey: { paths: ["/id"] }
+    });
+    return container;
+}
+
+async function getSeasonStatsContainer() {
+    var { container } = await database.containers.createIfNotExists({
+        id: SEASON_STATS_CONTAINER_ID,
         partitionKey: { paths: ["/id"] }
     });
     return container;
@@ -720,6 +730,31 @@ module.exports = async function (req, res) {
                 console.error("Live game cleanup failed:", err.message);
                 errors.push("Live game cleanup failed: " + err.message);
             }
+        }
+    }
+
+    // ── F. Recompute Season Stats (DRMBL + Copa Beta — anything with structured fields) ──
+    // Walk every completed box score for this season and rebuild the Season Stats doc.
+    // Skipped for custom games (they don't belong to season-wide stats) and simple-tracker
+    // games (those don't carry the structured fields needed for proper aggregation).
+    if (!customGame && !isSimple) {
+        try {
+            var statsContainer = await getSeasonStatsContainer();
+            var bsContainer = await getBoxScoresContainer();
+            var { resources: seasonBoxScores } = await bsContainer.items
+                .query({
+                    query: "SELECT * FROM c WHERE c.seasonID = @s OR c.season = @s",
+                    parameters: [{ name: "@s", value: seasonId }]
+                })
+                .fetchAll();
+            var { resource: seasonDocForStats } = await seasonsContainer.item(seasonId, seasonId).read();
+            if (seasonDocForStats) {
+                var statsDoc = recomputeSeasonStats(seasonDocForStats, seasonBoxScores);
+                await statsContainer.items.upsert(statsDoc);
+            }
+        } catch (err) {
+            console.error("Season Stats recompute failed:", err.message);
+            errors.push("Season Stats recompute failed: " + err.message);
         }
     }
 
