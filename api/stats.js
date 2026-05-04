@@ -30,10 +30,12 @@ module.exports = async function (req, res) {
             var { resources: leagues } = await db.container('Leagues').items
                 .query({ query: "SELECT * FROM c WHERE c.id = @id", parameters: [{ name: '@id', value: leagueDocId }] })
                 .fetchAll();
-            if (!leagues.length || !leagues[0].league || !leagues[0].league.activeSeason) {
+            if (!leagues.length || !leagues[0].league || !leagues[0].league.activeSeasons || !leagues[0].league.activeSeasons.length) {
                 return res.status(404).json({ error: "Active season not found for league: " + league });
             }
-            seasonId = leagues[0].league.activeSeason;
+            // Pick the first active season. For multi-division leagues (LOMBA, Copa Beta),
+            // callers should pass an explicit seasonId via ?seasonId= for division-specific stats.
+            seasonId = leagues[0].league.activeSeasons[0];
         }
 
         if (!seasonId) {

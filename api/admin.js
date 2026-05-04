@@ -52,23 +52,17 @@ module.exports = async function (req, res) {
             var { resource: leagueDoc } = await leaguesContainer.item(league, league).read();
             if (!leagueDoc) return res.status(404).json({ error: "League not found" });
 
-            var activeSeason = leagueDoc.league.activeSeason;
-            if (!activeSeason) return res.status(404).json({ error: "No active season" });
+            var activeSeasons = leagueDoc.league.activeSeasons;
+            if (!activeSeasons || !activeSeasons.length) return res.status(404).json({ error: "No active season" });
 
-            var seasons;
-            if (league === "DRMBL") {
-                var { resource: singleSeason } = await seasonsContainer.item(activeSeason, activeSeason).read();
-                seasons = singleSeason ? [singleSeason] : [];
-            } else {
-                var result = await seasonsContainer.items.query({
-                    query: "SELECT * FROM c WHERE STARTSWITH(c.id, @prefix) AND ENDSWITH(c.id, @suffix)",
-                    parameters: [
-                        { name: "@prefix", value: league + " -" },
-                        { name: "@suffix", value: activeSeason }
-                    ]
-                }).fetchAll();
-                seasons = result.resources;
-            }
+            // Fetch each active season doc by direct ID. Works for single-season (DRMBL)
+            // and multi-season (LOMBA, Copa Beta) leagues uniformly.
+            var seasonFetches = activeSeasons.map(function (id) {
+                return seasonsContainer.item(id, id).read()
+                    .then(function (r) { return r.resource; })
+                    .catch(function () { return null; });
+            });
+            var seasons = (await Promise.all(seasonFetches)).filter(function (d) { return d != null; });
 
             var teams = [];
             for (var i = 0; i < seasons.length; i++) {

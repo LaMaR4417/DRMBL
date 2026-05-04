@@ -51,12 +51,13 @@ module.exports = async function (req, res) {
                 .query("SELECT * FROM c WHERE c.id = 'DRMBL'")
                 .fetchAll();
 
-            if (!drmblLeague.length || !drmblLeague[0].league.activeSeason) {
+            if (!drmblLeague.length || !drmblLeague[0].league.activeSeasons || !drmblLeague[0].league.activeSeasons.length) {
                 return res.status(404).json({ error: "No active DRMBL season found." });
             }
 
             var leagueDoc = drmblLeague[0];
-            var activeSeasonId = leagueDoc.league.activeSeason;
+            // DRMBL has one division currently — use the first active season ID
+            var activeSeasonId = leagueDoc.league.activeSeasons[0];
 
             var seasonResponse = await seasonsContainer.item(activeSeasonId, activeSeasonId).read();
             var seasonDoc = seasonResponse.resource;
@@ -88,16 +89,20 @@ module.exports = async function (req, res) {
                 .query("SELECT * FROM c WHERE c.id = 'LOMBA'")
                 .fetchAll();
 
-            if (!lombaLeague.length || !lombaLeague[0].league.activeSeason) {
+            if (!lombaLeague.length || !lombaLeague[0].league.activeSeasons || !lombaLeague[0].league.activeSeasons.length) {
                 return res.status(404).json({ error: "No active LOMBA season found." });
             }
 
             var lombaLeagueDoc = lombaLeague[0];
-            var lombaActiveSeason = lombaLeagueDoc.league.activeSeason;
+            // LOMBA may have multiple active seasons (one per division). Fetch each by direct ID.
+            var lombaActiveIds = lombaLeagueDoc.league.activeSeasons;
 
-            var { resources: lombaSeasons } = await seasonsContainer.items
-                .query("SELECT * FROM c WHERE STARTSWITH(c.id, 'LOMBA -') AND ENDSWITH(c.id, '" + lombaActiveSeason + "')")
-                .fetchAll();
+            var lombaFetches = lombaActiveIds.map(function (id) {
+                return seasonsContainer.item(id, id).read()
+                    .then(function (r) { return r.resource; })
+                    .catch(function () { return null; });
+            });
+            var lombaSeasons = (await Promise.all(lombaFetches)).filter(function (d) { return d != null; });
 
             var seasons = lombaSeasons.map(function (doc) {
                 return {
@@ -131,9 +136,16 @@ module.exports = async function (req, res) {
                 leagueInfo = leagueResources[0].league || null;
             }
 
-            var { resources: cbResources } = await seasonsContainer.items
-                .query("SELECT * FROM c WHERE STARTSWITH(c.id, 'Copa Beta -')")
-                .fetchAll();
+            // Copa Beta also uses activeSeasons[] — fetch each active doc by direct ID
+            var cbResources = [];
+            if (leagueInfo && leagueInfo.activeSeasons && leagueInfo.activeSeasons.length) {
+                var cbFetches = leagueInfo.activeSeasons.map(function (id) {
+                    return seasonsContainer.item(id, id).read()
+                        .then(function (r) { return r.resource; })
+                        .catch(function () { return null; });
+                });
+                cbResources = (await Promise.all(cbFetches)).filter(function (d) { return d != null; });
+            }
 
             var categories = cbResources.map(function (doc) {
                 return {
