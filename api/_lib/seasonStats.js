@@ -311,7 +311,10 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
         te.averages = computeTeamAverages(te.totals, te.gamesPlayed, te.gamesWithFullStats);
     }
 
-    var statsId = leagueAbbr + '.' +
+    // Stats doc ID uses slug-friendly league prefix (Copa Beta → Copa_Beta) so it
+    // matches box-score / team-doc ID conventions across leagues.
+    var leagueSlug = leagueAbbr.replace(/\s+/g, '_');
+    var statsId = leagueSlug + '.' +
         (seasonId.replace(new RegExp('^' + leagueAbbr + ' - '), '').replace(/[''`]/g, '').replace(/ - /g, '_').replace(/\s+/g, '_'));
 
     return {

@@ -1,4 +1,5 @@
 var { CosmosClient } = require("@azure/cosmos");
+var { recomputeSeasonStats } = require("./_lib/seasonStats");
 
 var client = new CosmosClient({
     endpoint: process.env.COSMOS_ENDPOINT,
@@ -9,6 +10,72 @@ var database = client.database("DRMBL Database");
 var leaguesContainer = database.container("Leagues");
 var seasonsContainer = database.container("Seasons");
 var boxScoresContainer = database.container("Box Scores");
+var seasonStatsContainer = database.container("Season Stats");
+
+// LOMBA-specific ID helpers (mirrors api/_lib/boxScoreId.js's DRMBL pattern but with
+// LOMBA naming + M/D/YYYY date format).
+function asciiSlug(s) {
+    return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[''`"]/g, '').trim();
+}
+function teamSlug(name) { return asciiSlug(name).replace(/\s+/g, '_'); }
+function lombaSeasonSlug(seasonId) {
+    return seasonId.replace(/^LOMBA - /, '').replace(/[''`]/g, '').replace(/ - /g, '_').replace(/\s+/g, '_');
+}
+function mdyToISO(mdy, fallbackTs) {
+    if (!mdy && fallbackTs) {
+        var d = new Date(fallbackTs);
+        if (!isNaN(d.getTime())) {
+            var local = new Date(d.getTime() - 6 * 60 * 60 * 1000);
+            return local.getUTCFullYear() + '-' + String(local.getUTCMonth() + 1).padStart(2, '0') + '-' + String(local.getUTCDate()).padStart(2, '0');
+        }
+    }
+    if (!mdy) return null;
+    var parts = mdy.split('/');
+    if (parts.length !== 3) return null;
+    var m = parseInt(parts[0], 10), d = parseInt(parts[1], 10);
+    var y = parts[2]; if (y.length === 2) y = '20' + y;
+    return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+}
+function makeLombaBoxScoreID(seasonId, homeName, awayName, gameDate, suffix) {
+    var base = ['LOMBA', lombaSeasonSlug(seasonId), teamSlug(homeName) + '_vs_' + teamSlug(awayName), gameDate].join('.');
+    return suffix ? base + '.' + suffix : base;
+}
+
+// Add the new structured fields to a LOMBA box score before save.
+function applyStructuredFields(boxScore, seasonId, homeTeamID, awayTeamID, gameDate) {
+    boxScore.leagueID = 'LOMBA';
+    boxScore.seasonID = seasonId;
+    if (homeTeamID) boxScore.homeTeamID = homeTeamID;
+    if (awayTeamID) boxScore.awayTeamID = awayTeamID;
+    boxScore.gameDate = gameDate;
+    boxScore.gameTimestamp = (boxScore.gameInfo && boxScore.gameInfo.general && boxScore.gameInfo.general.timestamp) || new Date().toISOString();
+}
+
+// Look up the full LOMBA team ID by team name within a season's roster.
+async function resolveTeamID(teamName, seasonId) {
+    if (!teamName) return null;
+    try {
+        var { resources: teams } = await client.database("DRMBL Database").container("Teams").items
+            .query({
+                query: "SELECT c.id, c.name FROM c WHERE STARTSWITH(c.id, 'LOMBA.') AND c.name = @n AND ARRAY_CONTAINS(c.seasons, { id: @s }, true)",
+                parameters: [{ name: '@n', value: teamName }, { name: '@s', value: seasonId }]
+            }).fetchAll();
+        return teams[0] ? teams[0].id : null;
+    } catch (e) { return null; }
+}
+
+// Fire-and-await Season Stats recompute. Doesn't fail the whole save on error.
+async function recomputeStatsForSeason(seasonDoc) {
+    try {
+        var { resources: bsList } = await boxScoresContainer.items
+            .query({ query: "SELECT * FROM c WHERE c.seasonID = @s", parameters: [{ name: '@s', value: seasonDoc.id }] })
+            .fetchAll();
+        var stats = recomputeSeasonStats(seasonDoc, bsList);
+        await seasonStatsContainer.items.upsert(stats);
+    } catch (e) {
+        console.error('Season Stats recompute failed for ' + seasonDoc.id + ':', e.message);
+    }
+}
 
 function parseTime(t) {
     if (!t) return 0;
@@ -68,6 +135,33 @@ module.exports = async function (req, res) {
         }
 
         try {
+            // Rewrite ID to new format + add structured fields BEFORE save (mirrors DRMBL pattern)
+            var dateStr = boxScore.gameInfo && boxScore.gameInfo.general && boxScore.gameInfo.general.date;
+            var ts = boxScore.gameInfo && boxScore.gameInfo.general && boxScore.gameInfo.general.timestamp;
+            var gameDate = mdyToISO(dateStr, ts);
+            var homeName = boxScore.team && boxScore.team.home;
+            var awayName = boxScore.team && boxScore.team.away;
+            var homeTeamID = await resolveTeamID(homeName, seasonId);
+            var awayTeamID = await resolveTeamID(awayName, seasonId);
+
+            if (gameDate && homeName && awayName) {
+                var baseID = makeLombaBoxScoreID(seasonId, homeName, awayName, gameDate);
+                // Collision retry: if base ID exists, append .g2/.g3
+                var attempt = 1, candidateID = baseID;
+                while (attempt < 10) {
+                    try {
+                        await boxScoresContainer.item(candidateID, candidateID).read();
+                        attempt++;
+                        candidateID = baseID + '.g' + (attempt + 1);
+                    } catch (e) {
+                        if (e.code === 404) break; // ID free
+                        throw e;
+                    }
+                }
+                boxScore.id = candidateID;
+            }
+            applyStructuredFields(boxScore, seasonId, homeTeamID, awayTeamID, gameDate);
+
             await boxScoresContainer.items.upsert(boxScore);
 
             var { resource: season } = await seasonsContainer.item(seasonId, seasonId).read();
@@ -131,6 +225,9 @@ module.exports = async function (req, res) {
             });
 
             await seasonsContainer.items.upsert(season);
+
+            // Fire-and-await Season Stats recompute (mirrors DRMBL end-game pattern)
+            await recomputeStatsForSeason(season);
 
             return res.status(200).json({ success: true, id: boxScore.id });
         } catch (err) {
@@ -217,8 +314,17 @@ module.exports = async function (req, res) {
         }
 
         try {
-            // Upsert box score if provided
+            // Refresh structured fields on the box score before save (idempotent — the
+            // ID stays the same since we're editing an existing game).
             if (boxScore) {
+                var dStr = boxScore.gameInfo && boxScore.gameInfo.general && boxScore.gameInfo.general.date;
+                var ts = boxScore.gameInfo && boxScore.gameInfo.general && boxScore.gameInfo.general.timestamp;
+                var gameDate = mdyToISO(dStr, ts);
+                var homeName = boxScore.team && boxScore.team.home;
+                var awayName = boxScore.team && boxScore.team.away;
+                var homeTeamID = await resolveTeamID(homeName, seasonId);
+                var awayTeamID = await resolveTeamID(awayName, seasonId);
+                applyStructuredFields(boxScore, seasonId, homeTeamID, awayTeamID, gameDate);
                 await boxScoresContainer.items.upsert(boxScore);
             }
 
@@ -247,6 +353,10 @@ module.exports = async function (req, res) {
             }
 
             await seasonsContainer.items.upsert(season);
+
+            // Stat aggregates may have shifted (score change, forfeit toggle) — recompute
+            await recomputeStatsForSeason(season);
+
             return res.status(200).json({ success: true, id: gameId });
 
         } catch (err) {
@@ -269,8 +379,32 @@ module.exports = async function (req, res) {
         }
 
         try {
-            // Save box score if provided
+            // Apply new ID format + structured fields to the box score before save
             if (boxScore) {
+                var dStrPo = boxScore.gameInfo && boxScore.gameInfo.general && boxScore.gameInfo.general.date;
+                var tsPo = boxScore.gameInfo && boxScore.gameInfo.general && boxScore.gameInfo.general.timestamp;
+                var gameDatePo = mdyToISO(dStrPo, tsPo);
+                var homeNamePo = boxScore.team && boxScore.team.home;
+                var awayNamePo = boxScore.team && boxScore.team.away;
+                var homeTeamIDPo = await resolveTeamID(homeNamePo, seasonId);
+                var awayTeamIDPo = await resolveTeamID(awayNamePo, seasonId);
+
+                if (gameDatePo && homeNamePo && awayNamePo) {
+                    var basePo = makeLombaBoxScoreID(seasonId, homeNamePo, awayNamePo, gameDatePo);
+                    var attemptPo = 1, candidatePo = basePo;
+                    while (attemptPo < 10) {
+                        try {
+                            await boxScoresContainer.item(candidatePo, candidatePo).read();
+                            attemptPo++;
+                            candidatePo = basePo + '.g' + (attemptPo + 1);
+                        } catch (e) {
+                            if (e.code === 404) break;
+                            throw e;
+                        }
+                    }
+                    boxScore.id = candidatePo;
+                }
+                applyStructuredFields(boxScore, seasonId, homeTeamIDPo, awayTeamIDPo, gameDatePo);
                 await boxScoresContainer.items.upsert(boxScore);
             }
 
@@ -418,6 +552,9 @@ module.exports = async function (req, res) {
 
             // Save updated season doc
             await seasonsContainer.items.upsert(season);
+
+            // Recompute Season Stats so leaderboards reflect the playoff result
+            await recomputeStatsForSeason(season);
 
             return res.status(200).json({ success: true, season: season.playoffs });
 
