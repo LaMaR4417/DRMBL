@@ -102,6 +102,21 @@ module.exports = async function (req, res) {
         away: boxScore.teamInfo.away.name
     };
 
+    // Mark DNP on inGame slots that ended with 0 minutes played. The game is
+    // FINAL at save time, so 0 minutes = the player suited up but didn't play.
+    // recomputeSeasonStats skips dnp slots from player stat aggregation.
+    for (var dnpSide of ['home', 'away']) {
+        var dnpRoster = cleanedBS.teamInfo[dnpSide].roster.inGame || [];
+        for (var dnpI = 0; dnpI < dnpRoster.length; dnpI++) {
+            var dnpSlot = dnpRoster[dnpI];
+            if (!dnpSlot.playerID) continue;
+            var dnpMins = dnpSlot.stats && dnpSlot.stats.general && dnpSlot.stats.general.minutesPlayed;
+            if (!dnpMins || dnpMins === 0) {
+                dnpSlot.dnp = true;
+            }
+        }
+    }
+
     // Add structured top-level fields for indexing/queries (queryable by Cosmos)
     var structured = buildStructuredFields(cleanedBS, {
         seasonID: seasonId,

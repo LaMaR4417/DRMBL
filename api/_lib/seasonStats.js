@@ -261,6 +261,9 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
             for (var pi = 0; pi < inGame.length; pi++) {
                 var p = inGame[pi];
                 if (!p.playerID) continue;
+                // Skip DNP slots: player suited up but didn't play (0 minutes).
+                // gamesPlayed only counts actual playing appearances (NBA convention).
+                if (p.dnp === true) continue;
 
                 var pEntry = playerMap[p.playerID];
                 if (!pEntry) {
