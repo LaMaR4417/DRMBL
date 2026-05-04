@@ -10,8 +10,8 @@ Running list of pending items from brain-dump sessions. Update statuses as work 
 | 2 | **Schedule → Box Score deep link** | ✓ Done (2026-04-27) | DRMBL only. Completed games (with `boxScoreID`) get a `game-card-clickable` class + delegated handler navigating to `/box-scores?id=<boxScoreID>`. Honors ctrl/cmd-click + middle-click for new-tab. LOMBA / Copa Beta untouched. |
 | 3 | **Player stats corrections** | DONE (Week 1) — see "Stat correction notes" below | All 3 teams (Wonderland, Reapers, Heat) corrected for Week 1. New corrections will appear here as they come up. |
 | 4 | **Stats page** | ✓ Done (2026-04-27) | New `Season Stats` Cosmos container (one doc per season) populated by `recomputeSeasonStats` helper. `/api/stats` endpoint reads it. Frontend: 2K-style top-5 leaderboard cards (6 player + 6 team) on landing; click → sortable data grid with stat tabs, team filter, player search, sortable column headers, URL state. Mobile-responsive (PC-first). end-game.js auto-recomputes on every game save. |
-| 5 | **Owner page** | Pending — placeholder currently | |
-| 6 | **Free Agents page** | Pending — lowest priority | New page (doesn't exist yet). |
+| 5 | **Owner page** | ⏸ Stubbed (hidden from nav 2026-04-27) | Page still exists at `/owner.html` as old placeholder; no public entry point. Revisit when there's a defined use case (admin actions, "Meet the Captains" content, etc). |
+| 6 | **Free Agents page** | ⏸ Stubbed | Doesn't exist yet, won't be built until there's an actual need. Revisit if league movement / free-agent activity becomes worth surfacing. |
 
 ## Cross-cutting work (affects multiple pages/data)
 
