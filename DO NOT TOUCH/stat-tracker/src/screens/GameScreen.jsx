@@ -335,21 +335,37 @@ export default function GameScreen() {
     setPendingAction({ type: 'stat', side, action });
   }
 
-  // --- Substitution handlers (two-step: pick OUT then pick IN) ---
+  // --- Substitution handlers (bidirectional: pick OUT or IN first) ---
   function handleSubOut(side, playerIndex) {
+    if (pendingAction?.inIndex != null) {
+      setSuggestRebound(false);
+      setSuggestAssist(null);
+      setSuggestShot(null);
+      setSuggestTurnover(null);
+      setSuggestSteal(null);
+      setSuggestStopClock(false);
+      dispatch({ type: 'RECORD_SUBSTITUTION', side, outIndex: playerIndex, inIndex: pendingAction.inIndex });
+      shouldSync.current = true;
+      setPendingAction(null);
+      return;
+    }
     setPendingAction({ ...pendingAction, outIndex: playerIndex });
   }
 
   function handleSubIn(side, playerIndex) {
-    setSuggestRebound(false);
-    setSuggestAssist(null);
-    setSuggestShot(null);
-    setSuggestTurnover(null);
-    setSuggestSteal(null);
-    setSuggestStopClock(false);
-    dispatch({ type: 'RECORD_SUBSTITUTION', side, outIndex: pendingAction.outIndex, inIndex: playerIndex });
-    shouldSync.current = true;
-    setPendingAction(null);
+    if (pendingAction?.outIndex != null) {
+      setSuggestRebound(false);
+      setSuggestAssist(null);
+      setSuggestShot(null);
+      setSuggestTurnover(null);
+      setSuggestSteal(null);
+      setSuggestStopClock(false);
+      dispatch({ type: 'RECORD_SUBSTITUTION', side, outIndex: pendingAction.outIndex, inIndex: playerIndex });
+      shouldSync.current = true;
+      setPendingAction(null);
+      return;
+    }
+    setPendingAction({ ...pendingAction, inIndex: playerIndex });
   }
 
   // --- Timeout handler (fires immediately, no player selection) ---
@@ -610,7 +626,9 @@ export default function GameScreen() {
     const isSub = isSelecting && pendingAction.action === 'substitution';
     const isLateAdd = isSelecting && pendingAction.action === 'late-add';
     const isLateAddSubIn = isSelecting && pendingAction.action === 'late-add-sub-in';
-    const subStep = isSub ? (pendingAction.outIndex != null ? 2 : 1) : 0;
+    const subPicked = isSub
+      ? (pendingAction.outIndex != null ? 'out' : (pendingAction.inIndex != null ? 'in' : 'none'))
+      : null;
     const isPlayerSelectable = isSelecting && !subChoices && !isSub && !isLateAdd && !isLateAddSubIn;
 
     // Late Add mode: show available players from full roster
@@ -688,25 +706,32 @@ export default function GameScreen() {
       );
     }
 
-    // Substitution mode: two-step court/bench selection
+    // Substitution mode: bidirectional — pick OUT (court) or IN (bench) first
     if (isSub) {
-      const outPlayer = subStep === 2 ? team.roster.inGame[pendingAction.outIndex] : null;
+      const outPlayer = subPicked === 'out' ? team.roster.inGame[pendingAction.outIndex] : null;
+      const inPlayer = subPicked === 'in' ? team.roster.inGame[pendingAction.inIndex] : null;
+      let bannerText;
+      if (subPicked === 'out') {
+        bannerText = t('game', 'playerOutSelectIn', { number: outPlayer?.number || '?', name: outPlayer?.name });
+      } else if (subPicked === 'in') {
+        bannerText = t('game', 'playerInSelectOut', { number: inPlayer?.number || '?', name: inPlayer?.name });
+      } else {
+        bannerText = t('game', 'selectSubPlayer');
+      }
       return (
         <div className="game-section game-section-players">
           <div className="selection-banner">
-            <span className="selection-banner-text">
-              {subStep === 1
-                ? t('game', 'selectPlayerOut')
-                : t('game', 'playerOutSelectIn', { number: outPlayer?.number || '?', name: outPlayer?.name })}
-            </span>
+            <span className="selection-banner-text">{bannerText}</span>
             <button className="btn btn-small" onClick={() => {
-              if (subStep === 2) {
+              if (subPicked === 'out') {
                 setPendingAction({ ...pendingAction, outIndex: undefined });
+              } else if (subPicked === 'in') {
+                setPendingAction({ ...pendingAction, inIndex: undefined });
               } else {
                 setPendingAction(null);
               }
             }}>
-              {subStep === 2 ? t('common', 'back') : t('common', 'cancel')}
+              {subPicked !== 'none' ? t('common', 'back') : t('common', 'cancel')}
             </button>
           </div>
 
@@ -714,12 +739,12 @@ export default function GameScreen() {
           <div className="player-grid">
             {courtPlayers.map((player) => {
               const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
-              const isOut = subStep === 2 && actualIndex === pendingAction.outIndex;
+              const isOut = subPicked === 'out' && actualIndex === pendingAction.outIndex;
               return renderPlayerCard(player, team, {
-                selectable: subStep === 1,
+                selectable: subPicked !== 'out',
                 onClick: () => handleSubOut(side, actualIndex),
                 highlighted: isOut,
-                dimmed: subStep === 2 && !isOut,
+                dimmed: subPicked === 'out' && !isOut,
               });
             })}
           </div>
@@ -728,10 +753,12 @@ export default function GameScreen() {
           <div className="player-grid">
             {benchPlayers.length > 0 ? benchPlayers.map((player) => {
               const actualIndex = team.roster.inGame.findIndex((p) => p.playerID === player.playerID);
+              const isIn = subPicked === 'in' && actualIndex === pendingAction.inIndex;
               return renderPlayerCard(player, team, {
-                selectable: subStep === 2,
+                selectable: subPicked !== 'in',
                 onClick: () => handleSubIn(side, actualIndex),
-                dimmed: subStep === 1,
+                highlighted: isIn,
+                dimmed: subPicked === 'in' && !isIn,
               });
             }) : (
               <div className="sub-empty-bench">{t('game', 'noBench')}</div>
