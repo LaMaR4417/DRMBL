@@ -148,8 +148,9 @@
                 html += '<h2 class="week-title">' + label + '</h2>';
                 html += '<p class="week-sponsor">Presented by ' + meta.sponsor + '</p>';
                 if (sp && sp.img) {
-                    var spHref = sp.page ? '/' + sp.page : '/sponsor-bio.html?id=' + encodeURIComponent(sp.id);
-                    html += '<a href="' + spHref + '" class="week-sponsor-logo week-sponsor-logo-' + sp.id + '"><img src="/' + sp.img + '" alt="' + sp.name + '"></a>';
+                    var spHref = sponsorHref(sp, '/');
+                    var spTarget = sponsorIsExternal(sp) ? ' target="_blank" rel="noopener"' : '';
+                    html += '<a href="' + spHref + '" class="week-sponsor-logo week-sponsor-logo-' + sp.id + '"' + spTarget + '><img src="/' + sp.img + '" alt="' + sp.name + '"></a>';
                 }
                 html += '</div>';
             } else {

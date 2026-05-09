@@ -189,8 +189,9 @@
             var sp = SPONSORS[j];
             var bgStyle = sp.bgColor ? ' style="background-color:' + sp.bgColor + '"' : '';
             var fillCls = sp.fillCard ? ' sponsor-logo-fill' : '';
-            var spHref = sp.page ? sp.page : 'sponsor-bio.html?id=' + encodeURIComponent(sp.id);
-            html += '<a href="' + spHref + '" class="sponsor-logo-card' + fillCls + '"' + bgStyle + '>';
+            var spHref = sponsorHref(sp, '');
+            var spTarget = sponsorIsExternal(sp) ? ' target="_blank" rel="noopener"' : '';
+            html += '<a href="' + spHref + '" class="sponsor-logo-card' + fillCls + '"' + bgStyle + spTarget + '>';
             if (sp.img) {
                 html += '<img src="' + sp.img + '" alt="' + sp.name + '">';
             } else {
