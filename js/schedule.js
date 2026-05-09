@@ -24,7 +24,8 @@
         'drmbl': {
             1: { sponsor: 'Walmart' },
             2: { sponsor: 'El Tacon Madre' },
-            3: { sponsor: 'Chick-fil-A Del Rio' }
+            3: { sponsor: 'Chick-fil-A Del Rio' },
+            4: { sponsor: 'Deportes del Norte' }
         },
         'copa-beta': {
             11: { label: 'Playoff Sunday' }
