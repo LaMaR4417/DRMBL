@@ -1,4 +1,5 @@
 var { CosmosClient } = require("@azure/cosmos");
+var { recomputeSeasonStats } = require("./_lib/seasonStats");
 
 var client = new CosmosClient({
     endpoint: process.env.COSMOS_ENDPOINT,
@@ -10,6 +11,8 @@ var playersContainer = db.container("Players");
 var teamsContainer = db.container("Teams");
 var seasonsContainer = db.container("Seasons");
 var leaguesContainer = db.container("Leagues");
+var boxScoresContainer = db.container("Box Scores");
+var seasonStatsContainer = db.container("Season Stats");
 
 function normalizeName(name) {
     return name
@@ -208,6 +211,44 @@ module.exports = async function (req, res) {
 
             await playersContainer.item(ddata.id, ddata.id).delete();
             return res.status(200).json({ success: true });
+        }
+
+        if (req.method === "POST" && action === "delete-box-score") {
+            var bsData = req.body;
+            if (!bsData || !bsData.id) return res.status(400).json({ error: "Missing box score id" });
+            try {
+                await boxScoresContainer.item(bsData.id, bsData.id).delete();
+                return res.status(200).json({ success: true, id: bsData.id });
+            } catch (err) {
+                if (err.code === 404) return res.status(404).json({ error: "Box score not found" });
+                throw err;
+            }
+        }
+
+        if (req.method === "POST" && action === "recompute-season-stats") {
+            var rsData = req.body;
+            if (!rsData || !rsData.seasonId) return res.status(400).json({ error: "Missing seasonId" });
+
+            var { resource: seasonDoc } = await seasonsContainer.item(rsData.seasonId, rsData.seasonId).read();
+            if (!seasonDoc) return res.status(404).json({ error: "Season not found" });
+
+            var { resources: seasonBoxScores } = await boxScoresContainer.items
+                .query({
+                    query: "SELECT * FROM c WHERE c.seasonID = @s OR c.season = @s",
+                    parameters: [{ name: "@s", value: rsData.seasonId }]
+                })
+                .fetchAll();
+
+            var statsDoc = recomputeSeasonStats(seasonDoc, seasonBoxScores);
+            await seasonStatsContainer.items.upsert(statsDoc);
+
+            return res.status(200).json({
+                success: true,
+                seasonId: rsData.seasonId,
+                gamesProcessed: statsDoc.gamesProcessed,
+                playerCount: (statsDoc.players || []).length,
+                teamCount: (statsDoc.teams || []).length
+            });
         }
 
         return res.status(400).json({ error: "Invalid action" });
