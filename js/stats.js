@@ -2,6 +2,12 @@
     // ── State ──
     var statsDoc = null;
     var els = {};
+    // Primary sort for the detail grid.
+    //   { field, dir }  field ∈ { 'name', 'team', <stat key> }, dir ∈ { 'asc', 'desc' }
+    // When field is 'name' or 'team', the active stat (dropdown value) is used as
+    // the tiebreaker. When field is a stat key, primarySort.field === activeStatKey.
+    // null means uninitialized — populated on first detail render.
+    var primarySort = null;
 
     // Stats shown on the landing leaderboards (top-5 cards).
     // Each entry: { key, label, accessor (player → number), valueFmt (number → string), isPercent }
@@ -29,6 +35,22 @@
         { key: 'twoPct',    label: '2P%',    accessor: function (p) { return p.averages.twoPct; },       fmt: pctFmt },
         { key: 'threePct',  label: '3P%',    accessor: function (p) { return p.averages.threePct; },     fmt: pctFmt },
         { key: 'ftPct',     label: 'FT%',    accessor: function (p) { return p.averages.ftPct; },        fmt: pctFmt },
+        { key: 'eff',       label: 'EFF',    accessor: function (p) {
+            var gp = p.gamesPlayed || 0;
+            if (!gp) return 0;
+            var fg = (p.totals && p.totals.fieldGoals) || {};
+            var ft = (p.totals && p.totals.freeThrows) || {};
+            var reb = (p.totals && p.totals.rebounds) || {};
+            var eff = (p.totals.points || 0)
+                + (reb.total || 0)
+                + (p.totals.assists || 0)
+                + (p.totals.steals || 0)
+                + (p.totals.blocks || 0)
+                - (p.totals.turnovers || 0)
+                - ((fg.totalAttempted || 0) - (fg.totalMade || 0))
+                - ((ft.attempted || 0) - (ft.made || 0));
+            return eff / gp;
+        }, fmt: oneDec },
         { key: 'plusMinus', label: '+/-',    accessor: function (p) { return p.averages.plusMinusAvg; }, fmt: signedDec },
         // Totals — raw season counts, sortable like the rest.
         // Shooting-split columns sort by makes; display "made/attempted".
@@ -104,7 +126,9 @@
         var params = new URLSearchParams(window.location.search);
         var stat = params.get('stat');
         var team = params.get('team');
+        primarySort = null;
         if (stat) {
+            primarySort = { field: stat, dir: 'desc' };
             renderDetail(stat, team || 'all');
         } else {
             renderLanding();
@@ -122,6 +146,7 @@
 
     // ── Landing render ──
     function renderLanding() {
+        primarySort = null;
         els.detail.classList.add('hidden');
         els.landing.classList.remove('hidden');
 
@@ -150,6 +175,7 @@
         for (var c = 0; c < cards.length; c++) {
             cards[c].addEventListener('click', function () {
                 var stat = this.getAttribute('data-stat');
+                primarySort = { field: stat, dir: 'desc' };
                 renderDetail(stat, 'all');
                 setUrlState(stat, 'all');
             });
@@ -259,27 +285,50 @@
         var statDef = DETAIL_STATS.find(function (s) { return s.key === activeStatKey; }) || DETAIL_STATS[1];
         var search = (searchTerm || '').trim().toLowerCase();
 
+        var pf = primarySort && primarySort.field;
+        var pdir = primarySort && primarySort.dir;
+
         var players = (statsDoc.players || [])
             .filter(function (p) { return p.gamesPlayed > 0; })
             .filter(function (p) { return teamFilter === 'all' || p.teamID === teamFilter; })
             .filter(function (p) { return !search || p.name.toLowerCase().indexOf(search) !== -1; })
-            .sort(function (a, b) { return statDef.accessor(b) - statDef.accessor(a); });
+            .sort(function (a, b) {
+                if (pf === 'name' || pf === 'team') {
+                    var av = pf === 'name' ? a.name : a.teamName;
+                    var bv = pf === 'name' ? b.name : b.teamName;
+                    var cmp = String(av || '').localeCompare(String(bv || ''));
+                    if (cmp !== 0) return pdir === 'desc' ? -cmp : cmp;
+                    // Tiebreaker: active stat descending
+                    return statDef.accessor(b) - statDef.accessor(a);
+                }
+                // Primary is a stat (or unset → desc fallback)
+                var diff = statDef.accessor(b) - statDef.accessor(a);
+                return pdir === 'asc' ? -diff : diff;
+            });
 
         var html = '<div class="stats-table-area">';
         html += '<div class="stats-scroll-top"><div class="stats-scroll-top-inner"></div></div>';
         html += '<div class="stats-table-wrap">';
         html += '<table class="stats-table">';
+        var nameActive = pf === 'name';
+        var teamActive = pf === 'team';
+        var arrowFor = function (active) {
+            if (!active) return '';
+            var ch = pdir === 'asc' ? '&#9650;' : '&#9660;';
+            return ' <span class="st-arrow">' + ch + '</span>';
+        };
+
         html += '<thead><tr>';
         html += '<th class="st-rank">#</th>';
-        html += '<th class="st-player">PLAYER</th>';
-        html += '<th class="st-team">TEAM</th>';
+        html += '<th class="st-player st-sortable' + (nameActive ? ' st-active' : '') + '" data-sort="__name__" title="Sort by player name">PLAYER' + arrowFor(nameActive) + '</th>';
+        html += '<th class="st-team st-sortable' + (teamActive ? ' st-active' : '') + '" data-sort="__team__" title="Sort by team">TEAM' + arrowFor(teamActive) + '</th>';
         for (var i = 0; i < DETAIL_STATS.length; i++) {
             var s = DETAIL_STATS[i];
-            var isActive = s.key === activeStatKey;
+            var isActive = s.key === pf;
             var prevGroup = i > 0 ? DETAIL_STATS[i - 1].group : null;
             var isGroupStart = s.group && s.group !== prevGroup;
             var cls = 'st-stat st-sortable' + (isActive ? ' st-active' : '') + (isGroupStart ? ' st-group-start' : '');
-            html += '<th class="' + cls + '" data-sort="' + s.key + '" title="Sort by ' + s.label + '">' + s.label + (isActive ? ' <span class="st-arrow">&#9660;</span>' : '') + '</th>';
+            html += '<th class="' + cls + '" data-sort="' + s.key + '" title="Sort by ' + s.label + '">' + s.label + arrowFor(isActive) + '</th>';
         }
         html += '</tr></thead>';
         html += '<tbody>';
@@ -301,7 +350,7 @@
                 }
                 var prevGroupTd = si > 0 ? DETAIL_STATS[si - 1].group : null;
                 var isGroupStartTd = sd.group && sd.group !== prevGroupTd;
-                var tdCls = 'st-stat' + (sd.key === activeStatKey ? ' st-active' : '') + (isGroupStartTd ? ' st-group-start' : '');
+                var tdCls = 'st-stat' + (sd.key === pf ? ' st-active' : '') + (isGroupStartTd ? ' st-group-start' : '');
                 html += '<td class="' + tdCls + '">' + fmtVal + '</td>';
             }
             html += '</tr>';
@@ -346,14 +395,35 @@
             });
         }
 
-        // Header click → re-sort by clicked stat (also syncs the dropdown + URL)
+        // Header click → re-sort.
+        //   PLAYER/TEAM → set/toggle primary sort; active stat (dropdown) remains
+        //                 unchanged and serves as the tiebreaker.
+        //   Stat column → override primary (clears any name/team grouping), toggle
+        //                 asc/desc if same column, default desc on a different
+        //                 column. Syncs the dropdown + URL.
         var headers = els.detailTable.querySelectorAll('th[data-sort]');
         for (var hi = 0; hi < headers.length; hi++) {
             headers[hi].addEventListener('click', function () {
-                var newStat = this.getAttribute('data-sort');
-                els.detailStat.value = newStat;
-                renderDetailTable(newStat, teamFilter, searchTerm);
-                setUrlState(newStat, teamFilter);
+                var key = this.getAttribute('data-sort');
+                if (key === '__name__' || key === '__team__') {
+                    var field = key === '__name__' ? 'name' : 'team';
+                    if (primarySort && primarySort.field === field) {
+                        primarySort = { field: field, dir: primarySort.dir === 'asc' ? 'desc' : 'asc' };
+                    } else {
+                        primarySort = { field: field, dir: 'asc' };
+                    }
+                    renderDetailTable(activeStatKey, teamFilter, searchTerm);
+                    return;
+                }
+                // Stat column: override primary (clears name/team grouping)
+                if (primarySort && primarySort.field === key) {
+                    primarySort = { field: key, dir: primarySort.dir === 'asc' ? 'desc' : 'asc' };
+                } else {
+                    primarySort = { field: key, dir: 'desc' };
+                }
+                els.detailStat.value = key;
+                renderDetailTable(key, teamFilter, searchTerm);
+                setUrlState(key, teamFilter);
             });
         }
     }
@@ -381,9 +451,16 @@
         });
 
         els.detailStat.addEventListener('change', function () {
+            var newStat = this.value;
             var teamFilter = els.detailTeam.value || 'all';
-            renderDetail(this.value, teamFilter);
-            setUrlState(this.value, teamFilter);
+            // If primary is name/team, keep the grouping — the active stat just
+            // changes the tiebreaker. Otherwise the new stat becomes primary, desc.
+            var keepGrouping = primarySort && (primarySort.field === 'name' || primarySort.field === 'team');
+            if (!keepGrouping) {
+                primarySort = { field: newStat, dir: 'desc' };
+            }
+            renderDetail(newStat, teamFilter);
+            setUrlState(newStat, teamFilter);
         });
 
         els.detailTeam.addEventListener('change', function () {
