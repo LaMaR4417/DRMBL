@@ -226,6 +226,37 @@ module.exports = async function (req, res) {
             }
         }
 
+        if (req.method === "POST" && action === "prune-schedule-fallback-entry") {
+            var pData = req.body;
+            if (!pData || !pData.seasonId || !pData.gameId) {
+                return res.status(400).json({ error: "Missing seasonId or gameId" });
+            }
+            var { resource: pSeasonDoc } = await seasonsContainer.item(pData.seasonId, pData.seasonId).read();
+            if (!pSeasonDoc) return res.status(404).json({ error: "Season not found" });
+
+            var sched = pSeasonDoc.schedule || [];
+            var removed = 0;
+            var newSched = [];
+            for (var si = 0; si < sched.length; si++) {
+                var entry = sched[si];
+                var keptGames = (entry.games || []).filter(function (g) {
+                    if (g.id === pData.gameId) { removed++; return false; }
+                    return true;
+                });
+                if (keptGames.length > 0) {
+                    newSched.push({ date: entry.date, games: keptGames });
+                }
+            }
+
+            if (removed === 0) {
+                return res.status(404).json({ error: "Game id not found in schedule[]" });
+            }
+
+            pSeasonDoc.schedule = newSched;
+            await seasonsContainer.item(pData.seasonId, pData.seasonId).replace(pSeasonDoc);
+            return res.status(200).json({ success: true, removed: removed, remainingDates: newSched.length });
+        }
+
         if (req.method === "POST" && action === "delete-box-score") {
             var bsData = req.body;
             if (!bsData || !bsData.id) return res.status(400).json({ error: "Missing box score id" });
