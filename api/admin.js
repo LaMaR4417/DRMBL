@@ -213,6 +213,19 @@ module.exports = async function (req, res) {
             return res.status(200).json({ success: true });
         }
 
+        if (req.method === "GET" && action === "get-season-raw") {
+            var gsId = req.query.id;
+            if (!gsId) return res.status(400).json({ error: "Missing season id" });
+            try {
+                var { resource: gsDoc } = await seasonsContainer.item(gsId, gsId).read();
+                if (!gsDoc) return res.status(404).json({ error: "Season not found" });
+                return res.status(200).json({ season: gsDoc });
+            } catch (err) {
+                if (err.code === 404) return res.status(404).json({ error: "Season not found" });
+                throw err;
+            }
+        }
+
         if (req.method === "POST" && action === "delete-box-score") {
             var bsData = req.body;
             if (!bsData || !bsData.id) return res.status(400).json({ error: "Missing box score id" });
