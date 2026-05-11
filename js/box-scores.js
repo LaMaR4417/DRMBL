@@ -92,6 +92,8 @@
             return;
         }
 
+        renderSkeleton();
+
         var fetches = targetSeasons.map(function (s) {
             return fetch('/api/box-scores?season=' + encodeURIComponent(s.id))
                 .then(function (r) { return r.json(); })
@@ -159,6 +161,33 @@
 
     function hideSpotlightMsg() {
         els.spotlightMsg.classList.add('hidden');
+    }
+
+    function renderSkeleton() {
+        els.spotlightMsg.classList.add('hidden');
+        els.detail.classList.add('hidden');
+
+        var card =
+            '<div class="bs-game-card bs-game-card-skeleton" aria-hidden="true">' +
+                '<div class="bs-game-card-row">' +
+                    '<span class="bs-skeleton bs-skeleton-team"></span>' +
+                    '<span class="bs-skeleton bs-skeleton-score"></span>' +
+                '</div>' +
+                '<div class="bs-game-card-divider"></div>' +
+                '<div class="bs-game-card-row">' +
+                    '<span class="bs-skeleton bs-skeleton-team"></span>' +
+                    '<span class="bs-skeleton bs-skeleton-score"></span>' +
+                '</div>' +
+            '</div>';
+
+        var cards = '';
+        for (var i = 0; i < 9; i++) cards += card;
+
+        els.gameCards.innerHTML =
+            '<div class="bs-week-group bs-skeleton-group">' +
+                '<div class="bs-week-label"><span class="bs-skeleton bs-skeleton-label"></span></div>' +
+                '<div class="bs-games-grid">' + cards + '</div>' +
+            '</div>';
     }
 
     function loadLiveGames() {
@@ -710,7 +739,6 @@
                 var time = grouped.order[t];
                 var slotGames = grouped.map[time];
                 out += '<div class="bs-time-slot">';
-                out += '<div class="bs-time-label">' + time + '</div>';
 
                 // Sub-group by suffix (e.g. "Court A", "Court B")
                 var suffixMap = {};
@@ -1102,15 +1130,15 @@
             homePlayerStats: document.getElementById('bs-home-player-stats')
         };
 
-        // Show "Clear All" only when any filter is active
+        // Show "Clear All" only when a user-visible filter is active.
+        // League is locked to DRMBL on this site, so it doesn't count.
         function updateClearAllVisibility() {
-            var anyActive = selectedLeagueId || selectedDivision || selectedSeasonId || selectedTeam || selectedDate;
+            var anyActive = selectedDivision || selectedSeasonId || selectedTeam || selectedDate;
             els.clearAll.classList.toggle('hidden', !anyActive);
         }
 
-        // Clear All handler — resets everything
+        // Clear All — wipes user-visible filters but keeps the locked DRMBL league.
         els.clearAll.addEventListener('click', function () {
-            selectedLeagueId = null;
             selectedDivision = null;
             selectedSeasonId = null;
             selectedTeam = null;
@@ -1119,7 +1147,6 @@
             selectedBoxScoreId = null;
             clearBoxScoreUrl();
             hideDetail();
-            els.leagueSelect.value = '';
             renderLeagueDropdown();
             renderDivisionDropdown();
             renderSeasonDropdown();
@@ -1205,6 +1232,7 @@
         // Browser back/forward should swap the visible box score
         window.addEventListener('popstate', applyUrlBoxScore);
 
+        renderSkeleton();
         loadLeaguesAndSeasons();
 
         // If the user opened a deep link (?id=...), render that box score now.

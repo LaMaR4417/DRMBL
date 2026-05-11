@@ -16,7 +16,7 @@
 
     <!-- Live games / loading / empty state -->
     <section id="bs-spotlight" class="bs-spotlight">
-        <p id="bs-spotlight-msg">Loading all games...</p>
+        <p id="bs-spotlight-msg" class="hidden">Loading all games...</p>
         <div id="bs-live-games" class="game-selector hidden"></div>
     </section>
 
@@ -24,15 +24,18 @@
     <section id="bs-game-list" class="bs-game-list">
         <nav class="bs-filter-bar" id="bs-filter-bar">
             <div class="bs-filter-row">
-                <select id="bs-league-select" class="bs-filter-select bs-filter-primary-select" title="Select league">
+                <!-- DRMBL-only site: league is locked to DRMBL, dropdown hidden. -->
+                <select id="bs-league-select" class="bs-filter-select bs-filter-primary-select hidden" title="Select league">
                     <option value="">All Leagues</option>
                 </select>
+                <!-- Division stays in DOM but auto-hides when ≤1 division exists (DRMBL has only "Open"). -->
                 <div class="bs-filter-group bs-filter-division-group" id="bs-division-group">
                     <select id="bs-division-select" class="bs-filter-select bs-filter-subtle-select" title="Select division">
                         <option value="">All Divisions</option>
                     </select>
                 </div>
-                <select id="bs-season-select" class="bs-filter-select bs-filter-primary-select" title="Select season">
+                <!-- Season hidden for now (single active season). Un-hide when a new season is added. -->
+                <select id="bs-season-select" class="bs-filter-select bs-filter-primary-select hidden" title="Select season">
                     <option value="">All Seasons</option>
                 </select>
                 <select id="bs-team-select" class="bs-filter-select bs-filter-secondary-select" title="Select team">

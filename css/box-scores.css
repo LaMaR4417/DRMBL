@@ -412,16 +412,6 @@
     margin-bottom: 0;
 }
 
-.bs-time-label {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.7);
-    padding: 4px 0;
-    margin-bottom: 6px;
-}
-
 .bs-courts-row {
     display: flex;
     align-items: flex-end;
@@ -505,4 +495,49 @@
     .bs-game-card-score {
         font-size: 18px;
     }
+}
+
+/* Shimmer skeleton — placeholder cards shown while game data is loading.
+   Uses a transform-animated highlight inside an overflow-hidden base so the
+   animation stays on the compositor (no paint/layout each frame). */
+.bs-skeleton {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    vertical-align: middle;
+}
+
+.bs-skeleton::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        transparent 100%
+    );
+    transform: translateX(-100%);
+    animation: bs-shimmer 1.5s ease-in-out infinite;
+    will-change: transform;
+}
+
+.bs-skeleton-label { width: 180px; height: 22px; }
+.bs-skeleton-team { width: 140px; height: 16px; }
+.bs-skeleton-score { width: 36px; height: 20px; }
+
+.bs-game-card-skeleton {
+    cursor: default;
+    pointer-events: none;
+}
+
+.bs-game-card-skeleton:hover {
+    background: #111;
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+@keyframes bs-shimmer {
+    100% { transform: translateX(100%); }
 }
