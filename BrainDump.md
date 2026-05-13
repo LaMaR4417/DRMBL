@@ -18,6 +18,7 @@ Running list of pending items from brain-dump sessions. Update statuses as work 
 | Item | Status | Notes |
 |------|--------|-------|
 | **Box-score naming convention (DRMBL)** | ✓ Done (2026-04-27) | New format `[league].[seasonSlug].[home_vs_away].[date]` e.g. `DRMBL.Mens_Open_Spring_2026.Wonderland_vs_DR_Elite.2026-04-26`. Plus structured top-level fields `leagueID`, `seasonID`, `homeTeamID`, `awayTeamID`, `gameDate`, `gameTimestamp` for Cosmos queries. Helper at `api/_lib/boxScoreId.js`. Wired into `api/end-game.js` for new saves. 4 existing DRMBL box scores migrated + season doc references updated. LOMBA / Copa Beta out of scope (regional ESPN site work). |
+| **Retro-fill recorder backport vigilance** | Ongoing | `DO NOT TOUCH/drmbl-recorder-retro-fill/` is a clone of `drmbl-recorder-full/` (see /drmbl-recorder/retro-fill/). Non-trivial changes to the live tracker (`drmbl-recorder-full/`) should be evaluated for backport. The two diverge in: HomeScreen→GamePickerScreen, App.jsx step flow (collapsed to 2), GameContext (LOAD_BOX_SCORE + WIPE_STATS + editMode flag), GameScreen (Wipe button + target display + saveEditGame branch), api.js (fetchSeasonGames/fetchBoxScoreById/saveEditGame). Everything else stays in lockstep. |
 
 ## Future / out-of-scope (do NOT do here)
 
