@@ -525,49 +525,44 @@ module.exports = async function (req, res) {
                     }
                 }
             } else if (round === 'semiFinals') {
-                // Push winners into championship as they become available
+                // Reconcile championship to current SF winners. Rebuild matchup +
+                // games when both SFs are decided and the result has changed (e.g.
+                // an SF edit flipped a winner). Refuse to clobber once any
+                // championship game has been played.
                 var champ = season.playoffs.championship;
                 var champSuffix = seasonId.replace('LOMBA - ', '');
 
+                var sfWinners = [];
                 for (var sf2 = 0; sf2 < season.playoffs.semiFinals.length; sf2++) {
-                    var sfSeries = season.playoffs.semiFinals[sf2];
-                    var sfWinner = null;
+                    var sfS = season.playoffs.semiFinals[sf2];
+                    if (sfS.seed1Wins >= 2) sfWinners.push({ seed: sfS.seed1, name: sfS.name1 });
+                    else if (sfS.seed2Wins >= 2) sfWinners.push({ seed: sfS.seed2, name: sfS.name2 });
+                }
 
-                    if (sfSeries.seed1Wins >= 2) {
-                        sfWinner = { seed: sfSeries.seed1, name: sfSeries.name1 };
-                    } else if (sfSeries.seed2Wins >= 2) {
-                        sfWinner = { seed: sfSeries.seed2, name: sfSeries.name2 };
+                var champHasPlay = (champ.games || []).some(function (gm) { return gm && gm.completion; });
+
+                if (sfWinners.length === 2 && !champHasPlay) {
+                    sfWinners.sort(function (a, b) { return a.seed - b.seed; });
+                    var newHigher = sfWinners[0];
+                    var newLower = sfWinners[1];
+                    var matchupChanged = champ.name1 !== newHigher.name || champ.name2 !== newLower.name;
+
+                    if (matchupChanged) {
+                        champ.seed1 = newHigher.seed;
+                        champ.name1 = newHigher.name;
+                        champ.seed2 = newLower.seed;
+                        champ.name2 = newLower.name;
+                        champ.seed1Wins = 0;
+                        champ.seed2Wins = 0;
+                        champ.games = [
+                            { id: "Playoff Final Game 1 - " + newLower.name + " vs " + newHigher.name + " - " + champSuffix, home: newHigher.name, away: newLower.name, homeScore: null, awayScore: null, winner: "", forfeit: false, date: null, time: null, completion: false },
+                            { id: "Playoff Final Game 2 - " + newHigher.name + " vs " + newLower.name + " - " + champSuffix, home: newLower.name, away: newHigher.name, homeScore: null, awayScore: null, winner: "", forfeit: false, date: null, time: null, completion: false },
+                            { id: "Playoff Final Game 3 - " + newLower.name + " vs " + newHigher.name + " - " + champSuffix, home: newHigher.name, away: newLower.name, homeScore: null, awayScore: null, winner: "", forfeit: false, date: null, time: null, completion: false }
+                        ];
                     }
-
-                    if (sfWinner) {
-                        // Place winner in championship — higher seed goes to seed1
-                        if (champ.seed1 === null) {
-                            champ.seed1 = sfWinner.seed;
-                            champ.name1 = sfWinner.name;
-                        } else if (champ.seed2 === null && champ.name1 !== sfWinner.name) {
-                            // Second winner — make sure higher seed is seed1
-                            if (sfWinner.seed < champ.seed1) {
-                                champ.seed2 = champ.seed1;
-                                champ.name2 = champ.name1;
-                                champ.seed1 = sfWinner.seed;
-                                champ.name1 = sfWinner.name;
-                            } else {
-                                champ.seed2 = sfWinner.seed;
-                                champ.name2 = sfWinner.name;
-                            }
-
-                            // Both finalists known — generate game slots
-                            var champHigher = champ.name1;
-                            var champLower = champ.name2;
-                            champ.seed1Wins = 0;
-                            champ.seed2Wins = 0;
-                            champ.games = [
-                                { id: "Playoff Final Game 1 - " + champLower + " vs " + champHigher + " - " + champSuffix, home: champHigher, away: champLower, homeScore: null, awayScore: null, winner: "", forfeit: false, date: null, time: null, completion: false },
-                                { id: "Playoff Final Game 2 - " + champHigher + " vs " + champLower + " - " + champSuffix, home: champLower, away: champHigher, homeScore: null, awayScore: null, winner: "", forfeit: false, date: null, time: null, completion: false },
-                                { id: "Playoff Final Game 3 - " + champLower + " vs " + champHigher + " - " + champSuffix, home: champHigher, away: champLower, homeScore: null, awayScore: null, winner: "", forfeit: false, date: null, time: null, completion: false }
-                            ];
-                        }
-                    }
+                } else if (sfWinners.length === 1 && !champHasPlay && champ.seed1 === null) {
+                    champ.seed1 = sfWinners[0].seed;
+                    champ.name1 = sfWinners[0].name;
                 }
             }
 
