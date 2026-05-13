@@ -449,11 +449,32 @@ module.exports = async function (req, res) {
                 }
             }
 
-            // If series is over (someone hit 2 wins), null out remaining games
+            // Reconcile game slots to current series state. If a side has 2 wins,
+            // unplayed games are "no necesario" (null). Otherwise restore any
+            // previously-nulled slots — an earlier sweep may have nulled them and
+            // a later edit can drop the count back below 2.
             if (series.seed1Wins >= 2 || series.seed2Wins >= 2) {
                 for (var g = 0; g < series.games.length; g++) {
                     if (series.games[g] && !series.games[g].completion) {
                         series.games[g] = null;
+                    }
+                }
+            } else {
+                for (var gr = 0; gr < series.games.length; gr++) {
+                    if (series.games[gr] === null) {
+                        var lowerSeedHome = (gr === 1);
+                        series.games[gr] = {
+                            id: "",
+                            home: lowerSeedHome ? series.name2 : series.name1,
+                            away: lowerSeedHome ? series.name1 : series.name2,
+                            homeScore: null,
+                            awayScore: null,
+                            winner: "",
+                            forfeit: false,
+                            date: null,
+                            time: null,
+                            completion: false,
+                        };
                     }
                 }
             }
