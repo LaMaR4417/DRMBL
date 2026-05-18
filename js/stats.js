@@ -196,9 +196,10 @@
         html += '<ol class="stats-card-list">';
         for (var i = 0; i < players.length; i++) {
             var p = players[i];
+            var profileHref = '/player.html?id=' + encodeURIComponent(p.playerID);
             html += '<li class="stats-card-row">';
             html += '<span class="stats-card-rank">' + (i + 1) + '</span>';
-            html += '<span class="stats-card-name">' + escapeHtml(p.name) + '</span>';
+            html += '<a class="stats-card-name stats-card-player-link" href="' + profileHref + '">' + escapeHtml(p.name) + '</a>';
             html += '<span class="stats-card-row-team">' + escapeHtml(p.teamName) + '</span>';
             html += '<span class="stats-card-value">' + statDef.fmt(statDef.accessor(p)) + '</span>';
             html += '</li>';
@@ -337,7 +338,7 @@
             var p = players[pi];
             html += '<tr>';
             html += '<td class="st-rank">' + (pi + 1) + '</td>';
-            html += '<td class="st-player">' + escapeHtml(p.name) + '</td>';
+            html += '<td class="st-player"><a class="st-player-link" href="/player?id=' + encodeURIComponent(p.playerID) + '">' + escapeHtml(p.name) + '</a></td>';
             html += '<td class="st-team">' + escapeHtml(p.teamName) + '</td>';
             for (var si = 0; si < DETAIL_STATS.length; si++) {
                 var sd = DETAIL_STATS[si];

@@ -1,0 +1,174 @@
+/* Player profile page */
+
+.player-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+    color: #e8e8e8;
+}
+
+.player-loading,
+.player-error {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-size: 1.1em;
+}
+.player-error {
+    color: #ff6b6b;
+}
+.hidden { display: none !important; }
+
+/* Header */
+.player-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 22px;
+    background: linear-gradient(180deg, #1a1a1d 0%, #141416 100%);
+    border: 1px solid #2c2c30;
+    border-radius: 10px;
+    margin-bottom: 24px;
+}
+.player-header-main {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+.player-jersey {
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    font-size: 3em;
+    line-height: 1;
+    color: #d4a23a;
+    min-width: 70px;
+    text-align: center;
+}
+.player-identity { display: flex; flex-direction: column; gap: 4px; }
+.player-name {
+    margin: 0;
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    font-size: 2.4em;
+    letter-spacing: 0.02em;
+    line-height: 1;
+}
+.player-team {
+    margin: 0;
+    color: #aaa;
+    font-size: 1.05em;
+}
+.player-bio { font-size: 0.9em; color: #888; }
+
+/* Section labels */
+.section-label {
+    margin: 0 0 10px 0;
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    font-size: 1.2em;
+    letter-spacing: 0.06em;
+    color: #d4a23a;
+    text-transform: uppercase;
+}
+
+/* Stat grids (averages + totals) */
+.player-averages,
+.player-totals,
+.player-splits {
+    margin-bottom: 24px;
+}
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+    gap: 8px;
+}
+.stat-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    background: #1a1a1d;
+    border: 1px solid #2c2c30;
+    border-radius: 8px;
+}
+.stat-label {
+    font-size: 0.7em;
+    letter-spacing: 0.1em;
+    color: #888;
+    text-transform: uppercase;
+}
+.stat-value {
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    font-size: 1.9em;
+    line-height: 1;
+    color: #fff;
+}
+
+/* Shooting splits */
+.splits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+}
+.split-row {
+    display: grid;
+    grid-template-columns: 36px 1fr 70px;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #1a1a1d;
+    border: 1px solid #2c2c30;
+    border-radius: 6px;
+}
+.split-label {
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    font-size: 1.1em;
+    color: #d4a23a;
+}
+.split-pct {
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    font-size: 1.3em;
+    color: #fff;
+}
+.split-frac {
+    color: #888;
+    font-size: 0.85em;
+    text-align: right;
+}
+
+/* Game log */
+.player-game-log { margin-bottom: 24px; }
+.game-log-body { overflow-x: auto; }
+.game-log-loading, .game-log-empty {
+    padding: 30px 20px;
+    color: #888;
+    text-align: center;
+}
+.game-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92em;
+}
+.game-log-table thead th {
+    padding: 10px 8px;
+    text-align: left;
+    color: #888;
+    font-size: 0.75em;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid #2c2c30;
+    background: #1a1a1d;
+    position: sticky;
+    top: 0;
+}
+.game-log-table th:nth-child(n+4) { text-align: center; }
+.game-log-table tbody td {
+    padding: 9px 8px;
+    border-bottom: 1px solid #232326;
+}
+.game-log-table tbody tr:hover { background: #19191c; }
+.game-log-table .gl-date a { color: #d4a23a; text-decoration: none; }
+.game-log-table .gl-date a:hover { text-decoration: underline; }
+.game-log-table .gl-opp { color: #ccc; }
+.game-log-table .gl-result.win { color: #6cd97a; font-weight: 600; }
+.game-log-table .gl-result.loss { color: #ff6b6b; font-weight: 600; }
+.game-log-table .gl-stat { text-align: center; color: #ddd; }
+.game-log-table tr.dnp-row { opacity: 0.5; }
+.game-log-table tr.score-only-row { opacity: 0.65; }

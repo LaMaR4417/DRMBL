@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Profile - DRMBL</title>
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/player.css">
+    <script src="js/skeleton.js"></script>
+</head>
+<body>
+    <main id="player-page" class="player-page">
+        <p id="player-loading" class="player-loading">Loading player...</p>
+        <p id="player-error" class="player-error hidden"></p>
+        <div id="player-content" class="player-content hidden">
+            <header class="player-header">
+                <div class="player-header-main">
+                    <span id="player-jersey" class="player-jersey"></span>
+                    <div class="player-identity">
+                        <h1 id="player-name" class="player-name"></h1>
+                        <p id="player-team" class="player-team"></p>
+                    </div>
+                </div>
+                <div id="player-bio" class="player-bio"></div>
+            </header>
+
+            <section class="player-averages">
+                <h2 class="section-label">Per-Game Averages</h2>
+                <div id="player-avg-grid" class="stat-grid"></div>
+            </section>
+
+            <section class="player-totals">
+                <h2 class="section-label">Season Totals (<span id="player-gp">--</span> GP)</h2>
+                <div id="player-tot-grid" class="stat-grid"></div>
+            </section>
+
+            <section class="player-splits">
+                <h2 class="section-label">Shooting Splits</h2>
+                <div id="player-splits-grid" class="splits-grid"></div>
+            </section>
+
+            <section class="player-game-log">
+                <h2 class="section-label">Game Log</h2>
+                <div id="player-game-log-body" class="game-log-body">
+                    <p class="game-log-loading">Loading game log...</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="js/player.js"></script>
+</body>
+</html>

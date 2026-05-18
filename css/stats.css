@@ -1,5 +1,19 @@
 /* ── STATS PAGE ── */
 
+/* Player name links → profile page (inherit color, underline on hover) */
+.stats-card-player-link,
+.st-player-link {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+.stats-card-player-link:hover,
+.st-player-link:hover {
+    color: #d4a23a;
+    text-decoration: underline;
+}
+
+
 .stats-hero {
     padding: 200px 20px 40px;
     text-align: center;

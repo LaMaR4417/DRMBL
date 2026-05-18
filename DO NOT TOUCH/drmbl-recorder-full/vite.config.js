@@ -33,7 +33,8 @@ function serveProjectRoot() {
         if (req.url.startsWith('/drmbl-recorder') || req.url.startsWith('/api')) {
           return next()
         }
-        const filePath = path.join(projectRoot, req.url)
+        const urlPath = req.url.split('?')[0]
+        const filePath = path.join(projectRoot, urlPath)
         try {
           if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
             const ext = path.extname(filePath)
