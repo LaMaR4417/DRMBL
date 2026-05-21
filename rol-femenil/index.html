@@ -616,7 +616,8 @@
         .flyer .field-input { cursor: text; }
 
         /* Edit-mode affordances on selects/inputs */
-        body.editing .flyer .field-select {
+        body.editing .flyer .field-select,
+        body.editing .flyer .field-input.field-team {
             background-image:
                 linear-gradient(45deg, transparent 50%, currentColor 50%),
                 linear-gradient(135deg, currentColor 50%, transparent 50%);
@@ -626,6 +627,28 @@
             background-size: 4px 4px;
             background-repeat: no-repeat;
             padding-right: 12px;
+        }
+
+        /* Team combo box: behaves like a select but allows typing custom names */
+        .flyer .field-input.field-team {
+            cursor: pointer;
+            min-width: 8ch;
+        }
+        .flyer .field-input.field-team::-webkit-calendar-picker-indicator {
+            opacity: 0;
+            display: none;
+        }
+
+        /* Invalid (blank team) — flashed when user tries to export with empty field */
+        body.editing .flyer .field-input.field-team.field-error {
+            outline: 1.5px solid #ff5c5c !important;
+            background-color: rgba(255, 92, 92, 0.18) !important;
+        }
+
+        /* Inline error message in the toolbar hint slot */
+        .toolbar-hint.toolbar-error {
+            color: #ff8a8a;
+            font-weight: 600;
         }
 
         body.editing .flyer .field-select:hover,
@@ -682,6 +705,38 @@
     </style>
 </head>
 <body class="layout-trio editing">
+    <!-- Shared team list for all team combo boxes (datalist allows typing + picking) -->
+    <datalist id="femenil-teams">
+        <option value="Alfa y Omega"></option>
+        <option value="Amazonas"></option>
+        <option value="Bad Girls"></option>
+        <option value="Broncas"></option>
+        <option value="CBTIS"></option>
+        <option value="CBTIS B"></option>
+        <option value="CBTIS C"></option>
+        <option value="CONALEP"></option>
+        <option value="Genesis"></option>
+        <option value="Genesis B"></option>
+        <option value="IMSS"></option>
+        <option value="Linces A"></option>
+        <option value="Linces B"></option>
+        <option value="Linces C"></option>
+        <option value="Mambas"></option>
+        <option value="Mayko Girls A"></option>
+        <option value="Mayko Girls B"></option>
+        <option value="Mayko Girls C"></option>
+        <option value="Nets"></option>
+        <option value="Panteras"></option>
+        <option value="Piedras Negras"></option>
+        <option value="Sonics"></option>
+        <option value="Spurs"></option>
+        <option value="Totas"></option>
+        <option value="Totas 40"></option>
+        <option value="UA de C"></option>
+        <option value="Valquirias"></option>
+        <option value="West Gold"></option>
+    </datalist>
+
     <!-- ===================== EDITOR TOOLBAR ===================== -->
     <div class="editor-toolbar">
         <div>
@@ -790,70 +845,12 @@
                                 <div class="matchup">
                                     <div class="teams">
                                         <span class="team-a">
-                                            <select class="field-select edit-only" data-field="team-a" aria-label="Equipo A">
-                                                <option selected>Alfa y Omega</option>
-                                                <option>Amazonas</option>
-                                                <option>Bad Girls</option>
-                                                <option>Broncas</option>
-                                                <option>CBTIS</option>
-                                                <option>CBTIS B</option>
-                                                <option>CBTIS C</option>
-                                                <option>CONALEP</option>
-                                                <option>Genesis</option>
-                                                <option>Genesis B</option>
-                                                <option>IMSS</option>
-                                                <option>Linces A</option>
-                                                <option>Linces B</option>
-                                                <option>Linces C</option>
-                                                <option>Mambas</option>
-                                                <option>Mayko Girls A</option>
-                                                <option>Mayko Girls B</option>
-                                                <option>Mayko Girls C</option>
-                                                <option>Nets</option>
-                                                <option>Panteras</option>
-                                                <option>Piedras Negras</option>
-                                                <option>Sonics</option>
-                                                <option>Spurs</option>
-                                                <option>Totas</option>
-                                                <option>Totas 40</option>
-                                                <option>UA de C</option>
-                                                <option>Valquirias</option>
-                                                <option>West Gold</option>
-                                            </select>
+                                            <input class="field-input field-team edit-only" type="text" list="femenil-teams" data-field="team-a" aria-label="Equipo A" value="Alfa y Omega" placeholder="Equipo" autocomplete="off">
                                             <span class="field-display export-only">Alfa y Omega</span>
                                         </span>
                                         <span class="vs">VS</span>
                                         <span class="team-b">
-                                            <select class="field-select edit-only" data-field="team-b" aria-label="Equipo B">
-                                                <option>Alfa y Omega</option>
-                                                <option selected>Amazonas</option>
-                                                <option>Bad Girls</option>
-                                                <option>Broncas</option>
-                                                <option>CBTIS</option>
-                                                <option>CBTIS B</option>
-                                                <option>CBTIS C</option>
-                                                <option>CONALEP</option>
-                                                <option>Genesis</option>
-                                                <option>Genesis B</option>
-                                                <option>IMSS</option>
-                                                <option>Linces A</option>
-                                                <option>Linces B</option>
-                                                <option>Linces C</option>
-                                                <option>Mambas</option>
-                                                <option>Mayko Girls A</option>
-                                                <option>Mayko Girls B</option>
-                                                <option>Mayko Girls C</option>
-                                                <option>Nets</option>
-                                                <option>Panteras</option>
-                                                <option>Piedras Negras</option>
-                                                <option>Sonics</option>
-                                                <option>Spurs</option>
-                                                <option>Totas</option>
-                                                <option>Totas 40</option>
-                                                <option>UA de C</option>
-                                                <option>Valquirias</option>
-                                                <option>West Gold</option>
-                                            </select>
+                                            <input class="field-input field-team edit-only" type="text" list="femenil-teams" data-field="team-b" aria-label="Equipo B" value="Amazonas" placeholder="Equipo" autocomplete="off">
                                             <span class="field-display export-only">Amazonas</span>
                                         </span>
                                     </div>
@@ -888,70 +885,12 @@
                                 <div class="matchup">
                                     <div class="teams">
                                         <span class="team-a">
-                                            <select class="field-select edit-only" data-field="team-a" aria-label="Equipo A">
-                                                <option selected>Alfa y Omega</option>
-                                                <option>Amazonas</option>
-                                                <option>Bad Girls</option>
-                                                <option>Broncas</option>
-                                                <option>CBTIS</option>
-                                                <option>CBTIS B</option>
-                                                <option>CBTIS C</option>
-                                                <option>CONALEP</option>
-                                                <option>Genesis</option>
-                                                <option>Genesis B</option>
-                                                <option>IMSS</option>
-                                                <option>Linces A</option>
-                                                <option>Linces B</option>
-                                                <option>Linces C</option>
-                                                <option>Mambas</option>
-                                                <option>Mayko Girls A</option>
-                                                <option>Mayko Girls B</option>
-                                                <option>Mayko Girls C</option>
-                                                <option>Nets</option>
-                                                <option>Panteras</option>
-                                                <option>Piedras Negras</option>
-                                                <option>Sonics</option>
-                                                <option>Spurs</option>
-                                                <option>Totas</option>
-                                                <option>Totas 40</option>
-                                                <option>UA de C</option>
-                                                <option>Valquirias</option>
-                                                <option>West Gold</option>
-                                            </select>
+                                            <input class="field-input field-team edit-only" type="text" list="femenil-teams" data-field="team-a" aria-label="Equipo A" value="Alfa y Omega" placeholder="Equipo" autocomplete="off">
                                             <span class="field-display export-only">Alfa y Omega</span>
                                         </span>
                                         <span class="vs">VS</span>
                                         <span class="team-b">
-                                            <select class="field-select edit-only" data-field="team-b" aria-label="Equipo B">
-                                                <option>Alfa y Omega</option>
-                                                <option selected>Amazonas</option>
-                                                <option>Bad Girls</option>
-                                                <option>Broncas</option>
-                                                <option>CBTIS</option>
-                                                <option>CBTIS B</option>
-                                                <option>CBTIS C</option>
-                                                <option>CONALEP</option>
-                                                <option>Genesis</option>
-                                                <option>Genesis B</option>
-                                                <option>IMSS</option>
-                                                <option>Linces A</option>
-                                                <option>Linces B</option>
-                                                <option>Linces C</option>
-                                                <option>Mambas</option>
-                                                <option>Mayko Girls A</option>
-                                                <option>Mayko Girls B</option>
-                                                <option>Mayko Girls C</option>
-                                                <option>Nets</option>
-                                                <option>Panteras</option>
-                                                <option>Piedras Negras</option>
-                                                <option>Sonics</option>
-                                                <option>Spurs</option>
-                                                <option>Totas</option>
-                                                <option>Totas 40</option>
-                                                <option>UA de C</option>
-                                                <option>Valquirias</option>
-                                                <option>West Gold</option>
-                                            </select>
+                                            <input class="field-input field-team edit-only" type="text" list="femenil-teams" data-field="team-b" aria-label="Equipo B" value="Amazonas" placeholder="Equipo" autocomplete="off">
                                             <span class="field-display export-only">Amazonas</span>
                                         </span>
                                     </div>
@@ -992,70 +931,12 @@
             <div class="matchup">
                 <div class="teams">
                     <span class="team-a">
-                        <select class="field-select edit-only" data-field="team-a" aria-label="Equipo A">
-                            <option selected>Alfa y Omega</option>
-                            <option>Amazonas</option>
-                            <option>Bad Girls</option>
-                            <option>Broncas</option>
-                            <option>CBTIS</option>
-                            <option>CBTIS B</option>
-                            <option>CBTIS C</option>
-                            <option>CONALEP</option>
-                            <option>Genesis</option>
-                            <option>Genesis B</option>
-                            <option>IMSS</option>
-                            <option>Linces A</option>
-                            <option>Linces B</option>
-                            <option>Linces C</option>
-                            <option>Mambas</option>
-                            <option>Mayko Girls A</option>
-                            <option>Mayko Girls B</option>
-                            <option>Mayko Girls C</option>
-                            <option>Nets</option>
-                            <option>Panteras</option>
-                            <option>Piedras Negras</option>
-                            <option>Sonics</option>
-                            <option>Spurs</option>
-                            <option>Totas</option>
-                            <option>Totas 40</option>
-                            <option>UA de C</option>
-                            <option>Valquirias</option>
-                            <option>West Gold</option>
-                        </select>
+                        <input class="field-input field-team edit-only" type="text" list="femenil-teams" data-field="team-a" aria-label="Equipo A" value="Alfa y Omega" placeholder="Equipo" autocomplete="off">
                         <span class="field-display export-only">Alfa y Omega</span>
                     </span>
                     <span class="vs">VS</span>
                     <span class="team-b">
-                        <select class="field-select edit-only" data-field="team-b" aria-label="Equipo B">
-                            <option>Alfa y Omega</option>
-                            <option selected>Amazonas</option>
-                            <option>Bad Girls</option>
-                            <option>Broncas</option>
-                            <option>CBTIS</option>
-                            <option>CBTIS B</option>
-                            <option>CBTIS C</option>
-                            <option>CONALEP</option>
-                            <option>Genesis</option>
-                            <option>Genesis B</option>
-                            <option>IMSS</option>
-                            <option>Linces A</option>
-                            <option>Linces B</option>
-                            <option>Linces C</option>
-                            <option>Mambas</option>
-                            <option>Mayko Girls A</option>
-                            <option>Mayko Girls B</option>
-                            <option>Mayko Girls C</option>
-                            <option>Nets</option>
-                            <option>Panteras</option>
-                            <option>Piedras Negras</option>
-                            <option>Sonics</option>
-                            <option>Spurs</option>
-                            <option>Totas</option>
-                            <option>Totas 40</option>
-                            <option>UA de C</option>
-                            <option>Valquirias</option>
-                            <option>West Gold</option>
-                        </select>
+                        <input class="field-input field-team edit-only" type="text" list="femenil-teams" data-field="team-b" aria-label="Equipo B" value="Amazonas" placeholder="Equipo" autocomplete="off">
                         <span class="field-display export-only">Amazonas</span>
                     </span>
                 </div>
@@ -1120,10 +1001,35 @@
             }
         }
 
-        // Mode toggle
+        // Show a transient error message in the toolbar hint slot
+        let toolbarErrorTimeout;
+        function showToolbarError(message) {
+            const hint = document.querySelector('.toolbar-hint');
+            if (!hint) return;
+            if (!hint.dataset.originalText) hint.dataset.originalText = hint.textContent;
+            hint.textContent = message;
+            hint.classList.add('toolbar-error');
+            clearTimeout(toolbarErrorTimeout);
+            toolbarErrorTimeout = setTimeout(() => {
+                hint.classList.remove('toolbar-error');
+                hint.textContent = hint.dataset.originalText;
+            }, 4500);
+        }
+
+        // Mode toggle (blocks export when any team field is blank)
         modeBtn.addEventListener('click', () => {
             const wasEditing = body.classList.contains('editing');
             if (wasEditing) {
+                const teamInputs = document.querySelectorAll('.field-team');
+                const blanks = Array.from(teamInputs).filter(inp => !inp.value.trim());
+                teamInputs.forEach(inp => inp.classList.remove('field-error'));
+                if (blanks.length > 0) {
+                    blanks.forEach(inp => inp.classList.add('field-error'));
+                    blanks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    blanks[0].focus({ preventScroll: true });
+                    showToolbarError(`Faltan ${blanks.length} equipo${blanks.length === 1 ? '' : 's'} por completar antes de exportar.`);
+                    return;
+                }
                 body.classList.remove('editing');
                 body.classList.add('export');
                 setEditableAll(false);
@@ -1133,6 +1039,13 @@
                 body.classList.add('editing');
                 setEditableAll(true);
                 modeBtn.textContent = 'Modo Exportar';
+            }
+        });
+
+        // Clear the blank-team error highlight as soon as the user fills it in
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('field-team') && e.target.value.trim()) {
+                e.target.classList.remove('field-error');
             }
         });
 
