@@ -636,14 +636,26 @@
             padding-right: 12px;
         }
 
-        /* Team combo box: behaves like a select but allows typing custom names */
+        /* Team combo box: behaves like a select but allows typing custom names.
+           In edit mode we expand the input to fill its slot so the click target
+           is comfortable on touch. */
         .flyer .field-input.field-team {
             cursor: pointer;
-            min-width: 8ch;
         }
+        body.editing .flyer .field-input.field-team {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 4px 14px 4px 6px;
+            min-height: 26px;
+            background-color: rgba(255, 140, 0, 0.06);
+            border-radius: 4px;
+        }
+        /* Hide the native picker indicator visually but keep it in flow so the
+           browser still treats the input as a combobox. We trigger the popup
+           explicitly via showPicker() on focus. */
         .flyer .field-input.field-team::-webkit-calendar-picker-indicator {
             opacity: 0;
-            display: none;
+            cursor: pointer;
         }
 
         /* Invalid (blank team) — flashed when user tries to export with empty field */
@@ -1057,6 +1069,21 @@
                 setEditableAll(true);
                 modeBtn.textContent = 'Modo Exportar';
             }
+        });
+
+        // Pop the full team list whenever a team combo box is focused/clicked.
+        // Without this, the datalist popup only shows when the user starts
+        // typing, which makes it feel like a plain text input.
+        function openTeamPicker(input) {
+            if (typeof input.showPicker === 'function') {
+                try { input.showPicker(); } catch (_) { /* ignore: user gesture not yet established, etc. */ }
+            }
+        }
+        document.addEventListener('focusin', (e) => {
+            if (e.target.classList.contains('field-team')) openTeamPicker(e.target);
+        });
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('field-team')) openTeamPicker(e.target);
         });
 
         // Clear the blank-team error highlight as soon as the user fills it in
