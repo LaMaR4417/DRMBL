@@ -311,6 +311,13 @@
             min-height: 0;
         }
 
+        /* Single-court mode: collapse to one centered column, hide Cancha B */
+        body.one-court .courts {
+            grid-template-columns: minmax(0, 640px);
+            justify-content: center;
+        }
+        body.one-court #court-b { display: none; }
+
         .court {
             background: rgba(20, 20, 30, 0.7);
             border: 1px solid var(--line);
@@ -745,6 +752,7 @@
         </div>
         <div class="toolbar-actions">
             <button class="toolbar-btn" id="resetBtn" type="button">Restablecer</button>
+            <button class="toolbar-btn" id="courtsBtn" type="button">Modo 1 Cancha</button>
             <button class="toolbar-btn primary" id="modeBtn" type="button">Modo Exportar</button>
         </div>
     </div>
@@ -960,6 +968,7 @@
         const body = document.body;
         const modeBtn = document.getElementById('modeBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const courtsBtn = document.getElementById('courtsBtn');
         const template = document.getElementById('game-template');
 
         function setEditableAll(enabled) {
@@ -1016,12 +1025,20 @@
             }, 4500);
         }
 
-        // Mode toggle (blocks export when any team field is blank)
+        // Layout toggle: 1 court vs 2 courts (hides Cancha B + centers Cancha A)
+        courtsBtn.addEventListener('click', () => {
+            const isOneCourt = body.classList.toggle('one-court');
+            courtsBtn.textContent = isOneCourt ? 'Modo 2 Canchas' : 'Modo 1 Cancha';
+        });
+
+        // Mode toggle (blocks export when any visible team field is blank)
         modeBtn.addEventListener('click', () => {
             const wasEditing = body.classList.contains('editing');
             if (wasEditing) {
-                const teamInputs = document.querySelectorAll('.field-team');
-                const blanks = Array.from(teamInputs).filter(inp => !inp.value.trim());
+                // Only validate visible team inputs — skips Cancha B's inputs in 1-court mode
+                const teamInputs = Array.from(document.querySelectorAll('.field-team'))
+                    .filter(inp => inp.offsetParent !== null);
+                const blanks = teamInputs.filter(inp => !inp.value.trim());
                 teamInputs.forEach(inp => inp.classList.remove('field-error'));
                 if (blanks.length > 0) {
                     blanks.forEach(inp => inp.classList.add('field-error'));
