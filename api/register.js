@@ -93,15 +93,23 @@ async function handleCopaColMexRegistration(req, res) {
             if (!firstNames || !lastNames) continue;
             var rawNumber = p && p.number != null ? String(p.number).trim() : "";
             var number = rawNumber.replace(/[^0-9]/g, "").slice(0, 3);
+            // dob is required for any named player
+            var dobYear = p && p.dob && p.dob.year ? parseInt(p.dob.year, 10) : 0;
+            var dobMonth = p && p.dob && p.dob.month ? parseInt(p.dob.month, 10) : 0;
+            var dobDate = p && p.dob && p.dob.date ? parseInt(p.dob.date, 10) : 0;
+            if (!dobYear || !dobMonth || !dobDate) {
+                return res.status(400).json({ error: "Falta la fecha de nacimiento de algún jugador." });
+            }
             players.push({
                 firstNames: firstNames,
                 lastNames: lastNames,
-                number: number || null
+                number: number || null,
+                dob: { year: dobYear, month: dobMonth, date: dobDate }
             });
         }
     }
     if (players.length < COLMEX_MIN_PLAYERS) {
-        return res.status(400).json({ error: "Captura al menos " + COLMEX_MIN_PLAYERS + " jugadores con nombres y apellidos." });
+        return res.status(400).json({ error: "Captura al menos " + COLMEX_MIN_PLAYERS + " jugadores con nombres, apellidos y fecha de nacimiento." });
     }
 
     var now = new Date().toISOString();
