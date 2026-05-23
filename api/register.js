@@ -28,6 +28,11 @@ var COLMEX_LEAGUE_ID = "Copa ColMex";
 var COLMEX_SEASON_NAME = "Primer Copa ColMex Piedras Negras";
 var COLMEX_VALID_DIVISIONS = ["Femenil", "Varonil"];
 var COLMEX_VALID_CATEGORIES = ["2009-2010", "2011-2012", "2013-2014", "2015-2016", "2017-2018"];
+// Origen is a free-text field with a curated suggestion list on the client
+// (the ComboboxInput in inscripcion/index.html). Server only requires non-empty
+// trimmed text with a sane length cap — coaches can submit cities not in the list.
+var COLMEX_ORIGEN_MAX_LEN = 60;
+var COLMEX_MIN_PLAYERS = 2;
 
 function slugSegment(s) {
     return String(s || "")
@@ -62,6 +67,13 @@ async function handleCopaColMexRegistration(req, res) {
     if (!teamName) {
         return res.status(400).json({ error: "Falta el nombre del equipo." });
     }
+    var origen = body.origen ? String(body.origen).trim() : "";
+    if (!origen) {
+        return res.status(400).json({ error: "Falta el origen del equipo." });
+    }
+    if (origen.length > COLMEX_ORIGEN_MAX_LEN) {
+        return res.status(400).json({ error: "Origen demasiado largo (máx " + COLMEX_ORIGEN_MAX_LEN + " caracteres)." });
+    }
     if (COLMEX_VALID_DIVISIONS.indexOf(body.division) < 0) {
         return res.status(400).json({ error: "División inválida. Use Femenil o Varonil." });
     }
@@ -72,26 +84,28 @@ async function handleCopaColMexRegistration(req, res) {
         return res.status(400).json({ error: "Faltan datos del entrenador (nombre y teléfono)." });
     }
 
-    var now = new Date().toISOString();
-    var docId = buildColMexDocId(teamName, body.category, body.division, now);
-
     var players = [];
     if (Array.isArray(body.players)) {
         for (var i = 0; i < body.players.length; i++) {
             var p = body.players[i];
-            var pname = p && p.name ? String(p.name).trim() : "";
-            if (!pname) continue;
+            var firstNames = p && p.firstNames ? String(p.firstNames).trim() : "";
+            var lastNames = p && p.lastNames ? String(p.lastNames).trim() : "";
+            if (!firstNames || !lastNames) continue;
+            var rawNumber = p && p.number != null ? String(p.number).trim() : "";
+            var number = rawNumber.replace(/[^0-9]/g, "").slice(0, 3);
             players.push({
-                name: pname,
-                dob: p && p.dob && typeof p.dob === "object" ? {
-                    year: p.dob.year || null,
-                    month: p.dob.month || null,
-                    date: p.dob.date || null
-                } : null,
-                phone: p && p.phone ? String(p.phone).trim() : null
+                firstNames: firstNames,
+                lastNames: lastNames,
+                number: number || null
             });
         }
     }
+    if (players.length < COLMEX_MIN_PLAYERS) {
+        return res.status(400).json({ error: "Captura al menos " + COLMEX_MIN_PLAYERS + " jugadores con nombres y apellidos." });
+    }
+
+    var now = new Date().toISOString();
+    var docId = buildColMexDocId(teamName, body.category, body.division, now);
 
     var doc = {
         id: docId,
@@ -100,6 +114,7 @@ async function handleCopaColMexRegistration(req, res) {
         category: body.category,
         division: body.division,
         teamName: teamName,
+        origen: origen,
         owner: {
             name: String(body.owner.name).trim(),
             phone: String(body.owner.phone).trim(),
