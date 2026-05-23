@@ -1,3 +1,13 @@
+// Team registration endpoint.
+//
+// Default (no league query param): DRMBL flow — creates a Team doc, claims
+// an open slot in the active Season doc, and writes a Registration Form.
+//
+// `?league=copa-colmex`: staging-only flow — writes a pending Registration
+// Form using the Box-Scores-style ID convention. Does NOT create Team or
+// Season docs; organizer approves before publication. No date cutoff so
+// in-person sign-ups can be entered after the fact.
+
 var { CosmosClient } = require("@azure/cosmos");
 
 var client = new CosmosClient({
@@ -10,7 +20,113 @@ var registrationContainer = database.container("Registration Forms");
 var teamsContainer = database.container("Teams");
 var seasonsContainer = database.container("Seasons");
 
-var SEASON_ID = "Spring - Mens - 2026";
+// ─────────────────────────────────────────────────────────────────────────
+// COPA COLMEX HANDLER — staging-only registration into Registration Forms.
+// ─────────────────────────────────────────────────────────────────────────
+
+var COLMEX_LEAGUE_ID = "Copa ColMex";
+var COLMEX_SEASON_NAME = "Primer Copa ColMex Piedras Negras";
+var COLMEX_VALID_DIVISIONS = ["Femenil", "Varonil"];
+var COLMEX_VALID_CATEGORIES = ["2009-2010", "2011-2012", "2013-2014", "2015-2016", "2017-2018"];
+
+function slugSegment(s) {
+    return String(s || "")
+        .replace(/ñ/g, "n").replace(/Ñ/g, "N")
+        .replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i").replace(/ó/g, "o").replace(/ú/g, "u")
+        .replace(/Á/g, "A").replace(/É/g, "E").replace(/Í/g, "I").replace(/Ó/g, "O").replace(/Ú/g, "U")
+        .replace(/[\/\\?#]/g, "")
+        .replace(/\./g, "")
+        .replace(/\s+/g, "_")
+        .trim();
+}
+
+function buildColMexDocId(teamName, category, division, submittedAtIso) {
+    var leagueSeg = slugSegment(COLMEX_LEAGUE_ID);
+    var contextSeg = slugSegment(category + " " + division + " " + COLMEX_SEASON_NAME);
+    var teamSeg = slugSegment(teamName);
+    // Strip milliseconds + replace ":" so the ISO doesn't collide with the
+    // segment separator "." used by Box Scores. Result: 2026-05-23T10-00-00
+    var tsSeg = submittedAtIso.slice(0, 19).replace(/:/g, "-");
+    return leagueSeg + "." + contextSeg + "." + teamSeg + "." + tsSeg;
+}
+
+async function handleCopaColMexRegistration(req, res) {
+    var body = (req.body && typeof req.body === "object") ? req.body : {};
+
+    // Honeypot — silent success so bots don't retry
+    if (body.website && String(body.website).trim().length > 0) {
+        return res.status(200).json({ success: true });
+    }
+
+    var teamName = body.teamName ? String(body.teamName).trim() : "";
+    if (!teamName) {
+        return res.status(400).json({ error: "Falta el nombre del equipo." });
+    }
+    if (COLMEX_VALID_DIVISIONS.indexOf(body.division) < 0) {
+        return res.status(400).json({ error: "División inválida. Use Femenil o Varonil." });
+    }
+    if (COLMEX_VALID_CATEGORIES.indexOf(body.category) < 0) {
+        return res.status(400).json({ error: "Categoría inválida." });
+    }
+    if (!body.owner || !body.owner.name || !body.owner.phone) {
+        return res.status(400).json({ error: "Faltan datos del entrenador (nombre y teléfono)." });
+    }
+
+    var now = new Date().toISOString();
+    var docId = buildColMexDocId(teamName, body.category, body.division, now);
+
+    var players = [];
+    if (Array.isArray(body.players)) {
+        for (var i = 0; i < body.players.length; i++) {
+            var p = body.players[i];
+            var pname = p && p.name ? String(p.name).trim() : "";
+            if (!pname) continue;
+            players.push({
+                name: pname,
+                dob: p && p.dob && typeof p.dob === "object" ? {
+                    year: p.dob.year || null,
+                    month: p.dob.month || null,
+                    date: p.dob.date || null
+                } : null,
+                phone: p && p.phone ? String(p.phone).trim() : null
+            });
+        }
+    }
+
+    var doc = {
+        id: docId,
+        league: COLMEX_LEAGUE_ID,
+        seasonName: COLMEX_SEASON_NAME,
+        category: body.category,
+        division: body.division,
+        teamName: teamName,
+        owner: {
+            name: String(body.owner.name).trim(),
+            phone: String(body.owner.phone).trim(),
+            email: body.owner.email ? String(body.owner.email).trim() : null
+        },
+        players: players,
+        status: "pending",
+        submittedAt: now
+    };
+
+    try {
+        await registrationContainer.items.create(doc);
+        return res.status(200).json({ success: true, id: docId });
+    } catch (err) {
+        console.error("Copa ColMex registration error:", err && err.message);
+        if (err && err.code === 409) {
+            return res.status(409).json({ error: "Ya existe una inscripción reciente con ese nombre. Contacte al organizador." });
+        }
+        return res.status(500).json({ error: "Error al registrar. Intente de nuevo." });
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DRMBL HANDLER — original flow: creates Team + claims Season slot.
+// ─────────────────────────────────────────────────────────────────────────
+
+var DRMBL_SEASON_ID = "Spring - Mens - 2026";
 
 function sanitizeForID(str) {
     return str.replace(/[\/\\?#]/g, "");
@@ -88,7 +204,7 @@ function buildTeamDoc(body, teamSlot) {
             disbanded: false
         },
         seasons: [{
-            id: SEASON_ID,
+            id: DRMBL_SEASON_ID,
             teamSlot: teamSlot,
             roster: roster,
             record: {
@@ -103,11 +219,7 @@ function buildTeamDoc(body, teamSlot) {
     };
 }
 
-module.exports = async function (req, res) {
-    if (req.method !== "POST") {
-        return res.status(405).json({ error: "Method not allowed" });
-    }
-
+async function handleDrmblRegistration(req, res) {
     try {
         var body = req.body;
 
@@ -116,12 +228,12 @@ module.exports = async function (req, res) {
         }
 
         // Step 1: Read the Season document to find the next open slot
-        var seasonResponse = await seasonsContainer.item(SEASON_ID, SEASON_ID).read();
+        var seasonResponse = await seasonsContainer.item(DRMBL_SEASON_ID, DRMBL_SEASON_ID).read();
         var seasonDoc = seasonResponse.resource;
         var seasonEtag = seasonResponse.etag;
 
         if (!seasonDoc || !seasonDoc.teams || !Array.isArray(seasonDoc.teams)) {
-            console.error("Season document not found or malformed:", SEASON_ID);
+            console.error("Season document not found or malformed:", DRMBL_SEASON_ID);
             return res.status(500).json({ error: "Registration is not open yet." });
         }
 
@@ -153,7 +265,7 @@ module.exports = async function (req, res) {
             var replaceOptions = {
                 accessCondition: { type: "IfMatch", condition: seasonEtag }
             };
-            await seasonsContainer.item(SEASON_ID, SEASON_ID).replace(seasonDoc, replaceOptions);
+            await seasonsContainer.item(DRMBL_SEASON_ID, DRMBL_SEASON_ID).replace(seasonDoc, replaceOptions);
         } catch (conflictErr) {
             if (conflictErr.code === 412) {
                 try {
@@ -187,4 +299,20 @@ module.exports = async function (req, res) {
 
         return res.status(500).json({ error: "Registration failed. Please try again." });
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DISPATCH
+// ─────────────────────────────────────────────────────────────────────────
+
+module.exports = async function (req, res) {
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    if (req.query && req.query.league === "copa-colmex") {
+        return handleCopaColMexRegistration(req, res);
+    }
+
+    return handleDrmblRegistration(req, res);
 };
