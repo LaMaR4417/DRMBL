@@ -5,6 +5,10 @@ var client = new CosmosClient({
     key: process.env.COSMOS_KEY
 });
 
+var leaguesContainer = client
+    .database("DRMBL Database")
+    .container("Leagues");
+
 var seasonsContainer = client
     .database("DRMBL Database")
     .container("Seasons");
@@ -36,6 +40,125 @@ function sortGamesByDate(games) {
         return parseTime(a.time) - parseTime(b.time);
     });
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// LEAGUE FORMAT HANDLERS
+//
+// Each handler reads the League doc by ID, then fetches its activeSeasons.
+// Response shape is league-format-specific and is consumed by the matching
+// frontend — don't change a field without also updating the frontend.
+// ─────────────────────────────────────────────────────────────────────────
+
+async function readLeagueDoc(leagueDocId) {
+    var { resources } = await leaguesContainer.items
+        .query({
+            query: "SELECT * FROM c WHERE c.id = @id",
+            parameters: [{ name: "@id", value: leagueDocId }]
+        })
+        .fetchAll();
+    return resources[0] || null;
+}
+
+async function fetchActiveSeasonDocs(activeIds) {
+    var fetches = activeIds.map(function (id) {
+        return seasonsContainer.item(id, id).read()
+            .then(function (r) { return r.resource; })
+            .catch(function () { return null; });
+    });
+    return (await Promise.all(fetches)).filter(function (d) { return d != null; });
+}
+
+// Fixed-week single-division league (DRMBL). Returns one season doc as `season`.
+async function fetchFixedLeague(leagueDocId) {
+    var leagueDoc = await readLeagueDoc(leagueDocId);
+    if (!leagueDoc || !leagueDoc.league.activeSeasons || !leagueDoc.league.activeSeasons.length) {
+        return { status: 404, body: { error: "No active " + leagueDocId + " season found." } };
+    }
+    var activeSeasonId = leagueDoc.league.activeSeasons[0];
+    var seasonResponse = await seasonsContainer.item(activeSeasonId, activeSeasonId).read();
+    var seasonDoc = seasonResponse.resource;
+    if (!seasonDoc) {
+        return { status: 404, body: { error: "Active season not found." } };
+    }
+    return {
+        status: 200,
+        body: {
+            leagueInfo: leagueDoc.league,
+            season: {
+                id: seasonDoc.id,
+                league: seasonDoc.league || null,
+                teams: seasonDoc.teams || [],
+                standings: seasonDoc.standings || [],
+                weeklySchedule: seasonDoc.weeklySchedule || null,
+                timeline: seasonDoc.timeline || null
+            }
+        }
+    };
+}
+
+// Rolling multi-division league (LOMBA). Returns activeSeasons as `seasons[]`.
+async function fetchRollingLeague(leagueDocId) {
+    var leagueDoc = await readLeagueDoc(leagueDocId);
+    if (!leagueDoc || !leagueDoc.league.activeSeasons || !leagueDoc.league.activeSeasons.length) {
+        return { status: 404, body: { error: "No active " + leagueDocId + " season found." } };
+    }
+    var docs = await fetchActiveSeasonDocs(leagueDoc.league.activeSeasons);
+    var seasons = docs.map(function (doc) {
+        return {
+            id: doc.id,
+            league: doc.league || null,
+            teams: doc.teams || [],
+            schedule: doc.schedule || [],
+            playoffs: doc.playoffs || null,
+            timeline: doc.timeline || null
+        };
+    });
+    return {
+        status: 200,
+        body: { leagueInfo: leagueDoc.league, seasons: seasons }
+    };
+}
+
+// Tournament-format league (Copa Beta, Copa ColMex). Returns activeSeasons
+// as `categories[]` with bracket-friendly fields (games[], groups, standings).
+async function fetchTournamentLeague(leagueDocId) {
+    var leagueDoc = await readLeagueDoc(leagueDocId);
+    var leagueInfo = leagueDoc ? (leagueDoc.league || null) : null;
+    var docs = [];
+    if (leagueInfo && leagueInfo.activeSeasons && leagueInfo.activeSeasons.length) {
+        docs = await fetchActiveSeasonDocs(leagueInfo.activeSeasons);
+    }
+    var categories = docs.map(function (doc) {
+        return {
+            id: doc.id,
+            league: doc.league || null,
+            teams: doc.teams || [],
+            games: doc.games || [],
+            groups: doc.groups || null,
+            timeline: doc.timeline || null,
+            standings: doc.standings || []
+        };
+    });
+    return {
+        status: 200,
+        body: { leagueInfo: leagueInfo, categories: categories }
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// LEAGUE REGISTRY
+//
+// Single source of truth: slug → { docId, fetcher }. Adding a new league
+// is one line here. Slugs are lowercase-with-hyphens for URL safety;
+// docIds match the Cosmos `Leagues` container exactly (case-sensitive).
+// ─────────────────────────────────────────────────────────────────────────
+
+var LEAGUES = {
+    'drmbl':       { docId: 'DRMBL',       fetcher: fetchFixedLeague },
+    'lomba':       { docId: 'LOMBA',       fetcher: fetchRollingLeague },
+    'copa-beta':   { docId: 'Copa Beta',   fetcher: fetchTournamentLeague },
+    'copa-colmex': { docId: 'Copa ColMex', fetcher: fetchTournamentLeague }
+};
 
 module.exports = async function (req, res) {
     if (req.method !== "GET") {
@@ -109,125 +232,11 @@ module.exports = async function (req, res) {
     var league = req.query.league || null;
 
     try {
-        // DRMBL mode: fetch active season via League doc
-        if (league === 'drmbl') {
-            var leaguesContainer = client
-                .database("DRMBL Database")
-                .container("Leagues");
-
-            var { resources: drmblLeague } = await leaguesContainer.items
-                .query("SELECT * FROM c WHERE c.id = 'DRMBL'")
-                .fetchAll();
-
-            if (!drmblLeague.length || !drmblLeague[0].league.activeSeasons || !drmblLeague[0].league.activeSeasons.length) {
-                return res.status(404).json({ error: "No active DRMBL season found." });
-            }
-
-            var leagueDoc = drmblLeague[0];
-            // DRMBL has one division currently — use the first active season ID
-            var activeSeasonId = leagueDoc.league.activeSeasons[0];
-
-            var seasonResponse = await seasonsContainer.item(activeSeasonId, activeSeasonId).read();
-            var seasonDoc = seasonResponse.resource;
-
-            if (!seasonDoc) {
-                return res.status(404).json({ error: "Active season not found." });
-            }
-
-            return res.status(200).json({
-                leagueInfo: leagueDoc.league,
-                season: {
-                    id: seasonDoc.id,
-                    league: seasonDoc.league || null,
-                    teams: seasonDoc.teams || [],
-                    standings: seasonDoc.standings || [],
-                    weeklySchedule: seasonDoc.weeklySchedule || null,
-                    timeline: seasonDoc.timeline || null
-                }
-            });
-        }
-
-        // LOMBA mode: fetch active season docs via League doc
-        if (league === 'lomba') {
-            var leaguesContainer = client
-                .database("DRMBL Database")
-                .container("Leagues");
-
-            var { resources: lombaLeague } = await leaguesContainer.items
-                .query("SELECT * FROM c WHERE c.id = 'LOMBA'")
-                .fetchAll();
-
-            if (!lombaLeague.length || !lombaLeague[0].league.activeSeasons || !lombaLeague[0].league.activeSeasons.length) {
-                return res.status(404).json({ error: "No active LOMBA season found." });
-            }
-
-            var lombaLeagueDoc = lombaLeague[0];
-            // LOMBA may have multiple active seasons (one per division). Fetch each by direct ID.
-            var lombaActiveIds = lombaLeagueDoc.league.activeSeasons;
-
-            var lombaFetches = lombaActiveIds.map(function (id) {
-                return seasonsContainer.item(id, id).read()
-                    .then(function (r) { return r.resource; })
-                    .catch(function () { return null; });
-            });
-            var lombaSeasons = (await Promise.all(lombaFetches)).filter(function (d) { return d != null; });
-
-            var seasons = lombaSeasons.map(function (doc) {
-                return {
-                    id: doc.id,
-                    league: doc.league || null,
-                    teams: doc.teams || [],
-                    schedule: doc.schedule || [],
-                    playoffs: doc.playoffs || null,
-                    timeline: doc.timeline || null
-                };
-            });
-
-            return res.status(200).json({
-                leagueInfo: lombaLeagueDoc.league,
-                seasons: seasons
-            });
-        }
-
-        // Copa Beta mode: return league info + all Copa Beta categories
-        if (league === 'copa-beta') {
-            var leaguesContainer = client
-                .database("DRMBL Database")
-                .container("Leagues");
-
-            var { resources: leagueResources } = await leaguesContainer.items
-                .query("SELECT * FROM c WHERE c.id = 'Copa Beta'")
-                .fetchAll();
-
-            var leagueInfo = null;
-            if (leagueResources.length > 0) {
-                leagueInfo = leagueResources[0].league || null;
-            }
-
-            // Copa Beta also uses activeSeasons[] — fetch each active doc by direct ID
-            var cbResources = [];
-            if (leagueInfo && leagueInfo.activeSeasons && leagueInfo.activeSeasons.length) {
-                var cbFetches = leagueInfo.activeSeasons.map(function (id) {
-                    return seasonsContainer.item(id, id).read()
-                        .then(function (r) { return r.resource; })
-                        .catch(function () { return null; });
-                });
-                cbResources = (await Promise.all(cbFetches)).filter(function (d) { return d != null; });
-            }
-
-            var categories = cbResources.map(function (doc) {
-                return {
-                    id: doc.id,
-                    league: doc.league || null,
-                    teams: doc.teams || [],
-                    games: doc.games || [],
-                    groups: doc.groups || null,
-                    timeline: doc.timeline || null,
-                    standings: doc.standings || []
-                };
-            });
-
-            return res.status(200).json({ leagueInfo: leagueInfo, categories: categories });
+        // ── Registry-driven per-league lookup ──
+        if (league && LEAGUES[league]) {
+            var cfg = LEAGUES[league];
+            var result = await cfg.fetcher(cfg.docId);
+            return res.status(result.status).json(result.body);
         }
 
         // Default: list all seasons
