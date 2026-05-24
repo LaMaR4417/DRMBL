@@ -76,7 +76,7 @@ var DRMBL_DEFAULT = {
         },
         overtime: {
             full: 1,
-            short: 0
+            short: 1
         },
         duration: {
             full: 60,

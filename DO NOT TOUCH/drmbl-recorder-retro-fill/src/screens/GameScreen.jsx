@@ -32,7 +32,7 @@ export default function GameScreen() {
   // false = follow settings (default); true = force off (clock keeps running through actions).
   const [autoStopDisabled, setAutoStopDisabled] = useState(false);
   const [correctionMode, setCorrectionMode] = useState(false);
-  const [clockEdit, setClockEdit] = useState(null); // null | { minutes, seconds }
+  const [clockEdit, setClockEdit] = useState(null); // null | { mode: 'mm-ss' | 'sub-minute', minutes, seconds, tenths }
   const [suggestRebound, setSuggestRebound] = useState(false);
   const [suggestAssist, setSuggestAssist] = useState(null); // 'home' | 'away' | null
   const [suggestShot, setSuggestShot] = useState(null); // 'home' | 'away' | null
@@ -1591,10 +1591,25 @@ export default function GameScreen() {
                   value={clockEdit.seconds}
                   onChange={(e) => setClockEdit({ ...clockEdit, seconds: Math.min(59, Math.max(0, parseInt(e.target.value) || 0)) })}
                 />
+                {clockEdit.mode === 'sub-minute' && (
+                  <>
+                    <span>.</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="9"
+                      value={clockEdit.tenths}
+                      onChange={(e) => setClockEdit({ ...clockEdit, tenths: Math.min(9, Math.max(0, parseInt(e.target.value) || 0)) })}
+                    />
+                  </>
+                )}
               </div>
               <div className="clock-edit-actions">
                 <button onClick={() => {
-                  dispatch({ type: 'SET_CLOCK_TIME', timeLeft: (clockEdit.minutes * 60) + clockEdit.seconds });
+                  const nextTime = clockEdit.mode === 'sub-minute'
+                    ? (clockEdit.minutes * 60) + clockEdit.seconds + (clockEdit.tenths / 10)
+                    : (clockEdit.minutes * 60) + clockEdit.seconds;
+                  dispatch({ type: 'SET_CLOCK_TIME', timeLeft: nextTime });
                   shouldSync.current = true;
                   setClockEdit(null);
                   setCorrectionMode(false);
@@ -1608,9 +1623,15 @@ export default function GameScreen() {
               onClick={() => {
                 if (correctionMode) {
                   const t = Math.max(0, timeLeft || 0);
-                  const m = Math.floor(t / 60);
-                  const s = Math.floor(t % 60);
-                  setClockEdit({ minutes: m, seconds: s });
+                  if (t < 60) {
+                    const whole = Math.floor(t);
+                    const tenths = Math.floor((t - whole) * 10);
+                    setClockEdit({ mode: 'sub-minute', minutes: 0, seconds: whole, tenths });
+                  } else {
+                    const m = Math.floor(t / 60);
+                    const s = Math.floor(t % 60);
+                    setClockEdit({ mode: 'mm-ss', minutes: m, seconds: s, tenths: 0 });
+                  }
                 }
               }}
             >
