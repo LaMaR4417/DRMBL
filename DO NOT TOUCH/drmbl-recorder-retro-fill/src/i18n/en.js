@@ -106,6 +106,7 @@ export const en = {
     oneAndOne: '1-and-1',
     oneAndOneThreshold: '1-and-1 Threshold',
     doubleBonusThreshold: 'Double Bonus Threshold',
+    foulsCarryOverToOT: 'Carry Fouls Q4 → OT',
     techEjectionLimit: 'Tech Ejection Limit',
 
     timeoutsTitle: 'Timeouts',

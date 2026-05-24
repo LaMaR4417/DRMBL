@@ -519,6 +519,17 @@ export default function GameSettingsScreen() {
                 />
               </div>
               <div className="setting-row">
+                <label>{t('settings', 'foulsCarryOverToOT')}</label>
+                <div className="toggle-group">
+                  <button
+                    className={`btn btn-toggle ${settings.fouls.bonus.carryOverToOT ? 'active' : ''}`}
+                    onClick={() => updateSetting('fouls.bonus.carryOverToOT', !settings.fouls.bonus.carryOverToOT)}
+                  >
+                    {settings.fouls.bonus.carryOverToOT ? t('common', 'on') : t('common', 'off')}
+                  </button>
+                </div>
+              </div>
+              <div className="setting-row">
                 <label>{t('settings', 'techEjectionLimit')}</label>
                 <input
                   type="number"

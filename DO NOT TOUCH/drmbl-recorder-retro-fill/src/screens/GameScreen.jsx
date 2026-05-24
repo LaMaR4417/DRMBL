@@ -1449,14 +1449,32 @@ export default function GameScreen() {
     return bs.teamInfo[side].stats.fouls.perQuarter[key]?.committed || 0;
   }
 
+  // When carryOverToOT is on AND we're in an OT period, the foul count that
+  // drives bonus + scoreboard display is Q4 + OT1..currentOT, not just the
+  // current period. Otherwise it's the per-period count.
+  function getRelevantFouls(side, key) {
+    const carryOver = !!game.settings.fouls?.bonus?.carryOverToOT;
+    if (!carryOver || !key.startsWith('OT')) {
+      return getQuarterFouls(side, key);
+    }
+    const pq = bs.teamInfo[side].stats.fouls.perQuarter;
+    let total = pq.fourth?.committed || 0;
+    const ot = pq.overtime || {};
+    const currentOtN = parseInt(key.slice(2), 10);
+    for (let i = 1; i <= currentOtN; i++) {
+      total += ot['OT' + i]?.committed || 0;
+    }
+    return total;
+  }
+
   function getSideInfo(side) {
     const oppSide = side === 'home' ? 'away' : 'home';
-    const oppFouls = getQuarterFouls(oppSide, qKey);
+    const oppFouls = getRelevantFouls(oppSide, qKey);
     const oneAndOne = game.settings.fouls.bonus.oneAndOne;
     const dblBonus = game.settings.fouls.bonus.doubleBonus;
     const inBonus = oneAndOne != null && oppFouls >= oneAndOne;
     const inDoubleBonus = dblBonus != null && oppFouls >= dblBonus;
-    const teamFouls = getQuarterFouls(side, qKey);
+    const teamFouls = getRelevantFouls(side, qKey);
     const timeouts = bs.teamInfo[side].stats.timeouts.remaining;
     return { teamFouls, inBonus, inDoubleBonus, timeouts };
   }

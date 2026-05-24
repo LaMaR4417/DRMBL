@@ -65,8 +65,25 @@
         return (fouls[key] && fouls[key].committed) || 0;
     }
 
+    // Mirrors the recorder's getRelevantFouls: when carryOverToOT is on AND
+    // we're in an OT period, sum Q4 + OT1..currentOT. Otherwise per-period.
+    function getRelevantFouls(side, q, bs, bonusCfg) {
+        var key = quarterKey(q);
+        if (!bonusCfg || !bonusCfg.carryOverToOT || key.indexOf('OT') !== 0) {
+            return getQuarterFouls(side, q, bs);
+        }
+        var pq = bs.teamInfo[side].stats.fouls.perQuarter;
+        var total = (pq.fourth && pq.fourth.committed) || 0;
+        var ot = pq.overtime || {};
+        var currentOtN = parseInt(key.slice(2), 10);
+        for (var i = 1; i <= currentOtN; i++) {
+            total += (ot['OT' + i] && ot['OT' + i].committed) || 0;
+        }
+        return total;
+    }
+
     // DRMBL defaults — used if tracker doesn't push settings in trackerState
-    var DEFAULT_BONUS = { oneAndOne: null, doubleBonus: 5 };
+    var DEFAULT_BONUS = { oneAndOne: null, doubleBonus: 5, carryOverToOT: true };
 
     function getBonusConfig(payload) {
         var ts = payload && payload.trackerState;
@@ -302,10 +319,12 @@
         $('sb-home-arrow').classList.toggle('active', arrow === 'home');
         $('sb-away-arrow').classList.toggle('active', arrow === 'away');
 
-        // Bonus dots — level driven by opponent's quarter fouls vs settings thresholds
-        var homeFouls = getQuarterFouls('home', q, bs);
-        var awayFouls = getQuarterFouls('away', q, bs);
+        // Bonus dots — level driven by opponent's relevant fouls vs settings thresholds.
+        // "Relevant" = per-period normally, or cumulative (Q4 + OTs) when
+        // settings.fouls.bonus.carryOverToOT is true and we're in OT.
         var bonusCfg = getBonusConfig(payload);
+        var homeFouls = getRelevantFouls('home', q, bs, bonusCfg);
+        var awayFouls = getRelevantFouls('away', q, bs, bonusCfg);
         function bonusLevel(oppFouls) {
             if (bonusCfg.doubleBonus != null && oppFouls >= bonusCfg.doubleBonus) return 2;
             if (bonusCfg.oneAndOne != null && oppFouls >= bonusCfg.oneAndOne) return 1;
@@ -319,7 +338,7 @@
         applyBonus('home', bonusLevel(awayFouls));
         applyBonus('away', bonusLevel(homeFouls));
 
-        // Foul counts (this team's fouls this quarter)
+        // Foul counts — show the same total the bonus badge is computed from.
         $('sb-home-fouls').textContent = homeFouls;
         $('sb-away-fouls').textContent = awayFouls;
 

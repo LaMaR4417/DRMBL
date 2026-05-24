@@ -106,6 +106,7 @@ export const es = {
     oneAndOne: '1-y-1',
     oneAndOneThreshold: 'Umbral de 1-y-1',
     doubleBonusThreshold: 'Umbral de Doble Bonus',
+    foulsCarryOverToOT: 'Acumular Faltas 4to → TE',
     techEjectionLimit: 'Límite de Expulsión por Técnica',
 
     timeoutsTitle: 'Tiempos Fuera',
