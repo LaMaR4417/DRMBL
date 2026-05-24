@@ -13,6 +13,23 @@ var seasonsContainer = db.container("Seasons");
 var leaguesContainer = db.container("Leagues");
 var boxScoresContainer = db.container("Box Scores");
 var seasonStatsContainer = db.container("Season Stats");
+var gameSettingsContainer = db.container("Game Settings");
+
+// Apply a dotted-path patch object to a target doc, in place.
+// Example: applyPatch(doc, { "fouls.bonus.carryOverToOT": true })
+function applyPatch(doc, patch) {
+    for (var path in patch) {
+        var keys = path.split(".");
+        var cursor = doc;
+        for (var i = 0; i < keys.length - 1; i++) {
+            if (cursor[keys[i]] == null || typeof cursor[keys[i]] !== "object") {
+                cursor[keys[i]] = {};
+            }
+            cursor = cursor[keys[i]];
+        }
+        cursor[keys[keys.length - 1]] = patch[path];
+    }
+}
 
 function normalizeName(name) {
     return name
@@ -222,6 +239,23 @@ module.exports = async function (req, res) {
                 return res.status(200).json({ season: gsDoc });
             } catch (err) {
                 if (err.code === 404) return res.status(404).json({ error: "Season not found" });
+                throw err;
+            }
+        }
+
+        if (req.method === "POST" && action === "update-game-settings-preset") {
+            var ugData = req.body;
+            if (!ugData || !ugData.presetId || !ugData.patch || typeof ugData.patch !== "object") {
+                return res.status(400).json({ error: "Missing presetId or patch object" });
+            }
+            try {
+                var { resource: presetDoc } = await gameSettingsContainer.item(ugData.presetId, ugData.presetId).read();
+                if (!presetDoc) return res.status(404).json({ error: "Preset not found" });
+                applyPatch(presetDoc, ugData.patch);
+                await gameSettingsContainer.items.upsert(presetDoc);
+                return res.status(200).json({ success: true, presetId: ugData.presetId });
+            } catch (err) {
+                if (err.code === 404) return res.status(404).json({ error: "Preset not found" });
                 throw err;
             }
         }

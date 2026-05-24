@@ -63,7 +63,8 @@ var DRMBL_DEFAULT = {
             perPeriod: true,
             perHalf: false,
             oneAndOne: null,
-            doubleBonus: 5
+            doubleBonus: 5,
+            carryOverToOT: true
         },
         technicalEjectionLimit: 2
     },
