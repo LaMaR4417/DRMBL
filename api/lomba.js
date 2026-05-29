@@ -188,6 +188,24 @@ module.exports = async function (req, res) {
 
             if (!season.schedule) season.schedule = [];
 
+            // Consume any unplayed placeholder for the same matchup (any date group).
+            // Lets pre-seeded matchup placeholders be "promoted" by the first real save
+            // without leaving the placeholder behind as an orphan.
+            for (var pdgi = season.schedule.length - 1; pdgi >= 0; pdgi--) {
+                var pdg = season.schedule[pdgi];
+                var pgames = pdg.games || [];
+                for (var pgi = pgames.length - 1; pgi >= 0; pgi--) {
+                    var pgame = pgames[pgi];
+                    var isUnplayed = (!pgame.winner || pgame.winner === "") && pgame.completion !== true;
+                    var sameTeams = pgame.home === scheduleGame.home && pgame.away === scheduleGame.away;
+                    var differentId = pgame.id !== scheduleGame.id;
+                    if (isUnplayed && sameTeams && differentId) {
+                        pgames.splice(pgi, 1);
+                    }
+                }
+                if (pgames.length === 0) season.schedule.splice(pdgi, 1);
+            }
+
             var dateGroup = null;
             for (var i = 0; i < season.schedule.length; i++) {
                 var s = season.schedule[i];
