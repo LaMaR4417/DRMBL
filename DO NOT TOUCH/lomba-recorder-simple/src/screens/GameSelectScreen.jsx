@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useGame, useGameDispatch } from '../context/GameContext';
 
 export default function GameSelectScreen() {
@@ -85,7 +86,12 @@ function PlayoffSelect() {
 function ExistingSelect() {
     var game = useGame();
     var dispatch = useGameDispatch();
+    var [teamFilter, setTeamFilter] = useState('all');
+
     var schedule = game.seasonDoc && game.seasonDoc.schedule ? game.seasonDoc.schedule : [];
+    var seasonTeams = (game.seasonDoc && game.seasonDoc.teams ? game.seasonDoc.teams : []).slice().sort(function (a, b) {
+        return a.name.localeCompare(b.name);
+    });
 
     var allGames = [];
     for (var i = 0; i < schedule.length; i++) {
@@ -96,54 +102,105 @@ function ExistingSelect() {
         }
     }
 
+    var filtered = teamFilter === 'all'
+        ? allGames
+        : allGames.filter(function (g) { return g.home === teamFilter || g.away === teamFilter; });
+
+    var unplayed = filtered.filter(function (g) { return !(g.completion === true || (g.winner && g.winner !== '')); });
+    var played = filtered.filter(function (g) { return g.completion === true || (g.winner && g.winner !== ''); });
+
+    // Sort by team displayed on the left of the row
+    unplayed.sort(function (a, b) { return a.away.localeCompare(b.away) || a.home.localeCompare(b.home); });
+    played.sort(function (a, b) { return a.home.localeCompare(b.home) || a.away.localeCompare(b.away); });
+
+    function renderGame(g, key) {
+        var completed = g.completion === true || (g.winner && g.winner !== '');
+        return (
+            <div key={key} className="game-row">
+                <button className={'btn-option' + (completed ? ' completed' : '')}
+                    disabled={completed}
+                    onClick={function () {
+                        dispatch({
+                            type: 'SELECT_EXISTING_GAME',
+                            game: g,
+                            home: g.home,
+                            away: g.away,
+                            editMode: !completed,
+                            editGameId: !completed ? g.id : null,
+                        });
+                    }}>
+                    {completed
+                        ? <span>{g.home + ' ' + g.homeScore + ' - ' + g.awayScore + ' ' + g.away + (g.forfeit ? ' (FF)' : '')}</span>
+                        : <span>{g.away + ' vs ' + g.home}</span>
+                    }
+                </button>
+                {completed && (
+                    <button className="btn btn-edit"
+                        onClick={function () {
+                            var fw = null;
+                            if (g.forfeit) fw = g.winner;
+                            dispatch({
+                                type: 'SELECT_EXISTING_GAME',
+                                game: g,
+                                home: g.home,
+                                away: g.away,
+                                homeScore: g.homeScore,
+                                awayScore: g.awayScore,
+                                forfeit: g.forfeit,
+                                forfeitWinner: fw,
+                                editMode: true,
+                                editGameId: g.id,
+                            });
+                        }}>
+                        Editar
+                    </button>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="screen">
             <div className="screen-header">
                 <button className="btn-back" onClick={function () { dispatch({ type: 'GO_BACK' }); }}>&larr;</button>
                 <h2>Juego Existente</h2>
             </div>
-            <div className="subtitle">Juegos</div>
-            <div className="button-list">
-                {allGames.length === 0 && <div className="loading">No hay juegos</div>}
-                {allGames.map(function (g, i) {
-                    var completed = g.completion === true || (g.winner && g.winner !== '');
-                    return (
-                        <div key={i} className="game-row">
-                            <button className={'btn-option' + (completed ? ' completed' : '')}
-                                disabled={completed}
-                                onClick={function () {
-                                    dispatch({ type: 'SELECT_EXISTING_GAME', game: g, home: g.home, away: g.away });
-                                }}>
-                                {completed
-                                    ? <span>{g.home + ' ' + g.homeScore + ' - ' + g.awayScore + ' ' + g.away + (g.forfeit ? ' (FF)' : '')}</span>
-                                    : <span>{g.away + ' vs ' + g.home}</span>
-                                }
+
+            {seasonTeams.length > 0 && (
+                <div className="filter-chips">
+                    <button className={'chip' + (teamFilter === 'all' ? ' selected' : '')}
+                        onClick={function () { setTeamFilter('all'); }}>Todos</button>
+                    {seasonTeams.map(function (t) {
+                        return (
+                            <button key={t.teamID || t.name}
+                                className={'chip' + (teamFilter === t.name ? ' selected' : '')}
+                                onClick={function () { setTeamFilter(t.name); }}>
+                                {t.name}
                             </button>
-                            {completed && (
-                                <button className="btn btn-edit"
-                                    onClick={function () {
-                                        var fw = null;
-                                        if (g.forfeit) fw = g.winner;
-                                        dispatch({
-                                            type: 'SELECT_EXISTING_GAME',
-                                            game: g,
-                                            home: g.home,
-                                            away: g.away,
-                                            homeScore: g.homeScore,
-                                            awayScore: g.awayScore,
-                                            forfeit: g.forfeit,
-                                            forfeitWinner: fw,
-                                            editMode: true,
-                                            editGameId: g.id,
-                                        });
-                                    }}>
-                                    Editar
-                                </button>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {filtered.length === 0 && <div className="loading">No hay juegos</div>}
+
+            {unplayed.length > 0 && (
+                <>
+                    <div className="subtitle">Por Jugar ({unplayed.length})</div>
+                    <div className="button-list">
+                        {unplayed.map(function (g, i) { return renderGame(g, 'u' + i); })}
+                    </div>
+                </>
+            )}
+
+            {played.length > 0 && (
+                <>
+                    <div className="subtitle">Jugados ({played.length})</div>
+                    <div className="button-list">
+                        {played.map(function (g, i) { return renderGame(g, 'p' + i); })}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

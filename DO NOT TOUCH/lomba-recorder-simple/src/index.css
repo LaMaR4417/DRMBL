@@ -237,6 +237,27 @@ body {
 .team-slot { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; color: var(--court-wood); min-width: 24px; }
 .team-name { font-size: 14px; font-weight: 600; color: var(--white); }
 
+/* Filter chips (Juego Existente team filter) */
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 20px 4px;
+}
+.chip {
+    padding: 6px 12px;
+    border: 1px solid var(--border-med);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.chip:hover { border-color: var(--court-wood); }
+.chip.selected { border-color: var(--court-wood); background: rgba(193,154,107,0.15); color: var(--white); }
+
 /* Matchup bar */
 .matchup-bar {
     display: flex;
