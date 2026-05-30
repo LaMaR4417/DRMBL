@@ -53,6 +53,103 @@ async function l3x3PersistJerseyNumbers(seasonId, boxScore) {
     }
 }
 
+// Wave advancement: when all games in a wave (same round + same time) are
+// complete, pair their teams within record buckets (high seed vs low seed)
+// and append new schedule entries one timeslot later.
+function l3x3AddMinutes(timeStr, mins) {
+    var parts = timeStr.split(":");
+    var total = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10) + mins;
+    var h = Math.floor(total / 60);
+    var m = total % 60;
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+}
+function l3x3DateGroupISO(dg) {
+    return dg.date.year + "-" + String(dg.date.month).padStart(2, "0") + "-" + String(dg.date.date).padStart(2, "0");
+}
+function l3x3AdvanceWave(season, round, time, dateGroup) {
+    var waveGames = (dateGroup.games || []).filter(function (g) { return g.round === round && g.time === time; });
+    if (waveGames.length === 0) return null;
+    if (!waveGames.every(function (g) { return g.completion; })) return null;
+
+    // Collect teams from this wave
+    var teams = [];
+    waveGames.forEach(function (g) {
+        teams.push({ teamID: g.homeTeamID, name: g.home, seed: g.homeSeed });
+        teams.push({ teamID: g.awayTeamID, name: g.away, seed: g.awaySeed });
+    });
+
+    var records = (season.bracket && season.bracket.records) || {};
+    var eliminated = (season.bracket && season.bracket.eliminated) || [];
+
+    // Group by current record
+    var buckets = {};
+    teams.forEach(function (t) {
+        if (eliminated.indexOf(t.teamID) !== -1) return;
+        var rec = records[t.teamID] || { wins: 0, losses: 0 };
+        var key = rec.wins + "-" + rec.losses;
+        if (!buckets[key]) buckets[key] = [];
+        buckets[key].push(t);
+    });
+
+    // Pair within each bucket by seed (high vs low)
+    var pairings = [];
+    Object.keys(buckets).forEach(function (key) {
+        var bucket = buckets[key].slice().sort(function (a, b) { return a.seed - b.seed; });
+        while (bucket.length >= 2) {
+            var high = bucket.shift();
+            var low = bucket.pop();
+            pairings.push({ home: high, away: low, bucket: key });
+        }
+    });
+    if (pairings.length === 0) return null;
+
+    // Check if next-round games already exist for these teams (idempotency)
+    var nextRound = round + 1;
+    var existsAlready = (dateGroup.games || []).some(function (g) {
+        if (g.round !== nextRound) return false;
+        return pairings.some(function (p) {
+            return (g.homeTeamID === p.home.teamID && g.awayTeamID === p.away.teamID) ||
+                (g.homeTeamID === p.away.teamID && g.awayTeamID === p.home.teamID);
+        });
+    });
+    if (existsAlready) return null;
+
+    var nextTime = l3x3AddMinutes(time, 60);
+    var dateISO = l3x3DateGroupISO(dateGroup);
+    var courts = [1, 2, 3, 4];
+
+    var newGames = pairings.map(function (p, idx) {
+        return {
+            id: l3x3MakeBoxScoreID(season.id, p.home.name, p.away.name, dateISO),
+            home: p.home.name,
+            away: p.away.name,
+            homeTeamID: p.home.teamID,
+            awayTeamID: p.away.teamID,
+            homeSeed: p.home.seed,
+            awaySeed: p.away.seed,
+            round: nextRound,
+            court: courts[idx % 4],
+            time: nextTime,
+            wave: nextTime,
+            bucket: p.bucket,
+            completion: false,
+            winner: "",
+            loser: "",
+            homeScore: null,
+            awayScore: null,
+            forfeit: false,
+            boxScoreId: null,
+        };
+    });
+
+    dateGroup.games = (dateGroup.games || []).concat(newGames);
+
+    var stillOpen = (dateGroup.games || []).filter(function (g) { return g.round === round && !g.completion; });
+    if (stillOpen.length === 0 && season.bracket) season.bracket.currentRound = nextRound;
+
+    return { generated: newGames.length, nextRound: nextRound, nextTime: nextTime };
+}
+
 // LOMBA-specific ID helpers (mirrors api/_lib/boxScoreId.js's DRMBL pattern but with
 // LOMBA naming + M/D/YYYY date format).
 function asciiSlug(s) {
@@ -675,29 +772,55 @@ module.exports = async function (req, res) {
             var { resource: l3season2 } = await seasonsContainer.item(L3X3_SEASON_ID, L3X3_SEASON_ID).read();
             if (!l3season2) return res.status(404).json({ error: "Season not found" });
 
-            var l3dateStr = l3box.gameInfo && l3box.gameInfo.general && l3box.gameInfo.general.date;
-            var l3ts = l3box.gameInfo && l3box.gameInfo.general && l3box.gameInfo.general.timestamp;
-            var l3gameDate = l3box.gameDate || mdyToISO(l3dateStr, l3ts);
             var l3homeName = l3box.team && l3box.team.home;
             var l3awayName = l3box.team && l3box.team.away;
-            if (!l3gameDate || !l3homeName || !l3awayName) {
-                return res.status(400).json({ error: "Box score missing date or team names" });
+            if (!l3homeName || !l3awayName) {
+                return res.status(400).json({ error: "Box score missing team names" });
             }
 
-            var l3base = l3x3MakeBoxScoreID(L3X3_SEASON_ID, l3homeName, l3awayName, l3gameDate);
-            var l3attempt = 1, l3candidate = l3base;
-            while (l3attempt < 20) {
-                try {
-                    await boxScoresContainer.item(l3candidate, l3candidate).read();
-                    l3attempt++;
-                    l3candidate = l3base + ".g" + (l3attempt + 1);
-                } catch (e) {
-                    if (e.code === 404) break;
-                    throw e;
+            // Find an unplayed schedule entry matching home + away (consume placeholder)
+            var matchedEntry = null;
+            var matchedDg = null;
+            if (l3season2.schedule) {
+                for (var l3ds = 0; l3ds < l3season2.schedule.length; l3ds++) {
+                    var l3dg = l3season2.schedule[l3ds];
+                    for (var l3di = 0; l3di < (l3dg.games || []).length; l3di++) {
+                        var l3sg = l3dg.games[l3di];
+                        if (!l3sg.completion && l3sg.home === l3homeName && l3sg.away === l3awayName) {
+                            matchedEntry = l3sg;
+                            matchedDg = l3dg;
+                            break;
+                        }
+                    }
+                    if (matchedEntry) break;
                 }
             }
-            l3box.id = l3candidate;
-            l3box.gameDate = l3gameDate;
+
+            if (matchedEntry) {
+                l3box.id = matchedEntry.id;
+                l3box.gameDate = l3x3DateGroupISO(matchedDg);
+            } else {
+                // Ad-hoc fallback (off-bracket game)
+                var l3dateStr = l3box.gameInfo && l3box.gameInfo.general && l3box.gameInfo.general.date;
+                var l3ts = l3box.gameInfo && l3box.gameInfo.general && l3box.gameInfo.general.timestamp;
+                var l3gameDate = l3box.gameDate || mdyToISO(l3dateStr, l3ts);
+                if (!l3gameDate) return res.status(400).json({ error: "Box score missing date" });
+                var l3base = l3x3MakeBoxScoreID(L3X3_SEASON_ID, l3homeName, l3awayName, l3gameDate);
+                var l3attempt = 1, l3candidate = l3base;
+                while (l3attempt < 20) {
+                    try {
+                        await boxScoresContainer.item(l3candidate, l3candidate).read();
+                        l3attempt++;
+                        l3candidate = l3base + ".g" + (l3attempt + 1);
+                    } catch (e) {
+                        if (e.code === 404) break;
+                        throw e;
+                    }
+                }
+                l3box.id = l3candidate;
+                l3box.gameDate = l3gameDate;
+            }
+
             l3box.seasonID = L3X3_SEASON_ID;
             l3box.leagueID = "L3X3";
             l3box.season = L3X3_SEASON_ID;
@@ -706,6 +829,42 @@ module.exports = async function (req, res) {
 
             await boxScoresContainer.items.upsert(l3box);
             await l3x3PersistJerseyNumbers(L3X3_SEASON_ID, l3box);
+
+            // If this game was a scheduled bracket entry, update bracket state
+            if (matchedEntry) {
+                var winnerSide = (l3box.gameInfo && l3box.gameInfo.state && l3box.gameInfo.state.winner) || "";
+                var homeScore = (l3box.teamInfo && l3box.teamInfo.home && l3box.teamInfo.home.score && l3box.teamInfo.home.score.current) || 0;
+                var awayScore = (l3box.teamInfo && l3box.teamInfo.away && l3box.teamInfo.away.score && l3box.teamInfo.away.score.current) || 0;
+                var forfeit = !!(l3box.gameInfo && l3box.gameInfo.state && l3box.gameInfo.state.forfeit);
+
+                matchedEntry.completion = true;
+                matchedEntry.winner = winnerSide;
+                matchedEntry.loser = winnerSide === "home" ? "away" : (winnerSide === "away" ? "home" : "");
+                matchedEntry.homeScore = homeScore;
+                matchedEntry.awayScore = awayScore;
+                matchedEntry.forfeit = forfeit;
+                matchedEntry.boxScoreId = l3box.id;
+
+                if (!l3season2.bracket) l3season2.bracket = { format: "swiss-double-elim-2loss", totalTeams: 16, currentRound: 1, records: {}, eliminated: [] };
+                if (!l3season2.bracket.records) l3season2.bracket.records = {};
+                if (!l3season2.bracket.eliminated) l3season2.bracket.eliminated = [];
+
+                if (winnerSide === "home" || winnerSide === "away") {
+                    var winnerTeamID = winnerSide === "home" ? matchedEntry.homeTeamID : matchedEntry.awayTeamID;
+                    var loserTeamID = winnerSide === "home" ? matchedEntry.awayTeamID : matchedEntry.homeTeamID;
+                    if (!l3season2.bracket.records[winnerTeamID]) l3season2.bracket.records[winnerTeamID] = { wins: 0, losses: 0 };
+                    if (!l3season2.bracket.records[loserTeamID]) l3season2.bracket.records[loserTeamID] = { wins: 0, losses: 0 };
+                    l3season2.bracket.records[winnerTeamID].wins++;
+                    l3season2.bracket.records[loserTeamID].losses++;
+                    if (l3season2.bracket.records[loserTeamID].losses >= 2 && l3season2.bracket.eliminated.indexOf(loserTeamID) === -1) {
+                        l3season2.bracket.eliminated.push(loserTeamID);
+                    }
+                }
+
+                l3x3AdvanceWave(l3season2, matchedEntry.round, matchedEntry.time, matchedDg);
+            }
+
+            await seasonsContainer.item(L3X3_SEASON_ID, L3X3_SEASON_ID).replace(l3season2);
 
             return res.status(200).json({ success: true, id: l3box.id });
         } catch (err) {

@@ -173,6 +173,84 @@ button { font-family: inherit; cursor: pointer; }
 }
 .team-chip-name { font-weight: 600; }
 
+/* SchedulePickScreen */
+.schedule-group { margin-bottom: 16px; }
+.schedule-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0 4px 8px;
+}
+.schedule-group-header.dim { opacity: 0.5; }
+.schedule-group-round {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 3px;
+    color: var(--court-wood);
+    font-size: 16px;
+}
+.schedule-group-time {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+.schedule-list { display: flex; flex-direction: column; gap: 8px; }
+.schedule-card {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0;
+    color: var(--text);
+    text-align: left;
+    min-height: 64px;
+    width: 100%;
+    overflow: hidden;
+    transition: var(--transition);
+}
+.schedule-card:hover:not(:disabled) { border-color: var(--court-wood); }
+.schedule-card:disabled { opacity: 0.5; cursor: not-allowed; }
+.schedule-card.done { opacity: 0.5; cursor: default; }
+.schedule-card-court {
+    flex: 0 0 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: var(--court-wood);
+    background: var(--bg-row);
+    border-right: 1px solid var(--border);
+}
+.schedule-card-match { flex: 1; display: flex; flex-direction: column; padding: 8px 12px; gap: 2px; }
+.schedule-card-team { display: flex; align-items: center; gap: 8px; }
+.schedule-card-team .seed {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    font-size: 13px;
+    color: var(--court-wood);
+    min-width: 28px;
+}
+.schedule-card-name {
+    font-weight: 600;
+    font-size: 15px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.schedule-card-vs {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 2px 0;
+}
+.final-score { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; color: var(--text); }
+
 /* GameScreen */
 .game-screen { display: flex; flex-direction: column; min-height: 100vh; }
 .scoreboard {
