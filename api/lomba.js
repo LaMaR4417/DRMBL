@@ -9,8 +9,49 @@ var client = new CosmosClient({
 var database = client.database("DRMBL Database");
 var leaguesContainer = database.container("Leagues");
 var seasonsContainer = database.container("Seasons");
+var teamsContainer = database.container("Teams");
+var playersContainer = database.container("Players");
 var boxScoresContainer = database.container("Box Scores");
 var seasonStatsContainer = database.container("Season Stats");
+
+var L3X3_SEASON_ID = "L3X3 - Varonil Libre - 2026";
+
+function l3x3SeasonSlug(seasonId) {
+    return seasonId.replace(/^L3X3 - /, "").replace(/[''`]/g, "").replace(/ - /g, "_").replace(/\s+/g, "_");
+}
+function l3x3MakeBoxScoreID(seasonId, homeName, awayName, gameDate) {
+    return ["L3X3", l3x3SeasonSlug(seasonId), teamSlug(homeName) + "_vs_" + teamSlug(awayName), gameDate].join(".");
+}
+async function l3x3PersistJerseyNumbers(seasonId, boxScore) {
+    var sides = ["home", "away"];
+    for (var s = 0; s < sides.length; s++) {
+        var side = sides[s];
+        var teamSide = boxScore.teamInfo && boxScore.teamInfo[side];
+        if (!teamSide) continue;
+        var teamID = side === "home" ? boxScore.homeTeamID : boxScore.awayTeamID;
+        var teamName = teamSide.name;
+        var players = teamSide.players || [];
+        for (var p = 0; p < players.length; p++) {
+            var pl = players[p];
+            if (!pl.playerID || !pl.number) continue;
+            var num = parseInt(pl.number, 10);
+            if (isNaN(num)) continue;
+            try {
+                var { resource: playerDoc } = await playersContainer.item(pl.playerID, pl.playerID).read();
+                if (!playerDoc) continue;
+                var teamRef = (playerDoc.teams || []).find(function (t) { return t.teamID === teamID && t.seasonID === seasonId; });
+                if (!teamRef) {
+                    if (!playerDoc.teams) playerDoc.teams = [];
+                    playerDoc.teams.push({ name: teamName, teamID: teamID, seasonID: seasonId, leagueID: "L3X3", jerseyNumbers: [num] });
+                } else {
+                    if (!Array.isArray(teamRef.jerseyNumbers)) teamRef.jerseyNumbers = [];
+                    if (teamRef.jerseyNumbers.indexOf(num) === -1) teamRef.jerseyNumbers.push(num);
+                }
+                await playersContainer.items.upsert(playerDoc);
+            } catch (e) { /* skip on miss */ }
+        }
+    }
+}
 
 // LOMBA-specific ID helpers (mirrors api/_lib/boxScoreId.js's DRMBL pattern but with
 // LOMBA naming + M/D/YYYY date format).
@@ -595,6 +636,81 @@ module.exports = async function (req, res) {
         } catch (err) {
             console.error("LOMBA save playoff game error:", err.message);
             return res.status(500).json({ error: "Failed to save playoff game" });
+        }
+    }
+
+    // ─── L3X3 actions (folded in here to stay under the Vercel function cap) ───
+
+    // GET /api/lomba?action=l3x3-season
+    if (req.method === "GET" && action === "l3x3-season") {
+        try {
+            var { resource: l3season } = await seasonsContainer.item(L3X3_SEASON_ID, L3X3_SEASON_ID).read();
+            if (!l3season) return res.status(404).json({ error: "Season not found" });
+            return res.status(200).json(l3season);
+        } catch (err) {
+            console.error("L3X3 season fetch error:", err.message);
+            return res.status(500).json({ error: "Failed to load season" });
+        }
+    }
+
+    // GET /api/lomba?action=l3x3-team&id=...
+    if (req.method === "GET" && action === "l3x3-team") {
+        var l3teamID = req.query.id;
+        if (!l3teamID) return res.status(400).json({ error: "Missing team id" });
+        try {
+            var { resource: l3team } = await teamsContainer.item(l3teamID, l3teamID).read();
+            if (!l3team) return res.status(404).json({ error: "Team not found" });
+            return res.status(200).json(l3team);
+        } catch (err) {
+            console.error("L3X3 team fetch error:", err.message);
+            return res.status(500).json({ error: "Failed to load team" });
+        }
+    }
+
+    // POST /api/lomba?action=l3x3-save-game
+    if (req.method === "POST" && action === "l3x3-save-game") {
+        var l3box = req.body && req.body.boxScore;
+        if (!l3box) return res.status(400).json({ error: "Missing boxScore" });
+        try {
+            var { resource: l3season2 } = await seasonsContainer.item(L3X3_SEASON_ID, L3X3_SEASON_ID).read();
+            if (!l3season2) return res.status(404).json({ error: "Season not found" });
+
+            var l3dateStr = l3box.gameInfo && l3box.gameInfo.general && l3box.gameInfo.general.date;
+            var l3ts = l3box.gameInfo && l3box.gameInfo.general && l3box.gameInfo.general.timestamp;
+            var l3gameDate = l3box.gameDate || mdyToISO(l3dateStr, l3ts);
+            var l3homeName = l3box.team && l3box.team.home;
+            var l3awayName = l3box.team && l3box.team.away;
+            if (!l3gameDate || !l3homeName || !l3awayName) {
+                return res.status(400).json({ error: "Box score missing date or team names" });
+            }
+
+            var l3base = l3x3MakeBoxScoreID(L3X3_SEASON_ID, l3homeName, l3awayName, l3gameDate);
+            var l3attempt = 1, l3candidate = l3base;
+            while (l3attempt < 20) {
+                try {
+                    await boxScoresContainer.item(l3candidate, l3candidate).read();
+                    l3attempt++;
+                    l3candidate = l3base + ".g" + (l3attempt + 1);
+                } catch (e) {
+                    if (e.code === 404) break;
+                    throw e;
+                }
+            }
+            l3box.id = l3candidate;
+            l3box.gameDate = l3gameDate;
+            l3box.seasonID = L3X3_SEASON_ID;
+            l3box.leagueID = "L3X3";
+            l3box.season = L3X3_SEASON_ID;
+            l3box.type = "3x3";
+            if (!l3box.recorder) l3box.recorder = "l3x3-live-tap-simple";
+
+            await boxScoresContainer.items.upsert(l3box);
+            await l3x3PersistJerseyNumbers(L3X3_SEASON_ID, l3box);
+
+            return res.status(200).json({ success: true, id: l3box.id });
+        } catch (err) {
+            console.error("L3X3 save-game error:", err.message);
+            return res.status(500).json({ error: "Failed to save game" });
         }
     }
 
