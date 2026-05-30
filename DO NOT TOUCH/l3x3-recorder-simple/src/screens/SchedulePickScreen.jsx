@@ -23,6 +23,7 @@ export default function SchedulePickScreen() {
     const allGames = [];
     for (const dg of schedule) {
         for (const g of (dg.games || [])) {
+            if (g.isPlaceholder) continue;  // skip TBD slots — those are for external rendering only
             allGames.push({ ...g, _date: dg.date });
         }
     }

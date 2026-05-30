@@ -118,8 +118,14 @@ function l3x3AdvanceWave(season, round, time, dateGroup) {
     var dateISO = l3x3DateGroupISO(dateGroup);
     var courts = [1, 2, 3, 4];
 
-    var newGames = pairings.map(function (p, idx) {
-        return {
+    pairings.forEach(function (p, idx) {
+        var court = courts[idx % 4];
+        // If a TBD placeholder exists at (nextTime, court), overwrite in place;
+        // otherwise append a new entry.
+        var placeholder = (dateGroup.games || []).find(function (g) {
+            return g.time === nextTime && g.court === court && g.isPlaceholder;
+        });
+        var newEntry = {
             id: l3x3MakeBoxScoreID(season.id, p.home.name, p.away.name, dateISO),
             home: p.home.name,
             away: p.away.name,
@@ -128,7 +134,7 @@ function l3x3AdvanceWave(season, round, time, dateGroup) {
             homeSeed: p.home.seed,
             awaySeed: p.away.seed,
             round: nextRound,
-            court: courts[idx % 4],
+            court: court,
             time: nextTime,
             wave: nextTime,
             bucket: p.bucket,
@@ -140,9 +146,15 @@ function l3x3AdvanceWave(season, round, time, dateGroup) {
             forfeit: false,
             boxScoreId: null,
         };
+        if (placeholder) {
+            // Overwrite the placeholder in place (preserves the slot's position)
+            Object.keys(placeholder).forEach(function (k) { delete placeholder[k]; });
+            Object.assign(placeholder, newEntry);
+        } else {
+            if (!dateGroup.games) dateGroup.games = [];
+            dateGroup.games.push(newEntry);
+        }
     });
-
-    dateGroup.games = (dateGroup.games || []).concat(newGames);
 
     var stillOpen = (dateGroup.games || []).filter(function (g) { return g.round === round && !g.completion; });
     if (stillOpen.length === 0 && season.bracket) season.bracket.currentRound = nextRound;
