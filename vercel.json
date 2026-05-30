@@ -8,6 +8,7 @@
     { "source": "/drmbl-recorder/full/(.*)", "destination": "/drmbl-recorder/full/index.html" },
     { "source": "/drmbl-recorder/retro-fill/(.*)", "destination": "/drmbl-recorder/retro-fill/index.html" },
     { "source": "/lomba-recorder/(.*)", "destination": "/lomba-recorder/index.html" },
+    { "source": "/l3x3-recorder/simple/(.*)", "destination": "/l3x3-recorder/simple/index.html" },
     { "source": "/api/season", "destination": "/api/seasons" }
   ]
 }
