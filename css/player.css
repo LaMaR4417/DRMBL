@@ -57,6 +57,7 @@
     font-size: 1.05em;
 }
 .player-bio { font-size: 0.9em; color: #888; }
+.not-qualified-note { color: #b88a30; font-style: italic; }
 
 /* Section labels */
 .section-label {

@@ -5,6 +5,20 @@
 (function () {
     'use strict';
 
+    // Minimum games-played for a player to count as "qualified" in the stats race.
+    // Scales with season progress: floor(maxTeamGames / 2) + 1. Keep formula in sync
+    // with stats.js. Set when the stats doc loads.
+    var minGamesQualified = 1;
+
+    function computeMinGames(doc) {
+        var teams = (doc && doc.teams) || [];
+        var max = 0;
+        for (var i = 0; i < teams.length; i++) {
+            if ((teams[i].gamesPlayed || 0) > max) max = teams[i].gamesPlayed;
+        }
+        return Math.max(1, Math.floor(max / 2) + 1);
+    }
+
     function getParam(name) {
         var p = new URLSearchParams(window.location.search);
         return p.get(name);
@@ -42,6 +56,7 @@
         .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Stats fetch failed (' + r.status + ')')); })
         .then(function (resp) {
             var stats = resp.stats;
+            minGamesQualified = computeMinGames(stats);
             var entry = (stats.players || []).find(function (p) { return p.playerID === playerId; });
             if (!entry) {
                 showError('No stats found for player: ' + playerId + '. They may not have appeared in any tracked games yet.');
@@ -60,10 +75,17 @@
         });
 
     function renderHeader(entry) {
+        var qualified = (entry.gamesPlayed || 0) >= minGamesQualified;
         document.getElementById('player-jersey').textContent = '';
-        document.getElementById('player-name').textContent = entry.name || playerId;
+        document.getElementById('player-name').textContent = (entry.name || playerId) + (qualified ? '' : '*');
         document.getElementById('player-team').textContent = entry.teamName || '';
         document.getElementById('player-gp').textContent = entry.gamesPlayed != null ? entry.gamesPlayed : '--';
+        var bio = document.getElementById('player-bio');
+        if (!qualified) {
+            bio.innerHTML = '<span class="not-qualified-note">* Not yet qualified for stat leaders (needs ' + minGamesQualified + ' games).</span>';
+        } else {
+            bio.innerHTML = '';
+        }
     }
 
     var AVG_STATS = [

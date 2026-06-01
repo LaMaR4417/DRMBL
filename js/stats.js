@@ -1,4 +1,22 @@
 (function () {
+    // Minimum games-played for a player to count as "qualified" in the stats race.
+    // Scales with season progress: floor(maxTeamGames / 2) + 1 — i.e. "played more
+    // than half the games to date". Non-qualified players still appear on the
+    // leaderboards and grid, marked with *.
+    var minGamesQualified = 1; // computed from statsDoc on first render; recomputed if statsDoc reloads
+
+    function computeMinGames(doc) {
+        var teams = (doc && doc.teams) || [];
+        var max = 0;
+        for (var i = 0; i < teams.length; i++) {
+            if ((teams[i].gamesPlayed || 0) > max) max = teams[i].gamesPlayed;
+        }
+        return Math.max(1, Math.floor(max / 2) + 1);
+    }
+
+    function isQualified(p) { return (p.gamesPlayed || 0) >= minGamesQualified; }
+    function nameWithAsterisk(p) { return (p.name || '') + (isQualified(p) ? '' : '*'); }
+
     // ── State ──
     var statsDoc = null;
     var els = {};
@@ -108,6 +126,7 @@
                     return;
                 }
                 statsDoc = data.stats;
+                minGamesQualified = computeMinGames(statsDoc);
                 applyUrlState();
             })
             .catch(function () {
@@ -197,9 +216,10 @@
         for (var i = 0; i < players.length; i++) {
             var p = players[i];
             var profileHref = '/player.html?id=' + encodeURIComponent(p.playerID);
-            html += '<li class="stats-card-row">';
+            var qCls = isQualified(p) ? '' : ' stats-unqualified';
+            html += '<li class="stats-card-row' + qCls + '">';
             html += '<span class="stats-card-rank">' + (i + 1) + '</span>';
-            html += '<a class="stats-card-name stats-card-player-link" href="' + profileHref + '">' + escapeHtml(p.name) + '</a>';
+            html += '<a class="stats-card-name stats-card-player-link" href="' + profileHref + '" title="' + (isQualified(p) ? '' : 'Not yet qualified — needs ' + minGamesQualified + ' games') + '">' + escapeHtml(nameWithAsterisk(p)) + '</a>';
             html += '<span class="stats-card-row-team">' + escapeHtml(p.teamName) + '</span>';
             html += '<span class="stats-card-value">' + statDef.fmt(statDef.accessor(p)) + '</span>';
             html += '</li>';
@@ -289,8 +309,10 @@
         var pf = primarySort && primarySort.field;
         var pdir = primarySort && primarySort.dir;
 
+        var hideUnqualified = els.detailQualified && els.detailQualified.getAttribute('aria-pressed') === 'true';
         var players = (statsDoc.players || [])
             .filter(function (p) { return p.gamesPlayed > 0; })
+            .filter(function (p) { return !hideUnqualified || isQualified(p); })
             .filter(function (p) { return teamFilter === 'all' || p.teamID === teamFilter; })
             .filter(function (p) { return !search || p.name.toLowerCase().indexOf(search) !== -1; })
             .sort(function (a, b) {
@@ -308,6 +330,7 @@
             });
 
         var html = '<div class="stats-table-area">';
+        html += '<p class="stats-qualified-note">* Players with fewer than ' + minGamesQualified + ' games are not yet qualified for stat leaders.</p>';
         html += '<div class="stats-scroll-top"><div class="stats-scroll-top-inner"></div></div>';
         html += '<div class="stats-table-wrap">';
         html += '<table class="stats-table">';
@@ -336,9 +359,10 @@
 
         for (var pi = 0; pi < players.length; pi++) {
             var p = players[pi];
-            html += '<tr>';
+            var rowCls = isQualified(p) ? '' : ' stats-unqualified';
+            html += '<tr class="' + rowCls.trim() + '">';
             html += '<td class="st-rank">' + (pi + 1) + '</td>';
-            html += '<td class="st-player"><a class="st-player-link" href="/player?id=' + encodeURIComponent(p.playerID) + '">' + escapeHtml(p.name) + '</a></td>';
+            html += '<td class="st-player"><a class="st-player-link" href="/player.html?id=' + encodeURIComponent(p.playerID) + '" title="' + (isQualified(p) ? '' : 'Not yet qualified — needs ' + minGamesQualified + ' games') + '">' + escapeHtml(nameWithAsterisk(p)) + '</a></td>';
             html += '<td class="st-team">' + escapeHtml(p.teamName) + '</td>';
             for (var si = 0; si < DETAIL_STATS.length; si++) {
                 var sd = DETAIL_STATS[si];
@@ -442,6 +466,7 @@
         els.detail = document.getElementById('stats-detail');
         els.back = document.getElementById('stats-back');
         els.detailStat = document.getElementById('stats-detail-stat');
+        els.detailQualified = document.getElementById('stats-detail-qualified');
         els.detailTeam = document.getElementById('stats-detail-team');
         els.detailSearch = document.getElementById('stats-detail-search');
         els.detailTable = document.getElementById('stats-detail-table');
@@ -474,6 +499,17 @@
             var stat = els.detailStat.value;
             var team = els.detailTeam.value || 'all';
             renderDetailTable(stat, team, this.value);
+        });
+
+        els.detailQualified.addEventListener('click', function () {
+            var on = this.getAttribute('aria-pressed') === 'true';
+            var next = !on;
+            this.setAttribute('aria-pressed', next ? 'true' : 'false');
+            this.classList.toggle('active', next);
+            this.textContent = next ? 'Show All Players' : 'Hide Non-Qualifying Players*';
+            var stat = els.detailStat.value;
+            var team = els.detailTeam.value || 'all';
+            renderDetailTable(stat, team, els.detailSearch.value || '');
         });
 
         window.addEventListener('popstate', applyUrlState);

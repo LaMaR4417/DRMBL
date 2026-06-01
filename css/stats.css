@@ -13,6 +13,20 @@
     text-decoration: underline;
 }
 
+/* Non-qualified players (< MIN_GAMES_QUALIFIED games played) — slight de-emphasis. */
+.stats-card-row.stats-unqualified {
+    opacity: 0.7;
+}
+.stats-table tr.stats-unqualified {
+    opacity: 0.7;
+}
+.stats-qualified-note {
+    margin: 8px 16px 12px;
+    color: #888;
+    font-size: 0.85em;
+    font-style: italic;
+}
+
 
 .stats-hero {
     padding: 200px 20px 40px;
@@ -276,6 +290,25 @@
 .stats-select:focus,
 .stats-search:focus {
     outline: none;
+    border-color: var(--court-wood);
+}
+
+.stats-toggle-btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--white);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+.stats-toggle-btn:hover { border-color: var(--court-wood); }
+.stats-toggle-btn.active {
+    background: var(--court-wood);
+    color: #1a1a1d;
     border-color: var(--court-wood);
 }
 
