@@ -65,12 +65,76 @@ function fillTBD(season, slot, pair, round) {
     Object.assign(slot.entry, newEntry);
 }
 
+function isRoundComplete(season, round) {
+    var total = 0, done = 0;
+    (season.schedule || []).forEach(function (dg) {
+        (dg.games || []).forEach(function (g) {
+            if (g.round !== round || g.isPlaceholder) return;
+            total++;
+            if (g.completion) done++;
+        });
+    });
+    return total > 0 && done >= total;
+}
+function findPDByeRecipient(season) {
+    var best = null;
+    (season.schedule || []).forEach(function (dg) {
+        (dg.games || []).forEach(function (g) {
+            if (g.round !== 2 || g.isPlaceholder || !g.completion || g.bucket !== "1-0") return;
+            var pd = g.winner === "home" ? ((g.homeScore || 0) - (g.awayScore || 0)) : ((g.awayScore || 0) - (g.homeScore || 0));
+            var winnerTeamID = g.winner === "home" ? g.homeTeamID : g.awayTeamID;
+            var winnerName = g.winner === "home" ? g.home : g.away;
+            var winnerSeed = g.winner === "home" ? g.homeSeed : g.awaySeed;
+            if (!best || pd > best.pd || (pd === best.pd && winnerSeed < best.seed)) {
+                best = { teamID: winnerTeamID, name: winnerName, seed: winnerSeed, pd: pd };
+            }
+        });
+    });
+    return best;
+}
+function placeByeEntry(season, team, round) {
+    var slot = findNextTBD(season, round);
+    if (!slot) return null;
+    var dateISO = dateGroupISO(slot.dg);
+    var newEntry = {
+        id: ["L3X3", seasonSlug(season.id), teamSlug(team.name) + "_vs_Bye", dateISO].join("."),
+        home: team.name, away: "Bye",
+        homeTeamID: team.teamID, awayTeamID: null,
+        homeSeed: team.seed, awaySeed: null,
+        round: round, court: slot.entry.court, time: slot.entry.time,
+        bucket: "bye", completion: true, winner: "home", loser: "away",
+        homeScore: null, awayScore: null, forfeit: false, bye: true, boxScoreId: null,
+    };
+    Object.keys(slot.entry).forEach(function (k) { delete slot.entry[k]; });
+    Object.assign(slot.entry, newEntry);
+    return slot.entry;
+}
 function drainQueues(season, targetRound) {
     var queues = season.bracket.queues = season.bracket.queues || {};
     var placed = 0;
     var leftover = {};
+    var prevRound = targetRound - 1;
+    var holdTwoZero = (prevRound === 2 && !isRoundComplete(season, 2));
+    var r2JustCompleted = (prevRound === 2 && isRoundComplete(season, 2));
+
+    if (r2JustCompleted && queues["2-0"] && queues["2-0"].length === 5) {
+        var byeRecipient = findPDByeRecipient(season);
+        if (byeRecipient) {
+            queues["2-0"] = queues["2-0"].filter(function (t) { return t.teamID !== byeRecipient.teamID; });
+            placeByeEntry(season, byeRecipient, targetRound);
+            placed++;
+            if (!season.bracket.records[byeRecipient.teamID]) season.bracket.records[byeRecipient.teamID] = { wins: 0, losses: 0 };
+            season.bracket.records[byeRecipient.teamID].wins++;
+            var byeNewKey = recordKey(season.bracket.records[byeRecipient.teamID]);
+            if (!queues[byeNewKey]) queues[byeNewKey] = [];
+            queues[byeNewKey].push(byeRecipient);
+            console.log("    🎁 PD-bye awarded to:", byeRecipient.name, "(PD +" + byeRecipient.pd + ", seed " + byeRecipient.seed + ")");
+        }
+    }
+
     Object.keys(queues).forEach(function (key) {
         if (key === "cross") return;
+        if (key === "2-0" && holdTwoZero) return;
         var bucket = queues[key] || [];
         while (bucket.length >= 2) {
             var home = bucket.shift();
