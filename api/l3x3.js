@@ -106,16 +106,20 @@ function recordKey(rec) { return (rec && (rec.wins + "-" + rec.losses)) || "0-0"
 function findNextTBD(season, round) {
     var best = null;
     (season.schedule || []).forEach(function (dg) {
+        var dateNum = dg.date ? (dg.date.year * 10000 + (dg.date.month || 0) * 100 + (dg.date.date || 0)) : 0;
         (dg.games || []).forEach(function (g) {
-            if (!g.isPlaceholder) return;
-            if (g.round !== round) return;
+            if (!g.isPlaceholder || g.round !== round) return;
             var ts = (g.time || "23:59");
-            if (!best || ts < best.entry.time || (ts === best.entry.time && (g.court || 99) < (best.entry.court || 99))) {
-                best = { dg: dg, entry: g };
-            }
+            var court = g.court || 99;
+            if (!best) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, court: court }; return; }
+            if (dateNum < best.dateNum) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, court: court }; return; }
+            if (dateNum > best.dateNum) return;
+            if (ts < best.time) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, court: court }; return; }
+            if (ts > best.time) return;
+            if (court < best.court) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, court: court }; return; }
         });
     });
-    return best;
+    return best ? { dg: best.dg, entry: best.entry } : null;
 }
 
 function fillTBD(season, slot, pair, round) {
