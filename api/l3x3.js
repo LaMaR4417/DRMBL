@@ -310,6 +310,14 @@ function pairNextRound1vN(season, completedRound) {
     var done = collectAliveFinishedTeams(season, completedRound);
     var inNext = teamIDsInRound(season, nextRound);
     var available = done.filter(function (t) { return !inNext[t.teamID]; });
+
+    // Edge: 1 alive after a round closes → tournament has a champion.
+    // Set season.bracket.champion so callers know the bracket is done.
+    if (available.length === 1) {
+        if (!season.bracket) season.bracket = {};
+        season.bracket.champion = available[0].teamID;
+        return 0;
+    }
     if (available.length < 2) return 0;
 
     var records = (season.bracket && season.bracket.records) || {};
@@ -339,6 +347,37 @@ function pairNextRound1vN(season, completedRound) {
         }
     }
 
+    // End-game rule for R7: when 3+ teams remain after R6, the top team gets
+    // a bye to the final (R8) and #2 vs #3 play an intermediate game. Any
+    // teams ranked #4 or worse are eliminated by tiebreaker (PD/seed).
+    if (nextRound === 7 && available.length >= 3) {
+        if (available.length > 3) {
+            var dropped = available.splice(3); // remove all below #3
+            if (!season.bracket) season.bracket = {};
+            if (!season.bracket.eliminated) season.bracket.eliminated = [];
+            dropped.forEach(function (t) {
+                if (season.bracket.eliminated.indexOf(t.teamID) === -1) {
+                    season.bracket.eliminated.push(t.teamID);
+                }
+            });
+        }
+        // available now has exactly 3: #1, #2, #3
+        var slot7 = findNextTBD(season, nextRound);
+        if (slot7) {
+            fillTBD(season, slot7, { home: available[1], away: available[2], bucket: "intermediate" }, nextRound);
+        }
+        placeByeEntry(season, available[0], nextRound);
+        return 1;
+    }
+
+    // Mark final-stage games so the save handler can declare a champion when
+    // they save (avoiding ambiguity in the 2-loss-elim model when an
+    // undefeated team loses the title game).
+    //   - nextRound 7 with 2 alive: R6 ended with 2 → R7 IS the final.
+    //   - nextRound 8: R8 is always the final (placed after an R7 intermediate).
+    var isFinalStage = (nextRound === 7 && available.length === 2) || nextRound === 8;
+    var defaultBucket = isFinalStage ? "final" : "seeded";
+
     var placed = 0;
     var safety = available.length * 2;
     while (available.length >= 2 && safety-- > 0) {
@@ -361,7 +400,7 @@ function pairNextRound1vN(season, completedRound) {
             available.push(away);
             break;
         }
-        fillTBD(season, slot, { home: home, away: away, bucket: "seeded" }, nextRound);
+        fillTBD(season, slot, { home: home, away: away, bucket: defaultBucket }, nextRound);
         placed++;
     }
 
@@ -500,6 +539,18 @@ module.exports = async function (req, res) {
                     season2.bracket.records[loserTeamID].losses++;
                     if (season2.bracket.records[loserTeamID].losses >= 2 && season2.bracket.eliminated.indexOf(loserTeamID) === -1) {
                         season2.bracket.eliminated.push(loserTeamID);
+                    }
+
+                    // Final-stage detection: when a game marked bucket:"final"
+                    // saves, the winner is the tournament champion regardless
+                    // of records (handles the case where a previously-
+                    // undefeated team loses the title game — they still wear
+                    // the loss but the champion is whoever won the final).
+                    if (matchedEntry.bucket === "final") {
+                        season2.bracket.champion = winnerTeamID;
+                        if (season2.bracket.eliminated.indexOf(loserTeamID) === -1) {
+                            season2.bracket.eliminated.push(loserTeamID);
+                        }
                     }
 
                     // If any scheduled play-in entry was waiting on this game,
