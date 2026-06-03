@@ -119,6 +119,44 @@ function havePlayedBefore(season, teamAID, teamBID) {
     return found;
 }
 
+// Play-in promotion: when a game with a `pendingPlayIn` dependency saves,
+// fill in the pending entry's away (or home) slot with the just-saved game's
+// winner. The pending entry was pre-baked with one team known (e.g. Lobos)
+// and the other side waiting on a referenced game's outcome.
+//
+// pendingPlayIn entries carry a `playInDependsOn: { round, time, court }`
+// reference identifying which scheduled game produces the partner.
+function promotePendingPlayIns(season, savedGame) {
+    if (!savedGame || (savedGame.winner !== "home" && savedGame.winner !== "away")) return 0;
+    var winnerName = savedGame.winner === "home" ? savedGame.home : savedGame.away;
+    var winnerID = savedGame.winner === "home" ? savedGame.homeTeamID : savedGame.awayTeamID;
+    var winnerSeed = savedGame.winner === "home" ? savedGame.homeSeed : savedGame.awaySeed;
+    var promoted = 0;
+    (season.schedule || []).forEach(function (dg) {
+        (dg.games || []).forEach(function (g) {
+            if (!g.pendingPlayIn || !g.playInDependsOn) return;
+            var dep = g.playInDependsOn;
+            if (savedGame.round !== dep.round) return;
+            if (savedGame.time !== dep.time) return;
+            if (savedGame.court !== dep.court) return;
+            // Fill the empty side (assume away is the pending side; if home is
+            // null/empty, fill home instead).
+            if (!g.homeTeamID) {
+                g.home = winnerName;
+                g.homeTeamID = winnerID;
+                g.homeSeed = winnerSeed;
+            } else {
+                g.away = winnerName;
+                g.awayTeamID = winnerID;
+                g.awaySeed = winnerSeed;
+            }
+            g.pendingPlayIn = false;
+            promoted++;
+        });
+    });
+    return promoted;
+}
+
 function isRoundComplete(season, round) {
     var total = 0, done = 0;
     (season.schedule || []).forEach(function (dg) {
@@ -285,6 +323,22 @@ function pairNextRound1vN(season, completedRound) {
         return (b.wins - a.wins) || (a.losses - b.losses) || (b.pd - a.pd) || (a.seed - b.seed);
     });
 
+    // Tournament-specific override: Ouyizz plays both R4 G2 and R4 G6 (the
+    // Lobos play-in slot). If they reach R5 AND the round has a natural bye
+    // (odd alive count), give the bye to Ouyizz instead of the top seed —
+    // earned rest for the back-to-back R4 workload. Skipped when alive is
+    // even (would otherwise create a second bye, which we don't want).
+    if (nextRound === 5 && available.length >= 2 && (available.length % 2 === 1)) {
+        var ouyizzIdx = -1;
+        for (var oi = 0; oi < available.length; oi++) {
+            if (available[oi].teamID === "L3X3.Ouyizz.Varonil.Libre") { ouyizzIdx = oi; break; }
+        }
+        if (ouyizzIdx !== -1) {
+            var ouyizz = available.splice(ouyizzIdx, 1)[0];
+            placeByeEntry(season, ouyizz, nextRound);
+        }
+    }
+
     var placed = 0;
     var safety = available.length * 2;
     while (available.length >= 2 && safety-- > 0) {
@@ -447,6 +501,10 @@ module.exports = async function (req, res) {
                     if (season2.bracket.records[loserTeamID].losses >= 2 && season2.bracket.eliminated.indexOf(loserTeamID) === -1) {
                         season2.bracket.eliminated.push(loserTeamID);
                     }
+
+                    // If any scheduled play-in entry was waiting on this game,
+                    // fill in its pending team slot with the winner first.
+                    promotePendingPlayIns(season2, matchedEntry);
 
                     // Only pair next round once THIS round is fully complete.
                     // Avoids premature partial pairings while other games of
