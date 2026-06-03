@@ -131,25 +131,6 @@ function isRoundComplete(season, round) {
     return total > 0 && done >= total;
 }
 
-// Among the 4 R2 W-W games (bucket: "1-0"), find the winning team with the
-// highest point differential. Tiebreaker: lower seed (= higher-seeded team).
-function findPDByeRecipient(season) {
-    var best = null;
-    (season.schedule || []).forEach(function (dg) {
-        (dg.games || []).forEach(function (g) {
-            if (g.round !== 2 || g.isPlaceholder || !g.completion || g.bucket !== "1-0") return;
-            var pd = g.winner === "home" ? ((g.homeScore || 0) - (g.awayScore || 0)) : ((g.awayScore || 0) - (g.homeScore || 0));
-            var winnerTeamID = g.winner === "home" ? g.homeTeamID : g.awayTeamID;
-            var winnerName = g.winner === "home" ? g.home : g.away;
-            var winnerSeed = g.winner === "home" ? g.homeSeed : g.awaySeed;
-            if (!best || pd > best.pd || (pd === best.pd && winnerSeed < best.seed)) {
-                best = { teamID: winnerTeamID, name: winnerName, seed: winnerSeed, pd: pd };
-            }
-        });
-    });
-    return best;
-}
-
 function placeByeEntry(season, team, round) {
     var slot = findNextTBD(season, round);
     if (!slot) return null;
@@ -225,115 +206,104 @@ function fillTBD(season, slot, pair, round) {
     Object.assign(slot.entry, newEntry);
 }
 
-function drainQueues(season, targetRound) {
-    var queues = season.bracket.queues = season.bracket.queues || {};
-    var placed = 0;
+// ── Pure 1vN Swiss pairing (Day 2 logic) ──
+//
+// On each save, scan the schedule for all teams that completed games in the
+// current round and are still alive. Filter out teams already in a scheduled
+// next-round game. Rank remaining by current standings (W-L → PD), and
+// greedy-pair them 1 vs N within the unpaired pool, skipping repeat matchups.
+// Place pairs into the next chronological TBD slot for the next round.
 
-    // R3-specific: hold the 2-0 bucket until R2 is complete, then check for
-    // the PD-bye case (5 teams in 2-0 → award bye to highest-PD R2 W-W winner).
-    var prevRound = targetRound - 1;
-    var holdTwoZero = (prevRound === 2 && !isRoundComplete(season, 2));
-    var r2JustCompleted = (prevRound === 2 && isRoundComplete(season, 2));
+function computePD(season) {
+    var pd = {};
+    (season.schedule || []).forEach(function (dg) {
+        (dg.games || []).forEach(function (g) {
+            if (g.isPlaceholder || !g.completion || g.bye) return;
+            if (g.homeScore == null || g.awayScore == null) return;
+            pd[g.homeTeamID] = (pd[g.homeTeamID] || 0) + (g.homeScore - g.awayScore);
+            pd[g.awayTeamID] = (pd[g.awayTeamID] || 0) + (g.awayScore - g.homeScore);
+        });
+    });
+    return pd;
+}
 
-    if (r2JustCompleted && queues["2-0"] && queues["2-0"].length === 5) {
-        var byeRecipient = findPDByeRecipient(season);
-        if (byeRecipient) {
-            queues["2-0"] = queues["2-0"].filter(function (t) { return t.teamID !== byeRecipient.teamID; });
-            placeByeEntry(season, byeRecipient, targetRound);
-            placed++;
-            if (!season.bracket.records[byeRecipient.teamID]) season.bracket.records[byeRecipient.teamID] = { wins: 0, losses: 0 };
-            season.bracket.records[byeRecipient.teamID].wins++;
-            var byeNewKey = recordKey(season.bracket.records[byeRecipient.teamID]);
-            if (!queues[byeNewKey]) queues[byeNewKey] = [];
-            queues[byeNewKey].push(byeRecipient);
-        }
-    }
+function collectAliveFinishedTeams(season, round) {
+    var eliminated = (season.bracket && season.bracket.eliminated) || [];
+    var teams = [];
+    var seen = {};
+    (season.schedule || []).forEach(function (dg) {
+        (dg.games || []).forEach(function (g) {
+            if (g.isPlaceholder || !g.completion || g.round !== round) return;
+            var candidates = g.bye
+                ? [{ id: g.homeTeamID, name: g.home, seed: g.homeSeed }]
+                : [{ id: g.homeTeamID, name: g.home, seed: g.homeSeed }, { id: g.awayTeamID, name: g.away, seed: g.awaySeed }];
+            candidates.forEach(function (c) {
+                if (!c.id || seen[c.id] || eliminated.indexOf(c.id) !== -1) return;
+                teams.push({ teamID: c.id, name: c.name, seed: c.seed });
+                seen[c.id] = true;
+            });
+        });
+    });
+    return teams;
+}
 
-    // Standard bucket queues: pair within bucket (FIFO)
-    Object.keys(queues).forEach(function (key) {
-        if (key === "cross") return;
-        if (key === "2-0" && holdTwoZero) return; // hold until PD-bye determination
-        var bucket = queues[key] || [];
-        var attempts = 0;
-        while (bucket.length >= 2 && attempts < bucket.length) {
-            var home = bucket.shift();
-            // Find first team in bucket that home hasn't faced before
-            var awayIdx = -1;
-            for (var bi = 0; bi < bucket.length; bi++) {
-                if (!havePlayedBefore(season, home.teamID, bucket[bi].teamID)) { awayIdx = bi; break; }
-            }
-            if (awayIdx === -1) {
-                // No valid partner — put home at the back of the bucket and try the next
-                bucket.push(home);
-                attempts++;
-                continue;
-            }
-            var away = bucket.splice(awayIdx, 1)[0];
-            var slot = findNextTBD(season, targetRound);
-            if (!slot) { bucket.unshift(away); bucket.unshift(home); return; }
-            fillTBD(season, slot, { home: home, away: away, bucket: key }, targetRound);
-            placed++;
-            attempts = 0;
-        }
-        if (bucket.length === 0) delete queues[key];
+function teamIDsInRound(season, round) {
+    var set = {};
+    (season.schedule || []).forEach(function (dg) {
+        (dg.games || []).forEach(function (g) {
+            if (g.isPlaceholder || g.round !== round) return;
+            if (g.homeTeamID) set[g.homeTeamID] = true;
+            if (g.awayTeamID) set[g.awayTeamID] = true;
+        });
+    });
+    return set;
+}
+
+function pairNextRound1vN(season, completedRound) {
+    var nextRound = completedRound + 1;
+    var done = collectAliveFinishedTeams(season, completedRound);
+    var inNext = teamIDsInRound(season, nextRound);
+    var available = done.filter(function (t) { return !inNext[t.teamID]; });
+    if (available.length < 2) return 0;
+
+    var records = (season.bracket && season.bracket.records) || {};
+    var pd = computePD(season);
+    available = available.map(function (t) {
+        var r = records[t.teamID] || { wins: 0, losses: 0 };
+        return { teamID: t.teamID, name: t.name, seed: t.seed, wins: r.wins, losses: r.losses, pd: pd[t.teamID] || 0 };
+    });
+    // Rank desc: more wins → fewer losses → higher PD → lower seed
+    available.sort(function (a, b) {
+        return (b.wins - a.wins) || (a.losses - b.losses) || (b.pd - a.pd) || (a.seed - b.seed);
     });
 
-    // Cross-pair: pair w + l if both present
-    if (queues.cross && queues.cross.w && queues.cross.l) {
-        var slotX = findNextTBD(season, targetRound);
-        if (slotX) {
-            fillTBD(season, slotX, { home: queues.cross.w, away: queues.cross.l, bucket: "cross" }, targetRound);
-            delete queues.cross;
-            placed++;
+    var placed = 0;
+    var safety = available.length * 2;
+    while (available.length >= 2 && safety-- > 0) {
+        var home = available[0];
+        var awayIdx = -1;
+        for (var i = available.length - 1; i > 0; i--) {
+            if (!havePlayedBefore(season, home.teamID, available[i].teamID)) { awayIdx = i; break; }
         }
+        if (awayIdx === -1) {
+            // Top team has faced every available opponent — rotate them and try next
+            available.push(available.shift());
+            continue;
+        }
+        available.shift(); // remove home (index 0)
+        var away = available.splice(awayIdx - 1, 1)[0]; // -1 because shift moved indices
+        var slot = findNextTBD(season, nextRound);
+        if (!slot) {
+            // No TBD slot — put both back and stop
+            available.unshift(home);
+            available.push(away);
+            break;
+        }
+        fillTBD(season, slot, { home: home, away: away, bucket: "seeded" }, nextRound);
+        placed++;
     }
 
     return placed;
-}
-
-function advanceIncremental(season, completedEntry, winnerTeam, loserTeam) {
-    if (!season.bracket) season.bracket = { format: "swiss-double-elim-2loss", currentRound: 1, records: {}, eliminated: [], queues: {}, roundSaves: {} };
-    if (!season.bracket.queues) season.bracket.queues = {};
-    if (!season.bracket.roundSaves) season.bracket.roundSaves = {};
-    var eliminated = season.bracket.eliminated || [];
-
-    var r = completedEntry.round;
-    season.bracket.roundSaves[r] = (season.bracket.roundSaves[r] || 0) + 1;
-    var saveIdx = season.bracket.roundSaves[r];
-
-    var winnerRec = season.bracket.records[winnerTeam.teamID];
-    var loserRec = season.bracket.records[loserTeam.teamID];
-    var winnerKey = recordKey(winnerRec);
-    var loserKey = recordKey(loserRec);
-
-    // Special R1 cross-pair rule: save #3 winner -> cross.w, save #4 loser -> cross.l
-    var winnerDest = winnerKey;
-    var loserDest = loserKey;
-    if (r === 1 && saveIdx === 3) winnerDest = "cross-w";
-    if (r === 1 && saveIdx === 4) loserDest = "cross-l";
-
-    // Push to queues (skip eliminated)
-    if (eliminated.indexOf(winnerTeam.teamID) === -1) {
-        if (winnerDest === "cross-w") {
-            if (!season.bracket.queues.cross) season.bracket.queues.cross = { w: null, l: null };
-            season.bracket.queues.cross.w = winnerTeam;
-        } else {
-            if (!season.bracket.queues[winnerDest]) season.bracket.queues[winnerDest] = [];
-            season.bracket.queues[winnerDest].push(winnerTeam);
-        }
-    }
-    if (eliminated.indexOf(loserTeam.teamID) === -1) {
-        if (loserDest === "cross-l") {
-            if (!season.bracket.queues.cross) season.bracket.queues.cross = { w: null, l: null };
-            season.bracket.queues.cross.l = loserTeam;
-        } else {
-            if (!season.bracket.queues[loserDest]) season.bracket.queues[loserDest] = [];
-            season.bracket.queues[loserDest].push(loserTeam);
-        }
-    }
-
-    var placed = drainQueues(season, r + 1);
-    return { placed: placed, queues: season.bracket.queues };
 }
 
 // ── handler ──
@@ -449,17 +419,13 @@ module.exports = async function (req, res) {
                 matchedEntry.forfeit = forfeit;
                 matchedEntry.boxScoreId = box.id;
 
-                if (!season2.bracket) season2.bracket = { format: "swiss-double-elim-2loss", totalTeams: 18, currentRound: 1, records: {}, eliminated: [], queues: {}, roundSaves: {} };
+                if (!season2.bracket) season2.bracket = { format: "swiss-1vN", totalTeams: 18, currentRound: 1, records: {}, eliminated: [] };
                 if (!season2.bracket.records) season2.bracket.records = {};
                 if (!season2.bracket.eliminated) season2.bracket.eliminated = [];
 
                 if (winnerSide === "home" || winnerSide === "away") {
                     var winnerTeamID = winnerSide === "home" ? matchedEntry.homeTeamID : matchedEntry.awayTeamID;
                     var loserTeamID = winnerSide === "home" ? matchedEntry.awayTeamID : matchedEntry.homeTeamID;
-                    var winnerName = winnerSide === "home" ? matchedEntry.home : matchedEntry.away;
-                    var loserName = winnerSide === "home" ? matchedEntry.away : matchedEntry.home;
-                    var winnerSeed = winnerSide === "home" ? matchedEntry.homeSeed : matchedEntry.awaySeed;
-                    var loserSeed = winnerSide === "home" ? matchedEntry.awaySeed : matchedEntry.homeSeed;
 
                     if (!season2.bracket.records[winnerTeamID]) season2.bracket.records[winnerTeamID] = { wins: 0, losses: 0 };
                     if (!season2.bracket.records[loserTeamID]) season2.bracket.records[loserTeamID] = { wins: 0, losses: 0 };
@@ -469,10 +435,8 @@ module.exports = async function (req, res) {
                         season2.bracket.eliminated.push(loserTeamID);
                     }
 
-                    advanceIncremental(season2, matchedEntry,
-                        { teamID: winnerTeamID, name: winnerName, seed: winnerSeed },
-                        { teamID: loserTeamID, name: loserName, seed: loserSeed }
-                    );
+                    // Auto-pair next round using pure 1vN Swiss
+                    pairNextRound1vN(season2, matchedEntry.round);
                 }
             }
 
