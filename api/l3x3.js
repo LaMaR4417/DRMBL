@@ -132,6 +132,10 @@ function isRoundComplete(season, round) {
 }
 
 function placeByeEntry(season, team, round) {
+    // Byes are NO-RESULT entries: the team advances but no W is credited
+    // to records, and PD is unaffected (computePD already skips g.bye === true).
+    // We still mark completion: true so isRoundComplete() recognizes the slot
+    // as accounted for.
     var slot = findNextTBD(season, round);
     if (!slot) return null;
     var dateISO = dateGroupISO(slot.dg);
@@ -148,8 +152,8 @@ function placeByeEntry(season, team, round) {
         time: slot.entry.time,
         bucket: "bye",
         completion: true,
-        winner: "home",
-        loser: "away",
+        winner: "",
+        loser: "",
         homeScore: null,
         awayScore: null,
         forfeit: false,
@@ -162,19 +166,23 @@ function placeByeEntry(season, team, round) {
 }
 
 function findNextTBD(season, round) {
+    // Sort priority within a (date, time): by `fillPriority` if set on the
+    // slot, otherwise by court ascending. fillPriority lets us hand-prefer
+    // certain courts at certain times (e.g. 8pm C1, C2, C4 before C3).
     var best = null;
+    function priority(g) { return typeof g.fillPriority === "number" ? g.fillPriority : (g.court || 99); }
     (season.schedule || []).forEach(function (dg) {
         var dateNum = dg.date ? (dg.date.year * 10000 + (dg.date.month || 0) * 100 + (dg.date.date || 0)) : 0;
         (dg.games || []).forEach(function (g) {
             if (!g.isPlaceholder || g.round !== round) return;
             var ts = (g.time || "23:59");
-            var court = g.court || 99;
-            if (!best) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, court: court }; return; }
-            if (dateNum < best.dateNum) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, court: court }; return; }
+            var prio = priority(g);
+            if (!best) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, prio: prio }; return; }
+            if (dateNum < best.dateNum) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, prio: prio }; return; }
             if (dateNum > best.dateNum) return;
-            if (ts < best.time) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, court: court }; return; }
+            if (ts < best.time) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, prio: prio }; return; }
             if (ts > best.time) return;
-            if (court < best.court) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, court: court }; return; }
+            if (prio < best.prio) { best = { dg: dg, entry: g, dateNum: dateNum, time: ts, prio: prio }; return; }
         });
     });
     return best ? { dg: best.dg, entry: best.entry } : null;
@@ -301,6 +309,11 @@ function pairNextRound1vN(season, completedRound) {
         }
         fillTBD(season, slot, { home: home, away: away, bucket: "seeded" }, nextRound);
         placed++;
+    }
+
+    // Odd-count round: top-ranked unpaired team gets a bye (no result).
+    if (available.length === 1) {
+        placeByeEntry(season, available[0], nextRound);
     }
 
     return placed;
@@ -435,8 +448,12 @@ module.exports = async function (req, res) {
                         season2.bracket.eliminated.push(loserTeamID);
                     }
 
-                    // Auto-pair next round using pure 1vN Swiss
-                    pairNextRound1vN(season2, matchedEntry.round);
+                    // Only pair next round once THIS round is fully complete.
+                    // Avoids premature partial pairings while other games of
+                    // the same round are still open.
+                    if (isRoundComplete(season2, matchedEntry.round)) {
+                        pairNextRound1vN(season2, matchedEntry.round);
+                    }
                 }
             }
 
