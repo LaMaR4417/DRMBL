@@ -103,6 +103,22 @@ async function persistJerseyNumbers(seasonId, boxScore) {
 
 function recordKey(rec) { return (rec && (rec.wins + "-" + rec.losses)) || "0-0"; }
 
+// Returns true if these two team IDs have already faced each other in any
+// completed (non-placeholder) game in the season. Used by pair selection
+// to avoid repeating matchups across rounds.
+function havePlayedBefore(season, teamAID, teamBID) {
+    if (!teamAID || !teamBID) return false;
+    var found = false;
+    (season.schedule || []).forEach(function (dg) {
+        (dg.games || []).forEach(function (g) {
+            if (g.isPlaceholder || !g.completion) return;
+            var pair = [g.homeTeamID, g.awayTeamID];
+            if (pair.indexOf(teamAID) !== -1 && pair.indexOf(teamBID) !== -1) found = true;
+        });
+    });
+    return found;
+}
+
 function isRoundComplete(season, round) {
     var total = 0, done = 0;
     (season.schedule || []).forEach(function (dg) {
@@ -238,13 +254,26 @@ function drainQueues(season, targetRound) {
         if (key === "cross") return;
         if (key === "2-0" && holdTwoZero) return; // hold until PD-bye determination
         var bucket = queues[key] || [];
-        while (bucket.length >= 2) {
+        var attempts = 0;
+        while (bucket.length >= 2 && attempts < bucket.length) {
             var home = bucket.shift();
-            var away = bucket.shift();
+            // Find first team in bucket that home hasn't faced before
+            var awayIdx = -1;
+            for (var bi = 0; bi < bucket.length; bi++) {
+                if (!havePlayedBefore(season, home.teamID, bucket[bi].teamID)) { awayIdx = bi; break; }
+            }
+            if (awayIdx === -1) {
+                // No valid partner — put home at the back of the bucket and try the next
+                bucket.push(home);
+                attempts++;
+                continue;
+            }
+            var away = bucket.splice(awayIdx, 1)[0];
             var slot = findNextTBD(season, targetRound);
             if (!slot) { bucket.unshift(away); bucket.unshift(home); return; }
             fillTBD(season, slot, { home: home, away: away, bucket: key }, targetRound);
             placed++;
+            attempts = 0;
         }
         if (bucket.length === 0) delete queues[key];
     });
