@@ -33,6 +33,7 @@ function emptyTeamState(teamMeta, teamDoc) {
             by1: 0,
             by2: 0,
             by3: 0,
+            fouls: 0,
         })),
     };
 }
@@ -76,6 +77,14 @@ function reducer(state, action) {
                 const newCount = clampNonNegative(p[key] + delta);
                 const actualDelta = newCount - p[key];
                 return { ...p, [key]: newCount, points: p.points + actualDelta * value };
+            });
+            return { ...state, game: { ...state.game, [side]: { ...state.game[side], players } } };
+        }
+        case 'ADJUST_PLAYER_FOULS': {
+            const { side, playerIndex, delta } = action;
+            const players = state.game[side].players.map((p, i) => {
+                if (i !== playerIndex) return p;
+                return { ...p, fouls: clampNonNegative(p.fouls + delta) };
             });
             return { ...state, game: { ...state.game, [side]: { ...state.game[side], players } } };
         }

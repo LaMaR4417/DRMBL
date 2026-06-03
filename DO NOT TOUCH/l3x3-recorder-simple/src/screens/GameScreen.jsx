@@ -55,6 +55,7 @@ function TeamPanel({ side, team, dispatch, reverse }) {
                         <th className="col-pts">1</th>
                         <th className="col-pts">2</th>
                         <th className="col-pts">3</th>
+                        <th className="col-pts">F</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,6 +85,7 @@ function TeamPanel({ side, team, dispatch, reverse }) {
                             <ScoreCell side={side} playerIndex={i} value={1} count={p.by1} dispatch={dispatch} />
                             <ScoreCell side={side} playerIndex={i} value={2} count={p.by2} dispatch={dispatch} />
                             <ScoreCell side={side} playerIndex={i} value={3} count={p.by3} dispatch={dispatch} />
+                            <FoulCell side={side} playerIndex={i} count={p.fouls} dispatch={dispatch} />
                         </tr>
                     ))}
                 </tbody>
@@ -112,6 +114,28 @@ function ScoreCell({ side, playerIndex, value, count, dispatch }) {
                     onClick={() => dispatch({ type: 'ADJUST_POINTS', side, playerIndex, value, delta: +1 })}
                     aria-label={`+${value}`}>
                     +{value}
+                </button>
+            </div>
+        </td>
+    );
+}
+
+function FoulCell({ side, playerIndex, count, dispatch }) {
+    return (
+        <td className="col-pts">
+            <div className="score-cell">
+                <button
+                    className="score-btn minus"
+                    onClick={() => dispatch({ type: 'ADJUST_PLAYER_FOULS', side, playerIndex, delta: -1 })}
+                    aria-label="−1 falta">
+                    −F
+                </button>
+                <div className="score-count">{count}</div>
+                <button
+                    className="score-btn plus"
+                    onClick={() => dispatch({ type: 'ADJUST_PLAYER_FOULS', side, playerIndex, delta: +1 })}
+                    aria-label="+1 falta">
+                    +F
                 </button>
             </div>
         </td>

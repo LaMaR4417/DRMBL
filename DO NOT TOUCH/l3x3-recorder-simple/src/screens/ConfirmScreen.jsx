@@ -34,6 +34,7 @@ function buildBoxScore(state) {
             by1: p.by1,
             by2: p.by2,
             by3: p.by3,
+            fouls: p.fouls,
             onCourtAtEnd: p.onCourt,
         })),
     });
@@ -152,6 +153,7 @@ function TeamSummary({ team }) {
                         <th>1</th>
                         <th>2</th>
                         <th>3</th>
+                        <th>F</th>
                         <th>Pts</th>
                     </tr>
                 </thead>
@@ -163,13 +165,14 @@ function TeamSummary({ team }) {
                             <td>{p.by1}</td>
                             <td>{p.by2}</td>
                             <td>{p.by3}</td>
+                            <td>{p.fouls}</td>
                             <td><strong>{p.points}</strong></td>
                         </tr>
                     ))}
                 </tbody>
             </table>
             <div className="team-summary-totals">
-                Faltas: <strong>{team.fouls}</strong> · Tiempos: <strong>{team.timeouts}</strong>
+                Faltas equipo: <strong>{team.fouls}</strong> · Tiempos: <strong>{team.timeouts}</strong>
             </div>
         </div>
     );
