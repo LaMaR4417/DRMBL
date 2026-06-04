@@ -172,13 +172,67 @@ function isRoundComplete(season, round) {
 function placeByeEntry(season, team, round) {
     // Byes are NO-RESULT entries: the team advances but no W is credited
     // to records, and PD is unaffected (computePD already skips g.bye === true).
-    // We still mark completion: true so isRoundComplete() recognizes the slot
-    // as accounted for.
+    // completion: true so isRoundComplete() recognizes the bye as accounted
+    // for; bye: true so collectAliveFinishedTeams() carries the team forward.
+    //
+    // Two placement modes:
+    //   1. If an existing TBD slot for `round` is available, fill it (the
+    //      bye occupies a baked court slot — visible in time-grouped UIs).
+    //   2. Otherwise append a synthetic bye entry to the date group of the
+    //      round's other games (no court). This fixes the R7-intermediate
+    //      bug where the only R7 TBD was consumed by the intermediate game
+    //      and the bye for #1 silently failed to place.
     var slot = findNextTBD(season, round);
-    if (!slot) return null;
-    var dateISO = dateGroupISO(slot.dg);
-    var newEntry = {
-        id: ["L3X3", seasonSlug(season.id), teamSlug(team.name) + "_vs_Bye", dateISO].join("."),
+    if (slot) {
+        var dateISO = dateGroupISO(slot.dg);
+        var filledEntry = {
+            id: ["L3X3", seasonSlug(season.id), teamSlug(team.name) + "_vs_Bye", dateISO].join("."),
+            home: team.name,
+            away: "Bye",
+            homeTeamID: team.teamID,
+            awayTeamID: null,
+            homeSeed: team.seed,
+            awaySeed: null,
+            round: round,
+            court: slot.entry.court,
+            time: slot.entry.time,
+            bucket: "bye",
+            completion: true,
+            winner: "",
+            loser: "",
+            homeScore: null,
+            awayScore: null,
+            forfeit: false,
+            bye: true,
+            boxScoreId: null,
+        };
+        Object.keys(slot.entry).forEach(function (k) { delete slot.entry[k]; });
+        Object.assign(slot.entry, filledEntry);
+        return slot.entry;
+    }
+
+    // Synthetic append: find the date group hosting this round's other
+    // games (or the latest date group as a fallback). Use the round's
+    // existing time for UI grouping; leave court null since no court is
+    // actually used.
+    var targetDG = null;
+    var roundTime = null;
+    (season.schedule || []).forEach(function (dg) {
+        (dg.games || []).forEach(function (g) {
+            if (g.round === round && !g.isPlaceholder) {
+                targetDG = dg;
+                if (!roundTime) roundTime = g.time;
+            }
+        });
+    });
+    if (!targetDG && season.schedule && season.schedule.length) {
+        targetDG = season.schedule[season.schedule.length - 1];
+    }
+    if (!targetDG) return null;
+
+    var dateISO2 = dateGroupISO(targetDG);
+    var syntheticEntry = {
+        id: ["L3X3", seasonSlug(season.id), teamSlug(team.name) + "_vs_Bye", dateISO2].join("."),
         home: team.name,
         away: "Bye",
         homeTeamID: team.teamID,
@@ -186,8 +240,8 @@ function placeByeEntry(season, team, round) {
         homeSeed: team.seed,
         awaySeed: null,
         round: round,
-        court: slot.entry.court,
-        time: slot.entry.time,
+        court: null,
+        time: roundTime,
         bucket: "bye",
         completion: true,
         winner: "",
@@ -196,11 +250,13 @@ function placeByeEntry(season, team, round) {
         awayScore: null,
         forfeit: false,
         bye: true,
+        synthetic: true,
         boxScoreId: null,
+        isPlaceholder: false,
     };
-    Object.keys(slot.entry).forEach(function (k) { delete slot.entry[k]; });
-    Object.assign(slot.entry, newEntry);
-    return slot.entry;
+    targetDG.games = targetDG.games || [];
+    targetDG.games.push(syntheticEntry);
+    return syntheticEntry;
 }
 
 function findNextTBD(season, round) {
