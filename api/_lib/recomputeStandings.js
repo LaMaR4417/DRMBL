@@ -1,9 +1,10 @@
 // DRMBL + Copa Beta standings recompute. Called by api/end-game.js
 // after a game is saved, and by the one-shot fix script.
 //
-// DRMBL doubleheader rule: when a team plays twice in a single week,
-// the chronologically-second loss counts as 0.5 instead of 1.0. Wins
-// and point differential are always full.
+// (Removed 2026-06-02: the DRMBL doubleheader half-loss rule. Wonderland was
+// the only team that ever got a doubleheader and the user asked for it to
+// count as full losses. `losses` now equals `pureLosses` for every team; the
+// field is kept around so downstream consumers don't break.)
 //
 // Tiebreaker chain: wins desc → losses asc → pointDiff desc → H2H wins
 // within tied group (regular-season games only). Truly-tied entries
@@ -161,34 +162,15 @@ function recomputeStandings(seasonDoc) {
         if (t.teamID) standingsMap[t.slot] = makeEntry(t.slot, t.name);
     }
 
-    // ── DRMBL path: per-week iteration with doubleheader detection ──
+    // ── DRMBL path: walk weeklySchedule games and credit W/L + pointDiff ──
     if (seasonDoc.weeklySchedule) {
         for (var wi = 0; wi < seasonDoc.weeklySchedule.length; wi++) {
             var wk = seasonDoc.weeklySchedule[wi];
             if (wk.type === "seeded" || wk.type === "playoffs") continue;
             var games = wk.games || [];
 
-            // Count per-slot appearances in this week to detect doubleheaders
-            var slotCounts = {};
             for (var gi = 0; gi < games.length; gi++) {
-                var g = games[gi];
-                slotCounts[g.home] = (slotCounts[g.home] || 0) + 1;
-                slotCounts[g.away] = (slotCounts[g.away] || 0) + 1;
-            }
-
-            // Defensive chronological sort (data should already be ordered)
-            var sortedGames = games.slice().sort(function (a, b) {
-                return parseTime(a.time) - parseTime(b.time);
-            });
-
-            // Running per-slot counter to identify which game is the 2nd
-            var slotSeen = {};
-
-            for (var sgi = 0; sgi < sortedGames.length; sgi++) {
-                var ag = sortedGames[sgi];
-                slotSeen[ag.home] = (slotSeen[ag.home] || 0) + 1;
-                slotSeen[ag.away] = (slotSeen[ag.away] || 0) + 1;
-
+                var ag = games[gi];
                 if (!ag.winner || ag.winner === "") continue;
                 var hEntry = standingsMap[ag.home];
                 var aEntry = standingsMap[ag.away];
@@ -203,10 +185,7 @@ function recomputeStandings(seasonDoc) {
 
                 winnerEntry.wins++;
                 loserEntry.pureLosses++;
-
-                // Doubleheader protection: 0.5 only on the 2nd appearance for the loser
-                var isProtected = slotCounts[loserSlot] >= 2 && slotSeen[loserSlot] === 2;
-                loserEntry.losses += isProtected ? 0.5 : 1;
+                loserEntry.losses++;
 
                 hEntry.pointDiff += (hs - as);
                 aEntry.pointDiff += (as - hs);

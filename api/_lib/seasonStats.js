@@ -15,6 +15,33 @@
 // NOTE: min-attempt thresholds for percentage leaderboards are NOT applied
 // here. Add later if needed (e.g. require 10 FG attempted for FG% eligibility).
 
+// Stat categories that can be marked reliable/unreliable on a partialStats game.
+// A game's `partialStats: { reliable: ['points', 'fouls'] }` means only those
+// fields feed into season totals and per-stat denominators.
+var STAT_CATEGORIES = ['points', 'fouls', 'rebounds', 'assists', 'steals',
+    'blocks', 'turnovers', 'minutesPlayed', 'fieldGoals', 'freeThrows'];
+
+var ALL_STATS_RELIABLE = (function () {
+    var s = {};
+    for (var i = 0; i < STAT_CATEGORIES.length; i++) s[STAT_CATEGORIES[i]] = true;
+    return s;
+})();
+
+function reliableSetFrom(bs) {
+    if (!bs.partialStats || !Array.isArray(bs.partialStats.reliable)) return ALL_STATS_RELIABLE;
+    var set = {};
+    for (var i = 0; i < bs.partialStats.reliable.length; i++) {
+        set[bs.partialStats.reliable[i]] = true;
+    }
+    return set;
+}
+
+function emptyGamesPlayedFor() {
+    var g = {};
+    for (var i = 0; i < STAT_CATEGORIES.length; i++) g[STAT_CATEGORIES[i]] = 0;
+    return g;
+}
+
 function emptyPlayerTotals() {
     return {
         points: 0,
@@ -63,8 +90,11 @@ function avg(total, gp) {
     return Math.round((total / gp) * 10) / 10; // 1 decimal place
 }
 
-// Add a player's per-game stats into their season totals
-function accumulatePlayer(totals, p) {
+// Add a player's per-game stats into their season totals. `reliable` is a
+// stat-category lookup map (e.g. { points: true, fouls: true }) — only those
+// fields feed into totals. `gpFor` is the per-stat games-played counter for
+// the player, incremented per reliable category for accurate per-stat averages.
+function accumulatePlayer(totals, p, reliable, gpFor) {
     var s = p.stats || {};
     var off = s.offense || {};
     var fg = (off.shootingBreakdown && off.shootingBreakdown.fieldGoals) || {};
@@ -76,31 +106,61 @@ function accumulatePlayer(totals, p) {
     var gen = s.general || {};
     var fouls = (gen.fouls && gen.fouls.personal) || {};
 
-    totals.points += off.points || 0;
-    totals.assists += off.assists || 0;
-    totals.rebounds.total += reb.total || 0;
-    totals.rebounds.offensive += reb.offensive || 0;
-    totals.rebounds.defensive += reb.defensive || 0;
-    totals.steals += def.steals || 0;
-    totals.blocks += def.blocks || 0;
-    totals.turnovers += gen.turnovers || 0;
-    totals.fouls.personal += fouls.total || 0;
-    totals.fouls.technical += (gen.fouls && gen.fouls.technical) || 0;
-    totals.fouls.flagrant += (gen.fouls && gen.fouls.flagrant) || 0;
-    totals.minutesPlayed += gen.minutesPlayed || 0;
-    totals.plusMinus += gen.plusMinus || 0;
-    totals.fieldGoals.totalAttempted += fg.totalAttempted || 0;
-    totals.fieldGoals.totalMade += fg.totalMade || 0;
-    totals.fieldGoals.totalMissed += fg.totalMissed || 0;
-    totals.fieldGoals.twoPoint.attempted += fg2.attempted || 0;
-    totals.fieldGoals.twoPoint.made += fg2.made || 0;
-    totals.fieldGoals.twoPoint.missed += fg2.missed || 0;
-    totals.fieldGoals.threePoint.attempted += fg3.attempted || 0;
-    totals.fieldGoals.threePoint.made += fg3.made || 0;
-    totals.fieldGoals.threePoint.missed += fg3.missed || 0;
-    totals.freeThrows.attempted += ft.attempted || 0;
-    totals.freeThrows.made += ft.made || 0;
-    totals.freeThrows.missed += ft.missed || 0;
+    if (reliable.points) {
+        totals.points += off.points || 0;
+        gpFor.points++;
+    }
+    if (reliable.assists) {
+        totals.assists += off.assists || 0;
+        gpFor.assists++;
+    }
+    if (reliable.rebounds) {
+        totals.rebounds.total += reb.total || 0;
+        totals.rebounds.offensive += reb.offensive || 0;
+        totals.rebounds.defensive += reb.defensive || 0;
+        gpFor.rebounds++;
+    }
+    if (reliable.steals) {
+        totals.steals += def.steals || 0;
+        gpFor.steals++;
+    }
+    if (reliable.blocks) {
+        totals.blocks += def.blocks || 0;
+        gpFor.blocks++;
+    }
+    if (reliable.turnovers) {
+        totals.turnovers += gen.turnovers || 0;
+        gpFor.turnovers++;
+    }
+    if (reliable.fouls) {
+        totals.fouls.personal += fouls.total || 0;
+        totals.fouls.technical += (gen.fouls && gen.fouls.technical) || 0;
+        totals.fouls.flagrant += (gen.fouls && gen.fouls.flagrant) || 0;
+        gpFor.fouls++;
+    }
+    if (reliable.minutesPlayed) {
+        totals.minutesPlayed += gen.minutesPlayed || 0;
+        totals.plusMinus += gen.plusMinus || 0;
+        gpFor.minutesPlayed++;
+    }
+    if (reliable.fieldGoals) {
+        totals.fieldGoals.totalAttempted += fg.totalAttempted || 0;
+        totals.fieldGoals.totalMade += fg.totalMade || 0;
+        totals.fieldGoals.totalMissed += fg.totalMissed || 0;
+        totals.fieldGoals.twoPoint.attempted += fg2.attempted || 0;
+        totals.fieldGoals.twoPoint.made += fg2.made || 0;
+        totals.fieldGoals.twoPoint.missed += fg2.missed || 0;
+        totals.fieldGoals.threePoint.attempted += fg3.attempted || 0;
+        totals.fieldGoals.threePoint.made += fg3.made || 0;
+        totals.fieldGoals.threePoint.missed += fg3.missed || 0;
+        gpFor.fieldGoals++;
+    }
+    if (reliable.freeThrows) {
+        totals.freeThrows.attempted += ft.attempted || 0;
+        totals.freeThrows.made += ft.made || 0;
+        totals.freeThrows.missed += ft.missed || 0;
+        gpFor.freeThrows++;
+    }
 }
 
 // Score-only contribution: just points scored + allowed.
@@ -144,17 +204,20 @@ function accumulateTeam(totals, teamSide, oppSide) {
     totals.freeThrows.missed += ft.missed || 0;
 }
 
-// Compute averages from totals + games-played
-function computePlayerAverages(t, gp) {
+// Compute averages from totals + per-stat games-played counters. Falls back to
+// overall games-played when a per-stat counter is missing (legacy data).
+function computePlayerAverages(t, gpFor, gp) {
+    function denom(key) { return (gpFor && gpFor[key]) || gp; }
     return {
-        ppg: avg(t.points, gp),
-        rpg: avg(t.rebounds.total, gp),
-        apg: avg(t.assists, gp),
-        spg: avg(t.steals, gp),
-        bpg: avg(t.blocks, gp),
-        topg: avg(t.turnovers, gp),
-        mpg: avg(t.minutesPlayed / 60, gp), // mins (not seconds) per game
-        plusMinusAvg: avg(t.plusMinus, gp),
+        ppg: avg(t.points, denom('points')),
+        rpg: avg(t.rebounds.total, denom('rebounds')),
+        apg: avg(t.assists, denom('assists')),
+        spg: avg(t.steals, denom('steals')),
+        bpg: avg(t.blocks, denom('blocks')),
+        topg: avg(t.turnovers, denom('turnovers')),
+        fpg: avg(t.fouls.personal, denom('fouls')),
+        mpg: avg(t.minutesPlayed / 60, denom('minutesPlayed')), // mins (not seconds) per game
+        plusMinusAvg: avg(t.plusMinus, denom('minutesPlayed')),
         fgPct: pct(t.fieldGoals.totalMade, t.fieldGoals.totalAttempted),
         twoPct: pct(t.fieldGoals.twoPoint.made, t.fieldGoals.twoPoint.attempted),
         threePct: pct(t.fieldGoals.threePoint.made, t.fieldGoals.threePoint.attempted),
@@ -222,6 +285,11 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
         // scoreOnly: this game's per-player stats and team detail aggregates are excluded
         // from the season totals. Only the score (W/L + points scored/allowed) counts.
         var isScoreOnly = bs.scoreOnly === true;
+        // partialStats: only the fields in `partialStats.reliable` feed into player +
+        // team detail aggregates for this game. Score (W/L + points scored/allowed)
+        // always counts. If absent, all stats are treated as reliable.
+        var reliable = reliableSetFrom(bs);
+        var isFullyTracked = !isScoreOnly && !bs.partialStats;
 
         var sides = ['home', 'away'];
         for (var si = 0; si < sides.length; si++) {
@@ -234,7 +302,10 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
             if (teamID && teamMap[teamID]) {
                 var tEntry = teamMap[teamID];
                 tEntry.gamesPlayed++;
-                if (isScoreOnly) {
+                if (isScoreOnly || !isFullyTracked) {
+                    // scoreOnly and partial games contribute only the score to team
+                    // aggregates — detail stats are skipped to avoid dilution. Team
+                    // averages for detail stats use gamesWithFullStats as denominator.
                     accumulateTeamScoreOnly(tEntry.totals, side, opp);
                 } else {
                     tEntry.gamesWithFullStats++;
@@ -254,7 +325,8 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
                 });
             }
 
-            // Per-player accumulate — skip entirely for scoreOnly games (stats untrustworthy)
+            // Per-player accumulate — skip entirely for scoreOnly games (stats untrustworthy).
+            // partialStats games still feed in, but only the reliable categories get added.
             if (isScoreOnly) continue;
 
             var inGame = (side.roster && side.roster.inGame) || [];
@@ -273,6 +345,7 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
                         teamID: teamID || null,
                         teamName: side.name,
                         gamesPlayed: 0,
+                        gamesPlayedFor: emptyGamesPlayedFor(),
                         totals: emptyPlayerTotals(),
                         averages: null,
                         gameLog: []
@@ -280,7 +353,7 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
                     playerMap[p.playerID] = pEntry;
                 }
                 pEntry.gamesPlayed++;
-                accumulatePlayer(pEntry.totals, p);
+                accumulatePlayer(pEntry.totals, p, reliable, pEntry.gamesPlayedFor);
 
                 pEntry.gameLog.push({
                     boxScoreID: bs.id,
@@ -290,7 +363,8 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
                     points: (p.stats && p.stats.offense && p.stats.offense.points) || 0,
                     rebounds: (p.stats && p.stats.rebounds && p.stats.rebounds.total) || 0,
                     assists: (p.stats && p.stats.offense && p.stats.offense.assists) || 0,
-                    minutesPlayed: (p.stats && p.stats.general && p.stats.general.minutesPlayed) || 0
+                    minutesPlayed: (p.stats && p.stats.general && p.stats.general.minutesPlayed) || 0,
+                    partialStats: bs.partialStats ? { reliable: bs.partialStats.reliable.slice() } : null
                 });
             }
         }
@@ -303,7 +377,7 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
         pe.totals.fieldGoals.twoPoint.percentage = pct(pe.totals.fieldGoals.twoPoint.made, pe.totals.fieldGoals.twoPoint.attempted);
         pe.totals.fieldGoals.threePoint.percentage = pct(pe.totals.fieldGoals.threePoint.made, pe.totals.fieldGoals.threePoint.attempted);
         pe.totals.freeThrows.percentage = pct(pe.totals.freeThrows.made, pe.totals.freeThrows.attempted);
-        pe.averages = computePlayerAverages(pe.totals, pe.gamesPlayed);
+        pe.averages = computePlayerAverages(pe.totals, pe.gamesPlayedFor, pe.gamesPlayed);
     }
     for (var tid in teamMap) {
         var te = teamMap[tid];

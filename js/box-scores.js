@@ -940,6 +940,13 @@
             els.teamStats.innerHTML = notTrackedHTML;
             els.awayPlayerStats.innerHTML = '';
             els.homePlayerStats.innerHTML = '';
+        } else if (bs.partialStats && Array.isArray(bs.partialStats.reliable)) {
+            // Partial stats: some categories tracked reliably, others not. Show a
+            // narrower per-player table covering only the reliable columns + a banner
+            // listing what wasn't tracked. Score, points, and any other reliable
+            // categories feed into season averages with per-stat denominators.
+            renderPartialStatsBanner(bs);
+            renderPartialPlayerStats(bs);
         } else {
             renderTeamStats(bs);
             renderPlayerStats(bs);
@@ -1034,6 +1041,93 @@
     function renderPlayerStats(bs) {
         renderPlayerStatsForSide(bs, 'away', els.awayPlayerStats);
         renderPlayerStatsForSide(bs, 'home', els.homePlayerStats);
+    }
+
+    // ── PARTIAL STATS ──
+    // When a game has bs.partialStats.reliable, only those categories are trusted.
+    // The team-stats slot shows a banner instead of the full team table, and the
+    // per-player table renders only columns corresponding to reliable categories.
+
+    var PARTIAL_CAT_LABELS = {
+        points: 'points', fouls: 'fouls', rebounds: 'rebounds', assists: 'assists',
+        steals: 'steals', blocks: 'blocks', turnovers: 'turnovers',
+        minutesPlayed: 'minutes', fieldGoals: 'field-goal splits', freeThrows: 'free-throw splits'
+    };
+    var PARTIAL_ALL_CATEGORIES = ['points', 'fouls', 'rebounds', 'assists', 'steals',
+        'blocks', 'turnovers', 'minutesPlayed', 'fieldGoals', 'freeThrows'];
+
+    function renderPartialStatsBanner(bs) {
+        var reliable = {};
+        for (var i = 0; i < bs.partialStats.reliable.length; i++) reliable[bs.partialStats.reliable[i]] = true;
+        var missing = [];
+        for (var j = 0; j < PARTIAL_ALL_CATEGORIES.length; j++) {
+            var c = PARTIAL_ALL_CATEGORIES[j];
+            if (!reliable[c]) missing.push(PARTIAL_CAT_LABELS[c]);
+        }
+        var reliableLabels = bs.partialStats.reliable
+            .map(function (c) { return PARTIAL_CAT_LABELS[c] || c; })
+            .join(', ');
+        var html = '<div class="bs-untracked-banner bs-partial-banner">' +
+            '<div class="bs-untracked-icon">&#9888;</div>' +
+            '<div class="bs-untracked-text">' +
+                '<strong>Some stats not tracked for this game</strong>' +
+                '<p>Only the following were reliably recorded: <em>' + reliableLabels + '</em>. ' +
+                'Untracked categories (' + missing.join(', ') + ') are hidden and excluded from season averages.</p>' +
+            '</div>' +
+        '</div>';
+        els.teamStats.innerHTML = html;
+    }
+
+    function renderPartialPlayerStats(bs) {
+        var reliable = {};
+        for (var i = 0; i < bs.partialStats.reliable.length; i++) reliable[bs.partialStats.reliable[i]] = true;
+        renderPartialPlayerStatsForSide(bs, 'away', els.awayPlayerStats, reliable);
+        renderPartialPlayerStatsForSide(bs, 'home', els.homePlayerStats, reliable);
+    }
+
+    function renderPartialPlayerStatsForSide(bs, side, container, reliable) {
+        var team = bs.teamInfo[side];
+        var players = team.roster.inGame
+            .filter(function (p) { return p.playerID !== null; })
+            .sort(function (a, b) { return b.stats.offense.points - a.stats.offense.points; });
+
+        // Column registry: { th, render, cat }
+        var cols = [
+            { th: '#', cls: 'ept-num', cat: null, render: function (p) { return p.number || '?'; } },
+            { th: 'PLAYER', cls: 'ept-name', cat: null, render: function (p) { return p.name; } }
+        ];
+        if (reliable.minutesPlayed) cols.push({ th: 'MIN', cat: 'minutesPlayed', render: function (p) { return formatMinutes(p.stats.general.minutesPlayed); } });
+        if (reliable.points)        cols.push({ th: 'PTS', cat: 'points', render: function (p) { return p.stats.offense.points; } });
+        if (reliable.fieldGoals)    cols.push({ th: 'FG', cat: 'fieldGoals', render: function (p) { var fg = p.stats.offense.shootingBreakdown.fieldGoals; return fg.totalMade + '/' + fg.totalAttempted; } });
+        if (reliable.fieldGoals)    cols.push({ th: 'FG%', cat: 'fieldGoals', render: function (p) { return p.stats.offense.shootingBreakdown.fieldGoals.totalPercentage + '%'; } });
+        if (reliable.freeThrows)    cols.push({ th: 'FT', cat: 'freeThrows', render: function (p) { var ft = p.stats.offense.shootingBreakdown.freeThrows; return ft.made + '/' + ft.attempted; } });
+        if (reliable.freeThrows)    cols.push({ th: 'FT%', cat: 'freeThrows', render: function (p) { return p.stats.offense.shootingBreakdown.freeThrows.percentage + '%'; } });
+        if (reliable.rebounds)      cols.push({ th: 'TRB', cat: 'rebounds', render: function (p) { return p.stats.rebounds.total; } });
+        if (reliable.rebounds)      cols.push({ th: 'DRB', cat: 'rebounds', render: function (p) { return p.stats.rebounds.defensive; } });
+        if (reliable.rebounds)      cols.push({ th: 'ORB', cat: 'rebounds', render: function (p) { return p.stats.rebounds.offensive; } });
+        if (reliable.assists)       cols.push({ th: 'AST', cat: 'assists', render: function (p) { return p.stats.offense.assists; } });
+        if (reliable.steals)        cols.push({ th: 'STL', cat: 'steals', render: function (p) { return p.stats.defense.steals; } });
+        if (reliable.blocks)        cols.push({ th: 'BLK', cat: 'blocks', render: function (p) { return p.stats.defense.blocks; } });
+        if (reliable.turnovers)     cols.push({ th: 'TO', cat: 'turnovers', render: function (p) { return p.stats.general.turnovers; } });
+        if (reliable.fouls)         cols.push({ th: 'PF', cat: 'fouls', render: function (p) { return p.stats.general.fouls.personal.total; } });
+
+        var html = '<div class="live-section-title">' + team.name + ' — BOX SCORE</div>';
+        html += '<div class="live-player-table-wrap">';
+        html += '<table class="live-player-table">';
+        html += '<thead><tr>';
+        for (var ci = 0; ci < cols.length; ci++) {
+            html += '<th' + (cols[ci].cls ? ' class="' + cols[ci].cls + '"' : '') + '>' + cols[ci].th + '</th>';
+        }
+        html += '</tr></thead><tbody>';
+        for (var pi = 0; pi < players.length; pi++) {
+            html += '<tr>';
+            for (var cj = 0; cj < cols.length; cj++) {
+                html += '<td' + (cols[cj].cls ? ' class="' + cols[cj].cls + '"' : '') + '>' + cols[cj].render(players[pi]) + '</td>';
+            }
+            html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
     }
 
     function renderPlayerStatsForSide(bs, side, container) {

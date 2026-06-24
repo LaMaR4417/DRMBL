@@ -379,6 +379,17 @@
     margin: 8px 0;
 }
 
+/* "Some stats not tracked" — softer variant for partialStats games. */
+.bs-partial-banner {
+    background: rgba(229, 167, 53, 0.05);
+    border-color: rgba(229, 167, 53, 0.2);
+}
+.bs-partial-banner em {
+    color: rgba(229, 167, 53, 0.95);
+    font-style: normal;
+    font-weight: 600;
+}
+
 .bs-untracked-icon {
     font-size: 28px;
     color: rgba(229, 167, 53, 0.85);
