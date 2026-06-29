@@ -69,8 +69,11 @@
             var w = weeks[i];
             var meta = WEEK_META[w.week] || {};
             var isPlayoff = w.type === 'playoffs';
-            var cls = 'week-tab' + (isPlayoff ? ' week-tab-playoff' : '');
-            var label = isPlayoff ? (w.playoffWeek ? 'PO Wk ' + w.playoffWeek : 'Playoffs') : 'Wk ' + w.week;
+            var isAllStar = w.type === 'allstar';
+            var cls = 'week-tab' + (isPlayoff ? ' week-tab-playoff' : '') + (isAllStar ? ' week-tab-allstar' : '');
+            var label = isAllStar ? '⭐ All-Star'
+                : isPlayoff ? (w.playoffWeek ? 'PO Wk ' + w.playoffWeek : 'Playoffs')
+                : 'Wk ' + w.week;
             html += '<button type="button" class="' + cls + '" data-week="' + i + '">' + label + '</button>';
         }
         nav.innerHTML = html;
@@ -138,8 +141,9 @@
             var meta = WEEK_META[w.week] || {};
             var isPlayoff = w.type === 'playoffs';
             var isSeeded = w.type === 'seeded';
+            var isAllStar = w.type === 'allstar';
             var label = meta.label || w.label || ('Week ' + w.week);
-            var sectionCls = 'week-section' + (isPlayoff ? ' week-section-playoff' : '') + (isSeeded ? ' week-section-seeded' : '');
+            var sectionCls = 'week-section' + (isPlayoff ? ' week-section-playoff' : '') + (isSeeded ? ' week-section-seeded' : '') + (isAllStar ? ' week-section-allstar' : '');
 
             html += '<section class="' + sectionCls + '" data-week="' + i + '">';
             html += '<div class="week-header">';
@@ -169,11 +173,14 @@
                 var awaySlot = (isPlayoff || isSeeded) ? game.away : game.away;
                 var homeSlot = (isPlayoff || isSeeded) ? game.home : game.home;
                 var cardCls = 'game-card' + (isPlayoff ? ' game-card-playoff' : '');
-                var showSlot = !(isPlayoff || isSeeded);
+                var showSlot = !(isPlayoff || isSeeded || isAllStar);
                 var hasScore = game.completion === true && game.homeScore != null && game.awayScore != null;
-                // Compare resolved name to game.winner to mark the winning side
-                var awayName = showSlot ? getTeamName(teams, awaySlot) : awaySlot;
-                var homeName = showSlot ? getTeamName(teams, homeSlot) : homeSlot;
+                // Resolve slot → team name for every week type. getTeamName passes
+                // unknown values through, so seed/Winner/Loser placeholders and custom
+                // All-Star names render literally, while resolved slots (e.g. "B") show
+                // the real team name. Also makes winner highlighting work on playoff cards.
+                var awayName = getTeamName(teams, awaySlot);
+                var homeName = getTeamName(teams, homeSlot);
                 var awayWon = hasScore && game.winner === awayName;
                 var homeWon = hasScore && game.winner === homeName;
                 // Box-score deep link — only for completed games with a recorded boxScoreID
@@ -187,7 +194,7 @@
                 // Away
                 html += '<div class="game-team game-team-away' + (awayWon ? ' winner' : '') + '">';
                 html += '<span class="game-team-name"' + (showSlot ? ' data-slot="' + awaySlot + '"' : '') + '>';
-                html += showSlot ? '<span class="team-name-loading"></span>' : awaySlot;
+                html += showSlot ? '<span class="team-name-loading"></span>' : awayName;
                 html += '</span>';
                 if (hasScore) html += '<span class="game-team-score">' + game.awayScore + '</span>';
                 html += '</div>';
@@ -199,7 +206,7 @@
                 html += '<div class="game-team game-team-home' + (homeWon ? ' winner' : '') + '">';
                 if (hasScore) html += '<span class="game-team-score">' + game.homeScore + '</span>';
                 html += '<span class="game-team-name"' + (showSlot ? ' data-slot="' + homeSlot + '"' : '') + '>';
-                html += showSlot ? '<span class="team-name-loading"></span>' : homeSlot;
+                html += showSlot ? '<span class="team-name-loading"></span>' : homeName;
                 html += '</span>';
                 html += '</div>';
 
@@ -207,6 +214,8 @@
                     var roundCls = 'game-round';
                     if (game.round === 'Championship') roundCls += ' game-round-championship';
                     html += '<div class="game-label">' + '<span class="' + roundCls + '">' + game.round + '</span></div>';
+                } else if (game.label) {
+                    html += '<div class="game-label">' + game.label + '</div>';
                 } else {
                     html += '<div class="game-label">Game ' + (g + 1) + '</div>';
                 }

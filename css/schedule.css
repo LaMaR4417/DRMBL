@@ -619,6 +619,36 @@
     color: var(--accent);
 }
 
+/* All-Star Styles */
+.week-tab-allstar {
+    color: #5b9bd5;
+}
+
+.week-tab-allstar.active {
+    color: #5b9bd5;
+    border-bottom-color: #5b9bd5;
+}
+
+.week-section.week-section-allstar {
+    background: radial-gradient(circle at top, rgba(91, 155, 213, 0.1), #0d0d0d 65%);
+}
+
+.week-section-allstar .week-title {
+    color: #5b9bd5;
+}
+
+.week-section-allstar .week-title::before,
+.week-section-allstar .week-title::after {
+    content: '\2B50';
+    font-size: 0.65em;
+    margin: 0 14px;
+    vertical-align: middle;
+}
+
+.week-section-allstar .game-card {
+    border-color: rgba(91, 155, 213, 0.25);
+}
+
 /* All Weeks View */
 .week-divider {
     max-width: 700px;
