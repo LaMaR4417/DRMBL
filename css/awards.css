@@ -497,6 +497,92 @@
     font-size: 16px;
 }
 
+/* ── ALL-DRMBL (tiered medal teams) ── */
+.adrmbl-tier {
+    margin-bottom: 44px;
+    --tier-color: var(--court-wood);
+}
+
+.adrmbl-tier:last-child {
+    margin-bottom: 0;
+}
+
+.adrmbl-tier-1 { --tier-color: #e6bf45; } /* gold   */
+.adrmbl-tier-2 { --tier-color: #c2c7d0; } /* silver */
+.adrmbl-tier-3 { --tier-color: #cd7f32; } /* bronze */
+
+.adrmbl-tier-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(24px, 4.5vw, 34px);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--tier-color);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--tier-color);
+}
+
+.adrmbl-medal {
+    font-size: 1.15em;
+    line-height: 1;
+}
+
+.adrmbl-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+}
+
+.adrmbl-card {
+    position: relative;
+    padding: 20px 16px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 3px solid var(--tier-color);
+    border-left: 3px solid var(--team-color, var(--court-wood));
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.adrmbl-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.adrmbl-name {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--white);
+    line-height: 1.2;
+}
+
+.adrmbl-pos {
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 5px;
+}
+
+.adrmbl-team {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--team-color, rgba(255, 255, 255, 0.55));
+    margin-top: 5px;
+}
+
+.adrmbl-card.is-pending .adrmbl-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.3);
+}
+
 /* Empty state */
 .awards-empty {
     text-align: center;
@@ -508,22 +594,47 @@
 }
 
 /* ── RESPONSIVE ── */
+/* All-DRMBL grid steps down before the global small breakpoint */
+@media (max-width: 920px) {
+    .adrmbl-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 @media (max-width: 600px) {
     .awards-hero {
         padding: 170px 16px 32px;
     }
 
+    /* Three tabs no longer fit a fixed pill — let the row scroll horizontally */
     .awards-tabs {
         display: flex;
-        width: 100%;
-        max-width: 360px;
+        width: auto;
+        max-width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .awards-tabs::-webkit-scrollbar {
+        display: none;
     }
 
     .awards-tab {
-        flex: 1;
-        padding: 12px 8px;
+        flex: 0 0 auto;
+        padding: 12px 18px;
         font-size: 14px;
         letter-spacing: 1.5px;
+    }
+
+    .adrmbl-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .adrmbl-card {
+        padding: 16px 14px;
     }
 
     .awards-section {

@@ -1,5 +1,5 @@
 /* ── AWARDS PAGE ──
-   Two tabs: Individual Awards + All-Star.
+   Three tabs: Individual Awards + All-Star + All-DRMBL.
 
    ALL CONTENT IS EDITED IN THE DATA BLOCK BELOW.
    Fill in winners / players, then commit + push (Vercel deploys automatically).
@@ -104,6 +104,44 @@ var TEAM_COLORS = {
     'Kings':        '#9b51e0', // purple
     'Cash Kings':   '#ff5da2'  // pink
 };
+
+/* ── ALL-DRMBL TEAMS ───────────────────────────────────────────────────────
+   The 1st / 2nd / 3rd honor teams. One object per tier; `players` is the list
+   of selections (name + team). Player team colors come from TEAM_COLORS.
+   Add/remove players freely; an empty name shows "To Be Announced".
+──────────────────────────────────────────────────────────────────────────── */
+var ALL_DRMBL_TEAMS = [
+    {
+        tier: 'First Team', rank: 1, medal: '🥇',
+        players: [
+            { name: 'Angel Alonso',        team: 'DR Elite' },
+            { name: 'Christian Washington', team: 'R. Blitz' },
+            { name: 'Jordan Balderas',     team: 'Air Ballers' },
+            { name: 'Mat Peeler',          team: 'Del Rio Heat' },
+            { name: 'Tucker Terlizzi',     team: 'R. Blitz' }
+        ]
+    },
+    {
+        tier: 'Second Team', rank: 2, medal: '🥈',
+        players: [
+            { name: 'Chuck Blum',          team: 'R. Blitz' },
+            { name: 'Jacob Scott',         team: 'Wonderland' },
+            { name: 'Julian Dominguez',    team: 'DR Elite' },
+            { name: 'Kenneth Aleta',       team: 'Wonderland' },
+            { name: 'Nathan Robinson',     team: 'R. Blitz' }
+        ]
+    },
+    {
+        tier: 'Third Team', rank: 3, medal: '🥉',
+        players: [
+            { name: 'Cameron Rodgers',     team: 'R. Blitz' },
+            { name: 'Christian Lathan',    team: 'Del Rio Heat' },
+            { name: 'Kadeem Edmonson',     team: 'Air Ballers' },
+            { name: 'Malik Mumpfield',     team: 'R. Blitz' },
+            { name: 'Marshall McKee',      team: 'Kings' }
+        ]
+    }
+];
 
 /* ── ALL-STAR CONTESTS (optional) ──────────────────────────────────────────
    Leave empty to hide the Contests section. One object per contest.
@@ -286,24 +324,77 @@ var ALL_STAR_CONTESTS = [
         return html;
     }
 
+    // ── All-DRMBL ──
+    function renderAllDrmbl() {
+        var html = '';
+        html += '<h2 class="awards-block-title">' + escapeHtml(SEASON_LABEL.replace(/ Season$/, '')) + ' All-DRMBL</h2>';
+
+        if (typeof ALL_DRMBL_TEAMS === 'undefined' || !ALL_DRMBL_TEAMS.length) {
+            html += emptyState('All-DRMBL teams will be announced soon.');
+            document.getElementById('awards-alldrmbl').innerHTML = html;
+            return;
+        }
+
+        for (var t = 0; t < ALL_DRMBL_TEAMS.length; t++) {
+            var team = ALL_DRMBL_TEAMS[t];
+            var players = team.players || [];
+            html += '<section class="adrmbl-tier adrmbl-tier-' + (team.rank || (t + 1)) + '">';
+            html += '<h3 class="adrmbl-tier-title">' +
+                        (team.medal ? '<span class="adrmbl-medal">' + team.medal + '</span>' : '') +
+                        escapeHtml(team.tier || ('Team ' + (t + 1))) +
+                    '</h3>';
+            html += '<div class="adrmbl-grid">';
+            for (var p = 0; p < players.length; p++) {
+                html += renderDrmblCard(players[p]);
+            }
+            html += '</div>';
+            html += '</section>';
+        }
+
+        document.getElementById('awards-alldrmbl').innerHTML = html;
+    }
+
+    function renderDrmblCard(p) {
+        var has = !!(p.name && p.name.trim());
+        var color = (typeof TEAM_COLORS !== 'undefined' && TEAM_COLORS[p.team]) || '';
+        var styleAttr = color ? ' style="--team-color:' + color + '"' : '';
+        var html = '<div class="adrmbl-card' + (has ? '' : ' is-pending') + '"' + styleAttr + '>';
+        html += '<div class="adrmbl-name">' + (has ? escapeHtml(p.name) : TBA) + '</div>';
+        if (has && p.position) html += '<div class="adrmbl-pos">' + escapeHtml(p.position) + '</div>';
+        if (has && p.team) html += '<div class="adrmbl-team">' + escapeHtml(p.team) + '</div>';
+        html += '</div>';
+        return html;
+    }
+
     function emptyState(msg) {
         return '<div class="awards-empty">' + escapeHtml(msg) + '</div>';
     }
 
     // ── Tabs ──
+    // key → { view element id, url hash }
+    var TAB_VIEWS = {
+        'personal':  { el: 'awards-personal',  hash: '' },
+        'all-star':  { el: 'awards-allstar',   hash: '#all-star' },
+        'all-drmbl': { el: 'awards-alldrmbl',  hash: '#all-drmbl' }
+    };
+
     function showTab(tab) {
-        var isPersonal = tab !== 'all-star';
-        document.getElementById('awards-personal').classList.toggle('hidden', !isPersonal);
-        document.getElementById('awards-allstar').classList.toggle('hidden', isPersonal);
+        if (!TAB_VIEWS[tab]) tab = 'personal';
+
+        for (var key in TAB_VIEWS) {
+            if (!TAB_VIEWS.hasOwnProperty(key)) continue;
+            var view = document.getElementById(TAB_VIEWS[key].el);
+            if (view) view.classList.toggle('hidden', key !== tab);
+        }
 
         var tabs = document.querySelectorAll('.awards-tab');
         for (var i = 0; i < tabs.length; i++) {
-            var active = tabs[i].getAttribute('data-tab') === (isPersonal ? 'personal' : 'all-star');
+            var active = tabs[i].getAttribute('data-tab') === tab;
             tabs[i].classList.toggle('active', active);
             tabs[i].setAttribute('aria-pressed', active ? 'true' : 'false');
         }
 
-        var hash = isPersonal ? '' : '#all-star';
+        var hash = TAB_VIEWS[tab].hash;
         if (window.location.hash !== hash) {
             history.replaceState(null, '', window.location.pathname + hash);
         }
@@ -389,6 +480,7 @@ var ALL_STAR_CONTESTS = [
 
         renderPersonal();
         renderAllStar();
+        renderAllDrmbl();
         wireReveal(document.getElementById('awards-personal'));
         wireReveal(document.getElementById('awards-allstar'));
 
@@ -399,7 +491,8 @@ var ALL_STAR_CONTESTS = [
             });
         }
 
-        showTab(window.location.hash === '#all-star' ? 'all-star' : 'personal');
+        var hashToTab = { '#all-star': 'all-star', '#all-drmbl': 'all-drmbl' };
+        showTab(hashToTab[window.location.hash] || 'personal');
     }
 
     if (document.readyState === 'loading') {
