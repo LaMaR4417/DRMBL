@@ -649,6 +649,30 @@
     border-color: rgba(91, 155, 213, 0.25);
 }
 
+/* All-Star event cards (awards / contests — no two-team matchup) */
+.game-card-event {
+    grid-template-columns: 80px 1fr auto;
+}
+
+.game-event-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+    text-align: center;
+}
+
+.game-event-tag {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #5b9bd5;
+    text-align: right;
+    white-space: nowrap;
+}
+
 /* All Weeks View */
 .week-divider {
     max-width: 700px;

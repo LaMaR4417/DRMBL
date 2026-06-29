@@ -170,6 +170,18 @@
 
             for (var g = 0; g < w.games.length; g++) {
                 var game = w.games[g];
+
+                // Event card — All-Star ceremonies/contests carry a `title` and have
+                // no two-team matchup, so they render as a centered single-line card.
+                if (game.title) {
+                    html += '<div class="game-card game-card-event">';
+                    html += '<div class="game-time">' + game.time + '</div>';
+                    html += '<div class="game-event-title">' + game.title + '</div>';
+                    html += '<div class="game-event-tag">' + (game.label || '') + '</div>';
+                    html += '</div>';
+                    continue;
+                }
+
                 var awaySlot = (isPlayoff || isSeeded) ? game.away : game.away;
                 var homeSlot = (isPlayoff || isSeeded) ? game.home : game.home;
                 var cardCls = 'game-card' + (isPlayoff ? ' game-card-playoff' : '');
