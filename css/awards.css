@@ -1,0 +1,551 @@
+/* ── AWARDS PAGE ── */
+
+/* Hero */
+.awards-hero {
+    padding: 200px 20px 40px;
+    text-align: center;
+    background: #0a0602;
+}
+
+.awards-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 9vw, 88px);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--white);
+    line-height: 1;
+}
+
+.awards-subtitle {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(16px, 3vw, 22px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    margin-top: 8px;
+}
+
+/* Tabs */
+.awards-tabs {
+    display: inline-flex;
+    gap: 8px;
+    margin-top: 32px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+}
+
+.awards-tab {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    white-space: nowrap;
+}
+
+.awards-tab:hover {
+    color: var(--white);
+}
+
+.awards-tab.active {
+    color: var(--court-dark);
+    background: var(--court-wood);
+    box-shadow: 0 4px 16px rgba(200, 164, 92, 0.3);
+}
+
+/* Section */
+.awards-section {
+    padding: 56px 20px 80px;
+    background: #0d0d0d;
+}
+
+.awards-view {
+    max-width: 1080px;
+    margin: 0 auto;
+}
+
+.awards-view.hidden {
+    display: none;
+}
+
+/* Block titles (All-Star) */
+.awards-block-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(26px, 5vw, 38px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid rgba(200, 164, 92, 0.2);
+}
+
+.awards-block-title-sub {
+    margin-top: 64px;
+}
+
+/* ── FEATURED AWARDS (MVP + DPOY) ── */
+.award-featured-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 8px;
+}
+
+.award-featured {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 48px 24px 52px;
+    border-radius: 16px;
+    background:
+        radial-gradient(120% 140% at 50% 0%, rgba(200, 164, 92, 0.18) 0%, rgba(200, 164, 92, 0) 55%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(200, 164, 92, 0.35);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+
+.award-featured-glow {
+    position: absolute;
+    top: -40%;
+    left: 50%;
+    width: 60%;
+    height: 120%;
+    transform: translateX(-50%);
+    background: radial-gradient(closest-side, rgba(200, 164, 92, 0.22), transparent);
+    pointer-events: none;
+}
+
+.award-featured-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 3.5vw, 26px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    margin-bottom: 18px;
+}
+
+.award-featured-badge .award-icon {
+    font-size: 1.35em;
+    line-height: 1;
+}
+
+.award-featured-name {
+    position: relative;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(34px, 5vw, 58px);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white);
+    line-height: 1.02;
+}
+
+.award-featured-team {
+    position: relative;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 10px;
+}
+
+.award-featured-stat {
+    position: relative;
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--court-dark);
+    background: var(--court-wood);
+    padding: 5px 16px;
+    border-radius: 999px;
+    margin-top: 18px;
+}
+
+.award-featured.is-pending .award-featured-name {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: clamp(28px, 5vw, 44px);
+    letter-spacing: 4px;
+}
+
+/* ── AWARD GRID + CARDS ── */
+.award-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.award-card {
+    position: relative;
+    text-align: center;
+    padding: 32px 22px 28px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.015) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.award-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(200, 164, 92, 0.4);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.4);
+}
+
+.award-card-icon {
+    font-size: 38px;
+    line-height: 1;
+    margin-bottom: 14px;
+}
+
+.award-card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 19px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    font-weight: 400;
+    margin-bottom: 14px;
+}
+
+.award-card-winner {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--white);
+    line-height: 1.15;
+}
+
+.award-card-team {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 6px;
+}
+
+.award-card-stat {
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1.5px;
+    color: var(--court-wood);
+    background: rgba(200, 164, 92, 0.12);
+    border: 1px solid rgba(200, 164, 92, 0.25);
+    padding: 3px 12px;
+    border-radius: 999px;
+    margin-top: 14px;
+}
+
+.award-card.is-pending .award-card-winner {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── TAP TO REVEAL ── */
+.awards-controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 28px;
+}
+
+.awards-reveal-all {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    background: rgba(200, 164, 92, 0.1);
+    border: 1px solid rgba(200, 164, 92, 0.35);
+    border-radius: 999px;
+    padding: 10px 28px;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.awards-reveal-all:hover {
+    background: var(--court-wood);
+    color: var(--court-dark);
+    box-shadow: 0 4px 16px rgba(200, 164, 92, 0.3);
+}
+
+.awards-reveal-all.is-reset {
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.awards-reveal-all.is-reset:hover {
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+}
+
+/* Body wrapper holds the real (revealed) content + the cover overlay */
+.award-card-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 92px;
+}
+
+.award-featured-body {
+    min-height: 130px;
+}
+
+.award-reveal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1.35), filter 0.55s ease;
+}
+
+/* Locked: hide the real content behind a blur, show the cover */
+.is-locked .award-reveal {
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+    filter: blur(7px);
+    pointer-events: none;
+}
+
+.revealable.is-locked {
+    cursor: pointer;
+}
+
+.award-cover {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.is-locked .award-cover {
+    opacity: 1;
+}
+
+.cover-bar {
+    display: block;
+    height: 13px;
+    border-radius: 7px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(200, 164, 92, 0.22) 50%, rgba(255, 255, 255, 0.05) 75%);
+    background-size: 200% 100%;
+    animation: awardShimmer 1.7s infinite;
+}
+
+.cover-bar-lg { width: 62%; }
+.cover-bar-sm { width: 42%; }
+
+.cover-prompt {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--court-wood);
+    margin-top: 4px;
+    transition: color 0.2s ease;
+}
+
+.revealable.is-locked:hover .cover-prompt {
+    color: var(--white);
+}
+
+.award-featured.is-locked .cover-bar { height: 16px; }
+.award-featured.is-locked .cover-prompt { font-size: 15px; }
+
+/* One-shot light sweep when a card is revealed */
+.revealable.is-revealed::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.18) 50%, transparent 65%);
+    background-size: 250% 100%;
+    animation: awardShine 0.85s ease-out;
+}
+
+@keyframes awardShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes awardShine {
+    from { background-position: 150% 0; }
+    to { background-position: -150% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .award-reveal { transition: opacity 0.3s ease; transform: none; filter: none; }
+    .is-locked .award-reveal { transform: none; filter: none; }
+    .cover-bar { animation: none; }
+    .revealable.is-revealed::after { animation: none; display: none; }
+}
+
+/* ── ALL-STAR GRID + CARDS ── */
+.allstar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.allstar-card {
+    position: relative;
+    padding: 22px 18px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.015) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid var(--court-wood);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.allstar-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    border-left-color: var(--accent);
+}
+
+.allstar-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: var(--court-wood);
+    margin-bottom: 6px;
+}
+
+.allstar-name {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--white);
+    line-height: 1.2;
+}
+
+.allstar-team {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.55);
+    margin-top: 4px;
+}
+
+/* All-Star cascade reveal — tighter body than the award cards, and the
+   team-color accent pops in only once the card is revealed. */
+.allstar-card .award-card-body.allstar-body {
+    min-height: 52px;
+    align-items: flex-start;
+}
+
+.allstar-card .award-reveal {
+    align-items: flex-start;
+}
+
+.allstar-card .award-cover {
+    align-items: flex-start;
+}
+
+.allstar-card.is-revealed {
+    border-left-color: var(--team-color, var(--court-wood));
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.allstar-card.is-revealed .allstar-team {
+    color: var(--team-color, rgba(255, 255, 255, 0.55));
+    font-weight: 600;
+}
+
+.allstar-card.is-revealed .allstar-number {
+    color: var(--team-color, var(--court-wood));
+}
+
+/* Honorable mentions — lighter weight than full All-Stars */
+.allstar-grid-hm {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.allstar-grid-hm .allstar-card {
+    padding: 16px 16px;
+    border-left-color: rgba(200, 164, 92, 0.45);
+}
+
+.allstar-grid-hm .allstar-name {
+    font-size: 16px;
+}
+
+/* Empty state */
+.awards-empty {
+    text-align: center;
+    padding: 64px 20px;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .awards-hero {
+        padding: 170px 16px 32px;
+    }
+
+    .awards-tabs {
+        display: flex;
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .awards-tab {
+        flex: 1;
+        padding: 12px 8px;
+        font-size: 14px;
+        letter-spacing: 1.5px;
+    }
+
+    .awards-section {
+        padding: 40px 14px 64px;
+    }
+
+    .award-featured-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .award-featured {
+        padding: 36px 18px 40px;
+    }
+
+    .award-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 14px;
+    }
+
+    .allstar-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+}

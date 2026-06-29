@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Awards - DRMBL</title>
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/awards.css">
+    <script src="js/skeleton.js"></script>
+</head>
+<body>
+
+    <section class="awards-hero">
+        <h1 class="awards-title">Awards</h1>
+        <p class="awards-subtitle" id="awards-season"></p>
+        <div class="awards-tabs" id="awards-tabs">
+            <button type="button" class="awards-tab active" data-tab="personal">Individual Awards</button>
+            <button type="button" class="awards-tab" data-tab="all-star">All-Star</button>
+        </div>
+    </section>
+
+    <section class="awards-section">
+        <!-- Personal Awards view -->
+        <div id="awards-personal" class="awards-view"></div>
+
+        <!-- All-Star view -->
+        <div id="awards-allstar" class="awards-view hidden"></div>
+    </section>
+
+    <footer>
+        &copy; 2026 Del Rio Men's Basketball League
+    </footer>
+
+    <script src="js/awards.js"></script>
+</body>
+</html>

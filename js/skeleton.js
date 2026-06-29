@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<a href="' + b + 'standings.html" class="nav-link nav-secondary">Standings</a>' +
             '<a href="' + b + 'stats.html" class="nav-link nav-secondary">Stats</a>' +
             '<a href="' + b + 'box-scores.html" class="nav-link nav-secondary">Box Scores</a>' +
+            '<a href="' + b + 'awards.html" class="nav-link nav-secondary">Awards</a>' +
             '<a href="' + b + 'rules.html" class="nav-link nav-secondary">Rules</a>' +
             '<a href="' + b + 'sponsor.html" class="nav-link nav-secondary">Sponsor Us</a>' +
             '<button type="button" class="menu-toggle" aria-label="Menu">' +
@@ -79,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<a href="' + b + 'standings.html" class="nav-link">Standings</a>' +
             '<a href="' + b + 'stats.html" class="nav-link">Stats</a>' +
             '<a href="' + b + 'box-scores.html" class="nav-link">Box Scores</a>' +
+            '<a href="' + b + 'awards.html" class="nav-link">Awards</a>' +
             '<a href="' + b + 'rules.html" class="nav-link">Rules</a>' +
             '<a href="' + b + 'sponsor.html" class="nav-link">Sponsor Us</a>' +
         '</div>';
