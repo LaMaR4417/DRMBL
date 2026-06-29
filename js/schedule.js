@@ -131,10 +131,11 @@
         scrollTimer = setTimeout(updateActiveTab, 50);
     });
 
-    function buildScheduleSkeleton(weeks, teams) {
+    function buildScheduleSkeleton(weeks, teams, seedBySlot) {
         var container = document.getElementById('schedule-content');
         var html = '';
         teams = teams || [];
+        seedBySlot = seedBySlot || {};
 
         for (var i = 0; i < weeks.length; i++) {
             var w = weeks[i];
@@ -193,6 +194,11 @@
                 // the real team name. Also makes winner highlighting work on playoff cards.
                 var awayName = getTeamName(teams, awaySlot);
                 var homeName = getTeamName(teams, homeSlot);
+                // Playoff cards show the seed, e.g. "#2 R. Blitz". The plain name is
+                // kept for winner comparison; only the displayed string gets the prefix,
+                // and only when the slot resolves to a real seed (not Winner/Loser refs).
+                var awayDisplay = (isPlayoff && seedBySlot[awaySlot]) ? '#' + seedBySlot[awaySlot] + ' ' + awayName : awayName;
+                var homeDisplay = (isPlayoff && seedBySlot[homeSlot]) ? '#' + seedBySlot[homeSlot] + ' ' + homeName : homeName;
                 var awayWon = hasScore && game.winner === awayName;
                 var homeWon = hasScore && game.winner === homeName;
                 // Box-score deep link — only for completed games with a recorded boxScoreID
@@ -206,7 +212,7 @@
                 // Away
                 html += '<div class="game-team game-team-away' + (awayWon ? ' winner' : '') + '">';
                 html += '<span class="game-team-name"' + (showSlot ? ' data-slot="' + awaySlot + '"' : '') + '>';
-                html += showSlot ? '<span class="team-name-loading"></span>' : awayName;
+                html += showSlot ? '<span class="team-name-loading"></span>' : awayDisplay;
                 html += '</span>';
                 if (hasScore) html += '<span class="game-team-score">' + game.awayScore + '</span>';
                 html += '</div>';
@@ -218,7 +224,7 @@
                 html += '<div class="game-team game-team-home' + (homeWon ? ' winner' : '') + '">';
                 if (hasScore) html += '<span class="game-team-score">' + game.homeScore + '</span>';
                 html += '<span class="game-team-name"' + (showSlot ? ' data-slot="' + homeSlot + '"' : '') + '>';
-                html += showSlot ? '<span class="team-name-loading"></span>' : homeName;
+                html += showSlot ? '<span class="team-name-loading"></span>' : homeDisplay;
                 html += '</span>';
                 html += '</div>';
 
@@ -264,8 +270,10 @@
             .then(function (data) {
                 var season = data && data.season;
                 if (!season || !season.weeklySchedule) return;
+                var seedBySlot = {};
+                (season.standings || []).forEach(function (s, i) { seedBySlot[s.slot] = i + 1; });
                 buildWeekNav(season.weeklySchedule);
-                buildScheduleSkeleton(season.weeklySchedule, season.teams);
+                buildScheduleSkeleton(season.weeklySchedule, season.teams, seedBySlot);
                 if (season.teams) fillTeamNames(season.teams);
             })
             .catch(function () {
