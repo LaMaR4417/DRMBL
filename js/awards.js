@@ -327,6 +327,7 @@ var ALL_STAR_CONTESTS = [
     // ── All-DRMBL ──
     function renderAllDrmbl() {
         var html = '';
+        html += '<div class="awards-controls"><button type="button" class="awards-reveal-all" data-reveal="Reveal All-DRMBL" data-hide="Hide All-DRMBL">Reveal All-DRMBL</button></div>';
         html += '<h2 class="awards-block-title">' + escapeHtml(SEASON_LABEL.replace(/ Season$/, '')) + ' All-DRMBL</h2>';
 
         if (typeof ALL_DRMBL_TEAMS === 'undefined' || !ALL_DRMBL_TEAMS.length) {
@@ -358,10 +359,23 @@ var ALL_STAR_CONTESTS = [
         var has = !!(p.name && p.name.trim());
         var color = (typeof TEAM_COLORS !== 'undefined' && TEAM_COLORS[p.team]) || '';
         var styleAttr = color ? ' style="--team-color:' + color + '"' : '';
-        var html = '<div class="adrmbl-card' + (has ? '' : ' is-pending') + '"' + styleAttr + '>';
-        html += '<div class="adrmbl-name">' + (has ? escapeHtml(p.name) : TBA) + '</div>';
-        if (has && p.position) html += '<div class="adrmbl-pos">' + escapeHtml(p.position) + '</div>';
-        if (has && p.team) html += '<div class="adrmbl-team">' + escapeHtml(p.team) + '</div>';
+
+        // Pending slots show openly; filled slots are tap-to-reveal.
+        if (!has) {
+            return '<div class="adrmbl-card is-pending"' + styleAttr + '>' +
+                       '<div class="adrmbl-name">' + TBA + '</div>' +
+                   '</div>';
+        }
+
+        var html = '<div class="adrmbl-card revealable is-locked" role="button" tabindex="0" aria-expanded="false" aria-label="Reveal All-DRMBL selection"' + styleAttr + '>';
+        html += '<div class="award-card-body adrmbl-body">';
+        html += '<div class="award-reveal">';
+        html += '<div class="adrmbl-name">' + escapeHtml(p.name) + '</div>';
+        if (p.position) html += '<div class="adrmbl-pos">' + escapeHtml(p.position) + '</div>';
+        if (p.team) html += '<div class="adrmbl-team">' + escapeHtml(p.team) + '</div>';
+        html += '</div>'; // .award-reveal
+        html += coverHtml();
+        html += '</div>'; // .award-card-body
         html += '</div>';
         return html;
     }
@@ -483,6 +497,7 @@ var ALL_STAR_CONTESTS = [
         renderAllDrmbl();
         wireReveal(document.getElementById('awards-personal'));
         wireReveal(document.getElementById('awards-allstar'));
+        wireReveal(document.getElementById('awards-alldrmbl'));
 
         var tabs = document.querySelectorAll('.awards-tab');
         for (var i = 0; i < tabs.length; i++) {
