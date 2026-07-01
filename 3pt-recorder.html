@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-Point Contest Recorder</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #c8a45c;
+            --red: #c9302c;
+            --white: #ffffff;
+            --bg: #0d0d0d;
+            --card: #141414;
+            --line: rgba(255, 255, 255, 0.08);
+            --dim: rgba(255, 255, 255, 0.5);
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--white);
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            padding: 20px 16px 60px;
+        }
+        .wrap { max-width: 900px; margin: 0 auto; }
+
+        h1, h2, h3, .bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; text-transform: uppercase; }
+        .title { font-size: 34px; text-align: center; margin: 8px 0 2px; }
+        .subtitle { text-align: center; color: var(--dim); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px; }
+
+        .hidden { display: none !important; }
+
+        /* Toolbar / meta */
+        .meta-bar {
+            display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;
+            background: var(--card); border: 1px solid var(--line); padding: 12px 16px; margin-bottom: 18px;
+        }
+        .pool { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--gold); letter-spacing: 1px; }
+        .pool small { display: block; font-family: 'Inter'; font-size: 11px; letter-spacing: 1px; color: var(--dim); text-transform: uppercase; }
+        .present-count { font-size: 13px; color: var(--dim); }
+
+        /* Buttons */
+        button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; }
+        .btn {
+            display: inline-block; padding: 14px 20px; font-family: 'Bebas Neue', sans-serif;
+            font-size: 20px; letter-spacing: 2px; text-transform: uppercase; color: var(--white);
+            background: var(--red); transition: filter .15s ease; width: 100%;
+        }
+        .btn:hover { filter: brightness(1.1); }
+        .btn:disabled { opacity: .4; cursor: not-allowed; }
+        .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--dim); font-size: 13px;
+            font-family: 'Inter'; letter-spacing: .5px; text-transform: none; padding: 9px 14px; width: auto; }
+        .btn-ghost:hover { border-color: var(--gold); color: var(--gold); filter: none; }
+        .btn-gold { background: var(--gold); color: #1a1a1a; }
+        .edit-btn { background: none; border: 1px solid var(--line); color: var(--dim); width: 30px; height: 30px;
+            flex-shrink: 0; font-size: 13px; line-height: 1; margin-left: 8px; border-radius: 4px; }
+        .edit-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .name-input { width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 1px solid var(--line);
+            color: var(--white); font-family: 'Inter', sans-serif; font-size: 16px; outline: none; }
+        .name-input:focus { border-color: var(--gold); }
+
+        /* Sign-up rows */
+        .section-label { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin: 22px 0 10px; }
+        .rows { display: flex; flex-direction: column; gap: 8px; }
+        .row {
+            display: flex; align-items: center; gap: 12px; background: var(--card);
+            border: 1px solid var(--line); padding: 12px 14px; cursor: pointer; -webkit-user-select: none; user-select: none;
+        }
+        .row.off { opacity: .4; }
+        .row .chk {
+            width: 22px; height: 22px; flex-shrink: 0; border: 2px solid var(--dim); border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--bg);
+        }
+        .row.on .chk { background: var(--gold); border-color: var(--gold); }
+        .row .nm { font-weight: 600; }
+        .row .tm { color: var(--dim); font-size: 13px; margin-left: auto; text-align: right; }
+        .badge { font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--gold);
+            border: 1px solid var(--gold); border-radius: 3px; padding: 1px 5px; margin-left: 8px; }
+
+        /* Add player */
+        .add-box { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .add-box input, .add-box select {
+            flex: 1; min-width: 120px; padding: 11px 12px; background: rgba(255,255,255,.04);
+            border: 1px solid var(--line); color: var(--white); font-family: 'Inter'; font-size: 14px; outline: none;
+        }
+        .add-box select option { background: #1a1a1a; }
+        .add-box button { flex-shrink: 0; }
+
+        .sticky-cta { position: sticky; bottom: 0; padding-top: 14px; margin-top: 18px;
+            background: linear-gradient(to top, var(--bg) 60%, transparent); }
+
+        /* Bracket */
+        .round { margin-bottom: 22px; }
+        .round-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .round-head h3 { font-size: 22px; margin: 0; }
+        .round-head .tag { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim);
+            border: 1px solid var(--line); padding: 2px 8px; }
+        .round.current .round-head h3 { color: var(--gold); }
+        .bye-chip { font-size: 12px; color: var(--gold); border: 1px dashed var(--gold); padding: 6px 10px; margin-bottom: 8px; display: inline-block; }
+
+        .match { background: var(--card); border: 1px solid var(--line); margin-bottom: 8px; overflow: hidden; }
+        .match.actionable { border-color: var(--gold); cursor: pointer; }
+        .match.actionable:hover { background: #1b1b1b; }
+        .slot { display: flex; align-items: center; padding: 12px 14px; }
+        .slot + .slot { border-top: 1px solid var(--line); }
+        .slot .p-name { font-weight: 600; }
+        .slot .p-team { color: var(--dim); font-size: 12px; margin-left: 8px; }
+        .slot .p-score { margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; min-width: 34px; text-align: right; color: var(--dim); }
+        .slot.win { background: rgba(200,164,92,.10); }
+        .slot.win .p-name { color: var(--gold); }
+        .slot.win .p-score { color: var(--gold); }
+        .slot.lose { opacity: .55; }
+        .match .cta-row { padding: 10px 14px; border-top: 1px solid var(--line); text-align: center; color: var(--gold);
+            font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* Champion */
+        .champion { text-align: center; background: linear-gradient(180deg, rgba(200,164,92,.18), var(--card));
+            border: 1px solid var(--gold); padding: 28px 20px; margin-bottom: 22px; }
+        .champion .crown { font-size: 40px; }
+        .champion .c-label { font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin: 6px 0; }
+        .champion .c-name { font-family: 'Bebas Neue', sans-serif; font-size: 40px; letter-spacing: 2px; }
+        .champion .c-team { color: var(--dim); }
+
+        /* Modal */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: flex; align-items: center;
+            justify-content: center; padding: 20px; z-index: 50; }
+        .modal { background: var(--card); border: 1px solid var(--gold); width: 100%; max-width: 380px; padding: 22px; }
+        .modal h3 { font-size: 22px; margin: 0 0 4px; text-align: center; }
+        .modal .m-sub { text-align: center; color: var(--dim); font-size: 12px; margin-bottom: 18px; letter-spacing: 1px; text-transform: uppercase; }
+        .score-input { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .score-input .si-name { font-weight: 600; }
+        .score-input .si-name small { display: block; color: var(--dim); font-weight: 400; font-size: 12px; }
+        .score-input input { width: 84px; padding: 12px; text-align: center; font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px; background: rgba(255,255,255,.05); border: 1px solid var(--line); color: var(--white); outline: none; }
+        .score-input input:focus { border-color: var(--gold); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+        .modal-actions button { flex: 1; }
+
+        .err { color: #ff6b6b; font-size: 13px; text-align: center; min-height: 18px; margin-top: 6px; }
+        .loading { text-align: center; color: var(--dim); padding: 40px 0; }
+        .footer-tools { text-align: center; margin-top: 30px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1 class="title">3-Point Contest</h1>
+    <div class="subtitle">Recorder</div>
+
+    <div id="loading" class="loading">Loading&hellip;</div>
+
+    <!-- ── SETUP / ATTENDANCE ── -->
+    <div id="setup-view" class="hidden">
+        <div class="meta-bar">
+            <div class="pool"><span id="pool-amt">$0</span><small>Prize Pool (winner takes all)</small></div>
+            <div class="present-count"><span id="present-n">0</span> present</div>
+        </div>
+
+        <div class="section-label">Who's here? (tap to toggle present)</div>
+        <div id="signup-rows" class="rows"></div>
+        <div id="empty-note" class="present-count hidden" style="padding:10px 2px;">No sign-ups yet — add walk-ins below.</div>
+
+        <div class="section-label">Add a walk-in</div>
+        <div class="add-box">
+            <input id="wi-name" type="text" placeholder="Full name" autocomplete="off">
+            <select id="wi-team">
+                <option value="" disabled selected>Team</option>
+                <option>Air Ballers</option>
+                <option>Cash Kings</option>
+                <option>Del Rio Heat</option>
+                <option>DR Elite</option>
+                <option>Kings</option>
+                <option>R. Blitz</option>
+                <option>The Reapers</option>
+                <option>Wonderland</option>
+                <option>Free Agent</option>
+            </select>
+            <button type="button" class="btn-ghost" id="wi-add">+ Add</button>
+        </div>
+        <div id="wi-err" class="err"></div>
+
+        <div class="sticky-cta">
+            <button type="button" class="btn" id="start-btn">Start Contest</button>
+        </div>
+    </div>
+
+    <!-- ── BRACKET ── -->
+    <div id="bracket-view" class="hidden">
+        <div class="meta-bar">
+            <div class="pool"><span id="b-pool-amt">$0</span><small>Prize Pool</small></div>
+            <div class="present-count" id="b-status"></div>
+        </div>
+        <div id="champion-box"></div>
+        <div id="rounds"></div>
+        <div class="footer-tools">
+            <button type="button" class="btn-ghost" id="reset-btn">Reset contest</button>
+        </div>
+    </div>
+</div>
+
+<!-- Score entry modal -->
+<div id="modal-overlay" class="overlay hidden">
+    <div class="modal">
+        <h3 id="m-title">Enter Result</h3>
+        <div class="m-sub" id="m-sub"></div>
+        <div class="score-input">
+            <div class="si-name" id="m-a-name"></div>
+            <input id="m-a-score" type="number" inputmode="numeric" min="0" placeholder="0">
+        </div>
+        <div class="score-input">
+            <div class="si-name" id="m-b-name"></div>
+            <input id="m-b-score" type="number" inputmode="numeric" min="0" placeholder="0">
+        </div>
+        <div id="m-err" class="err"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn-ghost" id="m-cancel">Cancel</button>
+            <button type="button" class="btn btn-gold" id="m-save">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Rename modal -->
+<div id="rename-overlay" class="overlay hidden">
+    <div class="modal">
+        <h3>Edit Name</h3>
+        <div class="m-sub" id="rn-sub"></div>
+        <input id="rn-input" class="name-input" type="text" autocomplete="off" placeholder="Full name">
+        <div id="rn-err" class="err"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn-ghost" id="rn-cancel">Cancel</button>
+            <button type="button" class="btn btn-gold" id="rn-save">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var API = '/api/3pt-contest';
+    var signups = [];          // [{id, playerName, teamName, source}]
+    var present = {};          // id -> true/false
+    var state = null;          // division state (bracket etc.)
+    var pending = null;        // matchup being scored
+    var renaming = null;       // name being edited {kind, ...}
+
+    var $ = function (id) { return document.getElementById(id); };
+    function show(id) { $(id).classList.remove('hidden'); }
+    function hide(id) { $(id).classList.add('hidden'); }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+
+    function api(action, method, body) {
+        return fetch(API + '?action=' + action, {
+            method: method || 'GET',
+            headers: body ? { 'Content-Type': 'application/json' } : undefined,
+            body: body ? JSON.stringify(body) : undefined
+        }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); });
+    }
+
+    // ── BOOT ──
+    function boot() {
+        api('state').then(function (res) {
+            state = res.ok ? res.data : null;
+            hide('loading');
+            if (state && state.bracket && state.status !== 'open') {
+                renderBracket();
+            } else {
+                loadSetup();
+            }
+        }).catch(function () {
+            hide('loading');
+            loadSetup();
+        });
+    }
+
+    // ── SETUP ──
+    function loadSetup() {
+        show('setup-view');
+        api('signups').then(function (res) {
+            signups = (res.ok && res.data.signups) ? res.data.signups : [];
+            signups.forEach(function (s) { if (!(s.id in present)) present[s.id] = true; });
+            renderSignups();
+        });
+    }
+
+    function renderSignups() {
+        var box = $('signup-rows');
+        box.innerHTML = '';
+        $('empty-note').classList.toggle('hidden', signups.length > 0);
+        signups.forEach(function (s) {
+            var on = !!present[s.id];
+            var row = document.createElement('div');
+            row.className = 'row ' + (on ? 'on' : 'off');
+            row.innerHTML =
+                '<div class="chk">' + (on ? '✓' : '') + '</div>' +
+                '<div class="nm">' + esc(s.playerName) +
+                    (s.source === 'walk-in' ? '<span class="badge">walk-in</span>' : '') + '</div>' +
+                '<div class="tm">' + esc(s.teamName) + '</div>' +
+                '<button type="button" class="edit-btn" title="Edit name">✎</button>';
+            row.addEventListener('click', function () { present[s.id] = !present[s.id]; renderSignups(); });
+            row.querySelector('.edit-btn').addEventListener('click', function (e) {
+                e.stopPropagation();
+                openRename({ kind: 'signup', id: s.id, teamName: s.teamName, name: s.playerName });
+            });
+            box.appendChild(row);
+        });
+        var n = signups.filter(function (s) { return present[s.id]; }).length;
+        $('present-n').textContent = n;
+        $('pool-amt').textContent = '$' + (n * 5);
+        $('start-btn').disabled = n < 2;
+        $('start-btn').textContent = n < 2 ? 'Need at least 2 present' : 'Start Contest — ' + n + ' players';
+    }
+
+    // Add walk-in
+    $('wi-add').addEventListener('click', function () {
+        var name = $('wi-name').value.trim();
+        var team = $('wi-team').value;
+        $('wi-err').textContent = '';
+        if (!/\S+\s+\S+/.test(name)) { $('wi-err').textContent = 'Enter a full name.'; return; }
+        if (!team) { $('wi-err').textContent = 'Pick a team.'; return; }
+        this.disabled = true;
+        api('add-walkin', 'POST', { playerName: name, teamName: team }).then(function (res) {
+            if (!res.ok) { $('wi-err').textContent = res.data.error || 'Could not add.'; return; }
+            signups.push(res.data.signup);
+            present[res.data.signup.id] = true;
+            $('wi-name').value = ''; $('wi-team').selectedIndex = 0;
+            renderSignups();
+        }).finally(function () { $('wi-add').disabled = false; });
+    });
+
+    $('start-btn').addEventListener('click', function () {
+        var roster = signups.filter(function (s) { return present[s.id]; })
+            .map(function (s) { return { playerName: s.playerName, teamName: s.teamName }; });
+        if (roster.length < 2) return;
+        this.disabled = true; this.textContent = 'Drawing bracket…';
+        api('start', 'POST', { entrants: roster }).then(function (res) {
+            if (!res.ok) { alert(res.data.error || 'Could not start.'); renderSignups(); return; }
+            state = res.data;
+            hide('setup-view');
+            renderBracket();
+        });
+    });
+
+    // ── BRACKET ──
+    function renderBracket() {
+        show('bracket-view');
+        var b = state.bracket;
+        $('b-pool-amt').textContent = '$' + (state.prizePool ? state.prizePool.total : 0);
+        $('b-status').textContent = b.status === 'complete' ? 'Final' : 'Round ' + b.currentRound + ' in progress';
+
+        // Champion
+        var champBox = $('champion-box');
+        if (b.champion) {
+            champBox.innerHTML =
+                '<div class="champion"><div class="crown">🏆</div>' +
+                '<div class="c-label">Champion</div>' +
+                '<div class="c-name">' + esc(b.champion.name) + '</div>' +
+                '<div class="c-team">' + esc(b.champion.team) +
+                (state.prizePool ? ' &bull; wins $' + state.prizePool.total : '') + '</div></div>';
+        } else { champBox.innerHTML = ''; }
+
+        // Rounds
+        var host = $('rounds');
+        host.innerHTML = '';
+        b.rounds.forEach(function (r) {
+            var isCurrent = (r.round === b.currentRound) && b.status !== 'complete';
+            var div = document.createElement('div');
+            div.className = 'round' + (isCurrent ? ' current' : '');
+            var head = '<div class="round-head"><h3>' + roundName(r.round, b.rounds.length, r) + '</h3>' +
+                (isCurrent ? '<span class="tag">Live</span>' : '') + '</div>';
+            var byeHtml = r.bye ? '<div class="bye-chip">BYE — ' + esc(r.bye.name) + ' advances' +
+                (r.bye.reason === 'highest-score' ? ' (top score)' : '') +
+                ' <button type="button" class="edit-btn" data-entrant="' + esc(r.bye.entrantID) + '" data-name="' + esc(r.bye.name) + '" title="Edit name">✎</button></div>' : '';
+            var matches = r.matchups.map(function (m) { return matchHtml(m, r.round, isCurrent); }).join('');
+            div.innerHTML = head + byeHtml + matches;
+            host.appendChild(div);
+        });
+
+        // wire actionable matches
+        Array.prototype.forEach.call(document.querySelectorAll('.match.actionable'), function (el) {
+            el.addEventListener('click', function () { openModal(el.getAttribute('data-round'), el.getAttribute('data-id')); });
+        });
+        // wire name-edit buttons
+        Array.prototype.forEach.call(document.querySelectorAll('.edit-btn[data-entrant]'), function (el) {
+            el.addEventListener('click', function (e) {
+                e.stopPropagation();
+                openRename({ kind: 'entrant', entrantID: el.getAttribute('data-entrant'), name: el.getAttribute('data-name') });
+            });
+        });
+    }
+
+    function roundName(n, total, r) {
+        var playersInRound = r.matchups.length * 2 + (r.bye ? 1 : 0);
+        if (playersInRound === 2) return 'Final';
+        if (playersInRound <= 4) return 'Semifinals';
+        if (playersInRound <= 8) return 'Quarterfinals';
+        return 'Round ' + n;
+    }
+
+    function matchHtml(m, round, isCurrent) {
+        var done = m.completion;
+        var aWin = done && m.winner === m.a.entrantID;
+        var bWin = done && m.winner === m.b.entrantID;
+        var actionable = isCurrent && !done;
+        return '<div class="match' + (actionable ? ' actionable' : '') + '" data-round="' + round + '" data-id="' + m.id + '">' +
+            slotHtml(m.a, m.scoreA, aWin, done && !aWin) +
+            slotHtml(m.b, m.scoreB, bWin, done && !bWin) +
+            (actionable ? '<div class="cta-row">Tap to enter result</div>' : '') +
+            '</div>';
+    }
+    function slotHtml(p, score, win, lose) {
+        return '<div class="slot' + (win ? ' win' : '') + (lose ? ' lose' : '') + '">' +
+            '<span class="p-name">' + esc(p.name) + '<span class="p-team">' + esc(p.team) + '</span></span>' +
+            '<span class="p-score">' + (score == null ? '–' : score) + '</span>' +
+            '<button type="button" class="edit-btn" data-entrant="' + esc(p.entrantID) + '" data-name="' + esc(p.name) + '" title="Edit name">✎</button>' +
+            '</div>';
+    }
+
+    // ── MODAL ──
+    function openModal(round, id) {
+        var r = state.bracket.rounds.filter(function (x) { return x.round == round; })[0];
+        var m = r.matchups.filter(function (x) { return x.id === id; })[0];
+        pending = { round: parseInt(round, 10), id: id, a: m.a, b: m.b };
+        $('m-sub').textContent = roundName(r.round, state.bracket.rounds.length, r);
+        $('m-a-name').innerHTML = esc(m.a.name) + '<small>' + esc(m.a.team) + '</small>';
+        $('m-b-name').innerHTML = esc(m.b.name) + '<small>' + esc(m.b.team) + '</small>';
+        $('m-a-score').value = ''; $('m-b-score').value = ''; $('m-err').textContent = '';
+        show('modal-overlay');
+        $('m-a-score').focus();
+    }
+    function closeModal() { hide('modal-overlay'); pending = null; }
+
+    $('m-cancel').addEventListener('click', closeModal);
+    $('m-save').addEventListener('click', function () {
+        if (!pending) return;
+        var a = parseInt($('m-a-score').value, 10);
+        var b = parseInt($('m-b-score').value, 10);
+        $('m-err').textContent = '';
+        if (isNaN(a) || isNaN(b) || a < 0 || b < 0) { $('m-err').textContent = 'Enter both scores.'; return; }
+        if (a === b) { $('m-err').textContent = 'Tie — shoot a tiebreak, enter different scores.'; return; }
+        this.disabled = true;
+        api('save-match', 'POST', { round: pending.round, matchupId: pending.id, scoreA: a, scoreB: b }).then(function (res) {
+            if (!res.ok) { $('m-err').textContent = res.data.error || 'Could not save.'; return; }
+            state = res.data;
+            closeModal();
+            renderBracket();
+        }).finally(function () { $('m-save').disabled = false; });
+    });
+
+    // ── RENAME ──
+    function openRename(ctx) {
+        renaming = ctx;
+        $('rn-sub').textContent = ctx.kind === 'signup' ? 'Sign-up' : 'Bracket entrant';
+        $('rn-input').value = ctx.name || '';
+        $('rn-err').textContent = '';
+        show('rename-overlay');
+        var i = $('rn-input'); i.focus(); i.select();
+    }
+    function closeRename() { hide('rename-overlay'); renaming = null; }
+    $('rn-cancel').addEventListener('click', closeRename);
+    $('rn-save').addEventListener('click', function () {
+        if (!renaming) return;
+        var name = $('rn-input').value.trim();
+        $('rn-err').textContent = '';
+        if (!name) { $('rn-err').textContent = 'Name cannot be empty.'; return; }
+        var btn = this; btn.disabled = true;
+        var done = function (ok) { btn.disabled = false; if (ok) closeRename(); };
+        if (renaming.kind === 'signup') {
+            api('edit-signup', 'POST', { id: renaming.id, teamName: renaming.teamName, playerName: name }).then(function (res) {
+                if (!res.ok) { $('rn-err').textContent = res.data.error || 'Could not save.'; return done(false); }
+                signups.forEach(function (s) { if (s.id === renaming.id) s.playerName = name; });
+                renderSignups(); done(true);
+            });
+        } else {
+            api('rename-entrant', 'POST', { entrantID: renaming.entrantID, name: name }).then(function (res) {
+                if (!res.ok) { $('rn-err').textContent = res.data.error || 'Could not save.'; return done(false); }
+                state = res.data; renderBracket(); done(true);
+            });
+        }
+    });
+
+    $('reset-btn').addEventListener('click', function () {
+        if (!confirm('Reset the whole contest? This clears the bracket and all results.')) return;
+        api('reset', 'POST').then(function (res) {
+            state = res.ok ? res.data : state;
+            hide('bracket-view');
+            present = {};
+            boot();
+        });
+    });
+
+    boot();
+})();
+</script>
+</body>
+</html>

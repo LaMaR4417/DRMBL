@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-Point Contest - DRMBL</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/form.css">
+    <style>
+        /* Prize-pool callout */
+        .prize-pool {
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: #111;
+            padding: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .prize-pool .pool-amount {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 56px;
+            line-height: 1;
+            letter-spacing: 2px;
+            color: var(--court-wood);
+            margin-bottom: 6px;
+        }
+        .prize-pool .pool-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 16px;
+        }
+        .prize-pool .pool-desc {
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .prize-pool .pool-desc strong {
+            color: var(--white);
+        }
+        /* Honeypot — hidden from real users */
+        .hp-field {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+    </style>
+    <script src="js/skeleton.js"></script>
+</head>
+<body>
+
+    <section class="form-page">
+        <div class="form-inner">
+            <h1 class="form-title">3-Point Contest</h1>
+            <hr class="section-rule">
+            <p class="form-subtitle">Sign up to compete in the DRMBL 3-Point Contest.</p>
+
+            <div class="prize-pool">
+                <div class="pool-amount">$5</div>
+                <div class="pool-label">Entry Fee</div>
+                <p class="pool-desc">
+                    Every entry's <strong>$5</strong> goes straight into the prize pool &mdash;
+                    and the <strong>winner takes it all</strong>. The more shooters, the bigger the pot.
+                </p>
+            </div>
+
+            <form id="contest-form">
+
+                <fieldset class="form-section">
+                    <legend>Your Info</legend>
+
+                    <!-- Honeypot -->
+                    <div class="hp-field" aria-hidden="true">
+                        <label for="website">Website</label>
+                        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="player-name">Full Name <span class="req">*</span></label>
+                        <input type="text" id="player-name" name="player-name" placeholder="First and last name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="team-name">Team <span class="req">*</span></label>
+                        <select id="team-name" name="team-name" required>
+                            <option value="" disabled selected>Select your team</option>
+                            <option>Air Ballers</option>
+                            <option>Cash Kings</option>
+                            <option>Del Rio Heat</option>
+                            <option>DR Elite</option>
+                            <option>Kings</option>
+                            <option>R. Blitz</option>
+                            <option>The Reapers</option>
+                            <option>Wonderland</option>
+                            <option>Free Agent</option>
+                        </select>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend>Agreement</legend>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="fee-confirm" required>
+                        <span>I understand there is a <strong>$5 entry fee</strong>, paid at the event, that goes into the prize pool. The contest winner takes the entire pool.</span>
+                    </label>
+                </fieldset>
+
+                <button type="submit" class="btn-submit">Enter Contest</button>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        function validateField(input) {
+            var valid = true;
+            var hasValue = input.value.trim().length > 0;
+            // Full name: require at least two words
+            if (input.name === 'player-name' && hasValue && !/\S+\s+\S+/.test(input.value.trim())) {
+                valid = false;
+            }
+            if (input.required && !input.value.trim()) valid = false;
+            input.classList.remove('invalid', 'valid');
+            if (!valid) {
+                input.classList.add('invalid');
+            } else if (hasValue) {
+                input.classList.add('valid');
+            }
+            return valid;
+        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'INPUT') e.target.classList.remove('invalid', 'valid');
+        });
+        document.addEventListener('blur', function(e) {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'text') validateField(e.target);
+        }, true);
+        document.addEventListener('change', function(e) {
+            if (e.target.tagName === 'SELECT') validateField(e.target);
+        });
+
+        document.getElementById('contest-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var nameInput = document.getElementById('player-name');
+            var teamInput = document.getElementById('team-name');
+            var feeCb = document.querySelector('input[name="fee-confirm"]');
+
+            var firstInvalid = null;
+            if (!validateField(nameInput) && !firstInvalid) firstInvalid = nameInput;
+            if (!validateField(teamInput) && !firstInvalid) firstInvalid = teamInput;
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+                return;
+            }
+            if (!feeCb.checked) {
+                feeCb.focus();
+                alert('Please acknowledge the $5 entry fee to continue.');
+                return;
+            }
+
+            var entry = {
+                playerName: nameInput.value.trim(),
+                teamName: teamInput.value.trim(),
+                acknowledged: true,
+                website: document.getElementById('website').value
+            };
+
+            var btn = document.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'SUBMITTING...';
+
+            fetch('/api/3pt-contest?action=signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(entry)
+            })
+            .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+            .then(function(result) {
+                if (result.ok) {
+                    window.location.href = '3pt-contest-thank-you.html';
+                } else {
+                    alert('Error: ' + (result.data.error || 'Something went wrong. Please try again.'));
+                }
+            })
+            .catch(function() {
+                alert('Network error. Please check your connection and try again.');
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.textContent = 'ENTER CONTEST';
+            });
+        });
+    </script>
+
+</body>
+</html>
