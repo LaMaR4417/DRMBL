@@ -1,18 +1,8 @@
 (function () {
     // Minimum games-played for a player to count as "qualified" in the stats race.
-    // Scales with season progress: floor(maxTeamGames / 2) + 1 — i.e. "played more
-    // than half the games to date". Non-qualified players still appear on the
-    // leaderboards and grid, marked with *.
-    var minGamesQualified = 1; // computed from statsDoc on first render; recomputed if statsDoc reloads
-
-    function computeMinGames(doc) {
-        var teams = (doc && doc.teams) || [];
-        var max = 0;
-        for (var i = 0; i < teams.length; i++) {
-            if ((teams[i].gamesPlayed || 0) > max) max = teams[i].gamesPlayed;
-        }
-        return Math.max(1, Math.floor(max / 2) + 1);
-    }
+    // Flat threshold: a player must have played at least this many games. Non-qualified
+    // players still appear on the leaderboards and grid, marked with *.
+    var minGamesQualified = 4;
 
     function isQualified(p) { return (p.gamesPlayed || 0) >= minGamesQualified; }
     function nameWithAsterisk(p) { return (p.name || '') + (isQualified(p) ? '' : '*'); }
@@ -126,7 +116,6 @@
                     return;
                 }
                 statsDoc = data.stats;
-                minGamesQualified = computeMinGames(statsDoc);
                 applyUrlState();
             })
             .catch(function () {
