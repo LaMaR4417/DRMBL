@@ -3,238 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3-Point Contest — Scoreboard</title>
+    <title>3-Point Contest — Crowd Screen</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" href="assets/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --gold: #c8a45c;
-            --red: #c9302c;
-            --green: #2e7d32;
-            --white: #ffffff;
-            --bg: #0a0a0a;
-            --dim: rgba(255,255,255,.45);
-            --line: rgba(255,255,255,.10);
+            --gold: #c8a45c; --red: #c9302c; --white: #fff; --bg: #0a0a0a;
+            --dim: rgba(255,255,255,.4); --line: rgba(255,255,255,.10);
         }
         * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
         html, body { margin: 0; height: 100%; }
         body {
-            background: radial-gradient(circle at 50% 0%, #161616, var(--bg) 70%);
+            background: radial-gradient(circle at 50% -10%, #1a1a1a, var(--bg) 65%);
             color: var(--white); font-family: 'Inter', system-ui, sans-serif;
-            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            height: 100vh; overflow: hidden; cursor: pointer;
         }
-        .bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+        .bebas { font-family: 'Bebas Neue', sans-serif; }
 
-        /* Header */
-        .sb-head { text-align: center; padding: 14px 10px 4px; }
-        .sb-head .event { font-family: 'Bebas Neue', sans-serif; letter-spacing: 4px; font-size: clamp(16px, 3vw, 26px); color: var(--gold); text-transform: uppercase; }
-        .sb-head .round { font-size: clamp(11px, 1.6vw, 14px); letter-spacing: 3px; text-transform: uppercase; color: var(--dim); }
+        /* Idle */
+        #idle { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+        #idle .logo { font-family: 'Bebas Neue', sans-serif; letter-spacing: 6px; font-size: clamp(30px, 6vw, 70px); color: var(--gold); text-transform: uppercase; text-align: center; }
+        #idle .msg { color: var(--dim); letter-spacing: 3px; text-transform: uppercase; font-size: clamp(13px, 2vw, 20px); }
+        .pulse { animation: pulse 1.6s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 
-        /* Players row */
-        .players { flex: 1; display: flex; align-items: stretch; min-height: 0; }
-        .player {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 10px; cursor: pointer; position: relative; transition: background .15s ease;
-        }
-        .player:active { background: rgba(200,164,92,.08); }
-        .player .p-name { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; text-transform: uppercase;
-            font-size: clamp(26px, 5vw, 60px); line-height: 1; text-align: center; }
-        .player .p-team { color: var(--dim); font-size: clamp(12px, 1.6vw, 20px); margin-top: 6px; text-transform: uppercase; letter-spacing: 2px; }
-        .player .p-score { font-family: 'Bebas Neue', sans-serif; font-size: clamp(120px, 26vw, 340px); line-height: .9; margin-top: 6px; }
-        .player .tap-hint { position: absolute; bottom: 14px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); }
-        .player .minus { position: absolute; bottom: 40px; background: none; border: 1px solid var(--line); color: var(--dim);
-            width: 54px; height: 40px; font-size: 22px; border-radius: 6px; cursor: pointer; }
-        .player .minus:hover { border-color: var(--red); color: var(--red); }
-        .player.win .p-name, .player.win .p-score { color: var(--gold); }
-        .player.lose { opacity: .4; }
+        /* Board */
+        #board { height: 100vh; display: none; flex-direction: column; }
+        #board.show { display: flex; }
+        .bhead { text-align: center; padding: 2.5vh 10px 0; }
+        .bhead .event { font-family: 'Bebas Neue', sans-serif; letter-spacing: 6px; font-size: clamp(18px, 3.5vw, 40px); color: var(--gold); text-transform: uppercase; }
+        .bhead .round { letter-spacing: 4px; text-transform: uppercase; color: var(--dim); font-size: clamp(11px, 1.7vw, 18px); }
 
-        .vs { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 4px; flex-shrink: 0; }
-        .vs .vs-txt { font-family: 'Bebas Neue', sans-serif; font-size: clamp(22px, 3vw, 40px); color: var(--dim); letter-spacing: 2px; }
-        .divider { width: 1px; align-self: stretch; background: var(--line); }
+        .matchup { flex: 1; display: flex; align-items: stretch; min-height: 0; }
+        .side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1vh 1vw; transition: opacity .25s; }
+        .side .nm { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; text-transform: uppercase; text-align: center; line-height: .95; font-size: clamp(30px, 5.5vw, 84px); }
+        .side .tm { color: var(--dim); text-transform: uppercase; letter-spacing: 3px; margin-top: 1vh; font-size: clamp(12px, 1.8vw, 24px); }
+        .side .sc { font-family: 'Bebas Neue', sans-serif; line-height: .85; font-size: clamp(140px, 30vh, 460px); }
+        .side.win .nm, .side.win .sc { color: var(--gold); }
+        .side.lose { opacity: .35; }
+        .side .tag { margin-top: 1vh; font-family: 'Bebas Neue', sans-serif; letter-spacing: 4px; color: var(--gold); font-size: clamp(16px, 2.4vw, 32px); opacity: 0; }
+        .side.win .tag { opacity: 1; }
 
-        /* Timer band */
-        .timer-band { text-align: center; padding: 6px 10px 4px; border-top: 1px solid var(--line); }
-        .timer {
-            font-family: 'Bebas Neue', sans-serif; font-size: clamp(70px, 15vw, 190px); line-height: .9;
-            letter-spacing: 4px; font-variant-numeric: tabular-nums; transition: color .2s;
-        }
-        .timer.running { color: var(--white); }
+        .center { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 1vw; flex-shrink: 0; }
+        .center .vs { font-family: 'Bebas Neue', sans-serif; color: var(--dim); font-size: clamp(24px, 3.5vw, 52px); letter-spacing: 2px; }
+        .divline { width: 2px; background: var(--line); flex: 1; align-self: center; min-height: 8vh; }
+
+        .timerwrap { text-align: center; padding: 1vh 10px 3.5vh; }
+        .timer { font-family: 'Bebas Neue', sans-serif; font-size: clamp(90px, 20vh, 260px); line-height: .9; letter-spacing: 6px; font-variant-numeric: tabular-nums; }
         .timer.low { color: var(--gold); }
-        .timer.done { color: var(--red); animation: flash .6s steps(1) infinite; }
-        @keyframes flash { 50% { opacity: .25; } }
-
-        /* Controls */
-        .controls { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; padding: 8px 10px 14px; }
-        button.ctrl { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; text-transform: uppercase;
-            font-size: clamp(16px, 2.2vw, 22px); padding: 12px 22px; border: none; cursor: pointer; color: var(--white); background: #222; border-radius: 6px; }
-        button.ctrl:hover { filter: brightness(1.2); }
-        .ctrl.start { background: var(--green); }
-        .ctrl.pause { background: var(--red); }
-        .ctrl.reset { background: #333; }
-        .ctrl.submit { background: var(--gold); color: #1a1a1a; }
-        .dur { display: inline-flex; align-items: center; gap: 6px; color: var(--dim); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
-        .dur input { width: 64px; padding: 8px; text-align: center; background: rgba(255,255,255,.05); border: 1px solid var(--line); color: var(--white); font-family: 'Bebas Neue', sans-serif; font-size: 20px; border-radius: 6px; }
-
-        .result-banner { text-align: center; padding: 10px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px;
-            text-transform: uppercase; font-size: clamp(18px, 3vw, 30px); color: var(--gold); min-height: 8px; }
-        .result-banner.err { color: #ff6b6b; }
-
-        @media (max-width: 640px) {
-            .player .p-score { font-size: clamp(90px, 30vw, 200px); }
-        }
+        .timer.done { color: var(--red); animation: flash .55s steps(1) infinite; }
+        .timer.paused { color: var(--dim); }
+        @keyframes flash { 50% { opacity: .2; } }
+        .finalbar { font-family: 'Bebas Neue', sans-serif; letter-spacing: 6px; color: var(--gold); text-transform: uppercase; font-size: clamp(20px, 3vw, 40px); }
     </style>
 </head>
 <body>
-    <div class="sb-head">
-        <div class="event">3-Point Contest</div>
-        <div class="round" id="round-label"></div>
+    <div id="idle">
+        <div class="logo">3-Point Contest</div>
+        <div class="msg pulse" id="idle-msg">Waiting for the recorder&hellip;</div>
     </div>
 
-    <div class="players">
-        <div class="player" id="player-a" data-side="a">
-            <div class="p-name" id="a-name">Player 1</div>
-            <div class="p-team" id="a-team"></div>
-            <div class="p-score" id="a-score">0</div>
-            <button type="button" class="minus" id="a-minus" title="Subtract">−</button>
-            <div class="tap-hint">tap to add</div>
+    <div id="board">
+        <div class="bhead">
+            <div class="event">3-Point Contest</div>
+            <div class="round" id="round"></div>
         </div>
-        <div class="vs"><div class="divider"></div><div class="vs-txt">VS</div><div class="divider"></div></div>
-        <div class="player" id="player-b" data-side="b">
-            <div class="p-name" id="b-name">Player 2</div>
-            <div class="p-team" id="b-team"></div>
-            <div class="p-score" id="b-score">0</div>
-            <button type="button" class="minus" id="b-minus" title="Subtract">−</button>
-            <div class="tap-hint">tap to add</div>
+        <div class="matchup">
+            <div class="side" id="side-a">
+                <div class="nm" id="a-name"></div>
+                <div class="tm" id="a-team"></div>
+                <div class="sc" id="a-score">0</div>
+                <div class="tag">Winner</div>
+            </div>
+            <div class="center"><div class="divline"></div><div class="vs">VS</div><div class="divline"></div></div>
+            <div class="side" id="side-b">
+                <div class="nm" id="b-name"></div>
+                <div class="tm" id="b-team"></div>
+                <div class="sc" id="b-score">0</div>
+                <div class="tag">Winner</div>
+            </div>
         </div>
-    </div>
-
-    <div class="timer-band">
-        <div class="timer" id="timer">1:00</div>
-    </div>
-
-    <div class="result-banner" id="result"></div>
-
-    <div class="controls">
-        <button type="button" class="ctrl start" id="startBtn">Start</button>
-        <button type="button" class="ctrl reset" id="resetBtn">Reset</button>
-        <span class="dur">Seconds <input id="dur" type="number" inputmode="numeric" min="5" max="600" value="60"></span>
-        <button type="button" class="ctrl submit" id="submitBtn">Submit Result</button>
+        <div class="timerwrap">
+            <div class="timer" id="timer">1:00</div>
+            <div class="finalbar" id="finalbar"></div>
+        </div>
     </div>
 
     <script>
     (function () {
         var $ = function (id) { return document.getElementById(id); };
-        var params = new URLSearchParams(window.location.search);
 
-        var round = parseInt(params.get('round'), 10) || null;
-        var matchId = params.get('match') || null;
-        var scores = { a: 0, b: 0 };
-        var submitted = false;
-
-        // ── Player labels ──
-        $('a-name').textContent = params.get('a') || 'Player 1';
-        $('b-name').textContent = params.get('b') || 'Player 2';
-        $('a-team').textContent = params.get('at') || '';
-        $('b-team').textContent = params.get('bt') || '';
-        $('round-label').textContent = params.get('rl') || (round ? ('Round ' + round) : '');
-
-        // ── Scoring ──
-        function renderScores() { $('a-score').textContent = scores.a; $('b-score').textContent = scores.b; }
-        function bump(side, delta) {
-            if (submitted) return;
-            scores[side] = Math.max(0, scores[side] + delta);
-            renderScores();
-        }
-        $('player-a').addEventListener('click', function (e) { if (e.target.id !== 'a-minus') bump('a', 1); });
-        $('player-b').addEventListener('click', function (e) { if (e.target.id !== 'b-minus') bump('b', 1); });
-        $('a-minus').addEventListener('click', function (e) { e.stopPropagation(); bump('a', -1); });
-        $('b-minus').addEventListener('click', function (e) { e.stopPropagation(); bump('b', -1); });
-
-        // ── Timer (countdown) ──
-        var duration = 60, remaining = 60, running = false, handle = null, lastTick = 0;
         function fmt(t) {
-            t = Math.max(0, t);
+            t = Math.max(0, t == null ? 0 : t);
             if (t >= 60) { var m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
             return t.toFixed(1);
         }
-        function paint() {
-            var el = $('timer');
-            el.textContent = fmt(remaining);
-            el.className = 'timer' + (remaining <= 0 ? ' done' : (running ? (remaining <= 10 ? ' low' : ' running') : ''));
+
+        function showIdle(msg) {
+            $('board').classList.remove('show');
+            $('idle').style.display = 'flex';
+            if (msg) $('idle-msg').textContent = msg;
         }
-        function tick() {
-            var now = performance.now();
-            remaining -= (now - lastTick) / 1000; lastTick = now;
-            if (remaining <= 0) { remaining = 0; stopTimer(); beep(); }
-            paint();
+
+        function render(p) {
+            if (!p) return;
+            $('idle').style.display = 'none';
+            $('board').classList.add('show');
+            $('round').textContent = p.rl || '';
+            $('a-name').textContent = (p.a && p.a.name) || '';
+            $('a-team').textContent = (p.a && p.a.team) || '';
+            $('b-name').textContent = (p.b && p.b.name) || '';
+            $('b-team').textContent = (p.b && p.b.team) || '';
+            $('a-score').textContent = p.scoreA != null ? p.scoreA : 0;
+            $('b-score').textContent = p.scoreB != null ? p.scoreB : 0;
+
+            var a = $('side-a'), b = $('side-b');
+            a.classList.remove('win', 'lose'); b.classList.remove('win', 'lose');
+            if (p.finished && p.winner) {
+                a.classList.add(p.winner === 'a' ? 'win' : 'lose');
+                b.classList.add(p.winner === 'b' ? 'win' : 'lose');
+            }
+
+            var timer = $('timer');
+            timer.textContent = fmt(p.remaining);
+            var done = (p.remaining != null && p.remaining <= 0);
+            var low = (!done && p.remaining != null && p.remaining <= 10);
+            timer.className = 'timer' + (done ? ' done' : (low ? ' low' : (p.running ? '' : ' paused')));
+
+            $('finalbar').textContent = p.finished
+                ? ((p.winner === 'a' ? (p.a && p.a.name) : (p.b && p.b.name)) || '') + ' wins'
+                : '';
         }
-        function startTimer() {
-            if (running || remaining <= 0) return;
-            running = true; lastTick = performance.now();
-            handle = setInterval(tick, 100);
-            $('startBtn').textContent = 'Pause'; $('startBtn').className = 'ctrl pause';
-            paint();
+
+        if (typeof BroadcastChannel === 'undefined') {
+            showIdle('This browser does not support live sync.');
+            return;
         }
-        function stopTimer() {
-            running = false; if (handle) { clearInterval(handle); handle = null; }
-            $('startBtn').textContent = 'Start'; $('startBtn').className = 'ctrl start';
-            paint();
-        }
-        function resetTimer() {
-            stopTimer();
-            duration = Math.max(5, Math.min(600, parseInt($('dur').value, 10) || 60));
-            remaining = duration; paint();
-        }
-        $('startBtn').addEventListener('click', function () { running ? stopTimer() : startTimer(); });
-        $('resetBtn').addEventListener('click', resetTimer);
-        $('dur').addEventListener('change', function () { if (!running) resetTimer(); });
-        document.addEventListener('keydown', function (e) {
-            if (e.code === 'Space') { e.preventDefault(); running ? stopTimer() : startTimer(); }
+        var bc = new BroadcastChannel('drmbl-3pt');
+        bc.onmessage = function (ev) {
+            var msg = ev && ev.data;
+            if (!msg) return;
+            if (msg.type === 'state' && msg.payload) render(msg.payload);
+            else if (msg.type === 'clear') showIdle('Waiting for the next matchup…');
+        };
+        // Ask the recorder for the current match so we render immediately on open.
+        try { bc.postMessage({ type: 'request-state' }); } catch (e) {}
+
+        // Click anywhere to toggle fullscreen (handy on the second screen).
+        document.body.addEventListener('click', function () {
+            if (!document.fullscreenElement) { (document.documentElement.requestFullscreen || function () {}).call(document.documentElement); }
+            else if (document.exitFullscreen) { document.exitFullscreen(); }
         });
-
-        // Simple buzzer via Web Audio (no asset needed)
-        function beep() {
-            try {
-                var ctx = new (window.AudioContext || window.webkitAudioContext)();
-                var o = ctx.createOscillator(), g = ctx.createGain();
-                o.type = 'square'; o.frequency.value = 440; o.connect(g); g.connect(ctx.destination);
-                g.gain.setValueAtTime(0.25, ctx.currentTime);
-                o.start(); o.stop(ctx.currentTime + 0.8);
-                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-            } catch (e) { /* ignore */ }
-        }
-
-        // ── Submit result to the bracket ──
-        $('submitBtn').addEventListener('click', function () {
-            if (submitted) { window.close(); return; }
-            var res = $('result');
-            res.className = 'result-banner';
-            if (!round || !matchId) { res.className = 'result-banner err'; res.textContent = 'No matchup linked — open from the recorder.'; return; }
-            if (scores.a === scores.b) { res.className = 'result-banner err'; res.textContent = 'Tied — shoot a tiebreak (scores must differ).'; return; }
-            var btn = this; btn.disabled = true; res.textContent = 'Submitting…';
-            fetch('/api/3pt-contest?action=save-match', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ round: round, matchupId: matchId, scoreA: scores.a, scoreB: scores.b })
-            })
-            .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
-            .then(function (r) {
-                if (!r.ok) { res.className = 'result-banner err'; res.textContent = r.d.error || 'Could not submit.'; btn.disabled = false; return; }
-                submitted = true;
-                var aWon = scores.a > scores.b;
-                $('player-a').classList.add(aWon ? 'win' : 'lose');
-                $('player-b').classList.add(aWon ? 'lose' : 'win');
-                res.className = 'result-banner';
-                res.textContent = '✓ ' + (aWon ? $('a-name').textContent : $('b-name').textContent) + ' advances';
-                btn.textContent = 'Close'; btn.disabled = false;
-                stopTimer();
-            })
-            .catch(function () { res.className = 'result-banner err'; res.textContent = 'Network error.'; btn.disabled = false; });
-        });
-
-        renderScores();
-        resetTimer();
     })();
     </script>
 </body>
