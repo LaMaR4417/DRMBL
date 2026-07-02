@@ -37,12 +37,12 @@
         .bhead .round { letter-spacing: 4px; text-transform: uppercase; color: var(--dim); font-size: clamp(11px, 1.7vw, 18px); }
 
         .matchup { flex: 1; display: flex; align-items: stretch; min-height: 0; }
-        .side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1vh 1vw; transition: opacity .25s; }
+        .side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1vh 1vw; transition: opacity .25s ease, background .3s ease; }
         .side .nm { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; text-transform: uppercase; text-align: center; line-height: .95; font-size: clamp(30px, 5.5vw, 84px); }
         .side .tm { color: var(--dim); text-transform: uppercase; letter-spacing: 3px; margin-top: 1vh; font-size: clamp(12px, 1.8vw, 24px); }
         .side .sc { font-family: 'Bebas Neue', sans-serif; line-height: .85; font-size: clamp(140px, 30vh, 460px); }
-        .side.win { background: linear-gradient(180deg, rgba(200,164,92,.22), rgba(200,164,92,.04) 62%, transparent 88%); }
-        .side.win .nm, .side.win .sc { color: var(--gold); }
+        .side.lead, .side.win { background: linear-gradient(180deg, rgba(200,164,92,.22), rgba(200,164,92,.04) 62%, transparent 88%); }
+        .side.lead .nm, .side.lead .sc, .side.win .nm, .side.win .sc { color: var(--gold); }
         .side.lose { opacity: .35; }
         .side .tag { margin-top: 1vh; font-family: 'Bebas Neue', sans-serif; letter-spacing: 4px; color: var(--gold); font-size: clamp(16px, 2.4vw, 32px); opacity: 0; }
         .side.win .tag { opacity: 1; }
@@ -121,10 +121,15 @@
             $('b-score').textContent = p.scoreB != null ? p.scoreB : 0;
 
             var a = $('side-a'), b = $('side-b');
-            a.classList.remove('win', 'lose'); b.classList.remove('win', 'lose');
+            a.classList.remove('win', 'lose', 'lead'); b.classList.remove('win', 'lose', 'lead');
             if (p.finished && p.winner) {
                 a.classList.add(p.winner === 'a' ? 'win' : 'lose');
                 b.classList.add(p.winner === 'b' ? 'win' : 'lose');
+            } else {
+                // Live: gold-fade whoever is currently leading.
+                var sa = p.scoreA || 0, sb = p.scoreB || 0;
+                if (sa > sb) a.classList.add('lead');
+                else if (sb > sa) b.classList.add('lead');
             }
 
             var timer = $('timer');
