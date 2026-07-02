@@ -153,9 +153,14 @@
         .run-p.win .rp-name, .run-p.win .rp-score { color: var(--gold); }
         .run-p.lose { opacity: .45; }
         .rp-btns { display: flex; gap: 8px; justify-content: center; }
-        .rp-btns button { font-family: 'Bebas Neue', sans-serif; font-size: 20px; width: 54px; height: 46px; border-radius: 6px; cursor: pointer; border: none; }
+        .rp-btns button { font-family: 'Bebas Neue', sans-serif; font-size: 22px; width: 66px; height: 54px; border-radius: 6px; cursor: pointer; border: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; transition: filter .1s ease, outline-color .1s ease; }
+        .rp-btns button .kc { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1px; opacity: .6; margin-top: 3px; }
+        .rp-btns button.keyflash { outline: 3px solid var(--white); outline-offset: 1px; filter: brightness(1.4); }
         .rp-plus { background: var(--gold); color: #1a1a1a; }
         .rp-minus { background: #2a2a2a; color: var(--dim); }
+        .key-legend { text-align: center; color: var(--dim); font-size: 12px; letter-spacing: .5px; margin-top: 12px; }
+        .key-legend b { color: var(--gold); font-weight: 700; }
         .run-vs { display: flex; align-items: center; font-family: 'Bebas Neue', sans-serif; color: var(--dim); font-size: 20px; }
         .run-timer { text-align: center; margin: 16px 0 6px; }
         .rt-time { font-family: 'Bebas Neue', sans-serif; font-size: 66px; line-height: 1; letter-spacing: 3px; font-variant-numeric: tabular-nums; }
@@ -240,23 +245,24 @@
                 <div class="rp-name" id="ra-name"></div>
                 <div class="rp-team" id="ra-team"></div>
                 <div class="rp-score" id="ra-score">0</div>
-                <div class="rp-btns"><button type="button" class="rp-minus" id="ra-minus">−</button><button type="button" class="rp-plus" id="ra-plus">+1</button></div>
+                <div class="rp-btns"><button type="button" class="rp-minus" id="ra-minus">−<span class="kc">Q</span></button><button type="button" class="rp-plus" id="ra-plus">+1<span class="kc">W</span></button></div>
             </div>
             <div class="run-vs">VS</div>
             <div class="run-p" id="run-b">
                 <div class="rp-name" id="rb-name"></div>
                 <div class="rp-team" id="rb-team"></div>
                 <div class="rp-score" id="rb-score">0</div>
-                <div class="rp-btns"><button type="button" class="rp-minus" id="rb-minus">−</button><button type="button" class="rp-plus" id="rb-plus">+1</button></div>
+                <div class="rp-btns"><button type="button" class="rp-minus" id="rb-minus">−<span class="kc">O</span></button><button type="button" class="rp-plus" id="rb-plus">+1<span class="kc">P</span></button></div>
             </div>
         </div>
+        <div class="key-legend">Keys — Left: <b>Q</b> −&ensp;<b>W</b> +&emsp;·&emsp;Right: <b>O</b> −&ensp;<b>P</b> +&emsp;·&emsp;<b>Space</b> timer</div>
         <div class="run-timer">
-            <div class="rt-time" id="rt-time">1:00</div>
+            <div class="rt-time" id="rt-time">2:00</div>
             <div class="run-timer-ctrls">
                 <button type="button" class="tc start" id="tc-start">Start</button>
                 <button type="button" class="tc" id="tc-reset">Reset</button>
                 <span class="sec-label">SEC</span>
-                <input class="sec" id="tc-sec" type="number" inputmode="numeric" min="5" max="600" value="60" title="Timer seconds" aria-label="Timer seconds">
+                <input class="sec" id="tc-sec" type="number" inputmode="numeric" min="5" max="600" value="120" title="Timer seconds" aria-label="Timer seconds">
                 <button type="button" class="tc" id="tc-crowd">📺 Crowd Screen</button>
             </div>
         </div>
@@ -517,7 +523,7 @@
     function resetTimer() {
         if (!run) return;
         if (run.running) stopTimer();
-        run.duration = Math.max(5, Math.min(600, parseInt($('tc-sec').value, 10) || 60));
+        run.duration = Math.max(5, Math.min(600, parseInt($('tc-sec').value, 10) || 120));
         run.remaining = run.duration; paintTimer(); broadcast();
     }
     function paintScores() { $('ra-score').textContent = run.scoreA; $('rb-score').textContent = run.scoreB; }
@@ -533,7 +539,7 @@
         var m = r.matchups.filter(function (x) { return x.id === id; })[0];
         if (!m) return;
         if (run && run.handle) clearInterval(run.handle);
-        var dur = Math.max(5, Math.min(600, parseInt($('tc-sec').value, 10) || 60));
+        var dur = Math.max(5, Math.min(600, parseInt($('tc-sec').value, 10) || 120));
         run = { round: parseInt(round, 10), id: id, a: m.a, b: m.b, scoreA: 0, scoreB: 0,
             duration: dur, remaining: dur, running: false, handle: null, finished: false, _last: 0 };
         $('run-round').textContent = roundName(r.round, state.bracket.rounds.length, r);
@@ -565,10 +571,20 @@
         window.open('3pt-scoreboard.html', '3pt-crowd', 'width=1280,height=720');
     });
     $('run-close').addEventListener('click', closeMatch);
+    function flashKey(btn) { if (!btn) return; btn.classList.add('keyflash'); setTimeout(function () { btn.classList.remove('keyflash'); }, 140); }
+    // Scorekeeper shortcuts (only while the run panel is open):
+    //   Q/W = left player −/+ , O/P = right player −/+ , Space = timer
     document.addEventListener('keydown', function (e) {
-        if (e.code === 'Space' && run && !$('run-overlay').classList.contains('hidden')) {
-            e.preventDefault(); (run.running) ? stopTimer() : startTimer();
-        }
+        if (!run || $('run-overlay').classList.contains('hidden')) return;
+        var tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+        if (e.repeat) return;
+        if (e.code === 'Space') { e.preventDefault(); (run.running) ? stopTimer() : startTimer(); return; }
+        var k = e.key.toLowerCase();
+        if (k === 'q') { e.preventDefault(); bump('a', -1); flashKey($('ra-minus')); }
+        else if (k === 'w') { e.preventDefault(); bump('a', 1); flashKey($('ra-plus')); }
+        else if (k === 'o') { e.preventDefault(); bump('b', -1); flashKey($('rb-minus')); }
+        else if (k === 'p') { e.preventDefault(); bump('b', 1); flashKey($('rb-plus')); }
     });
     $('run-submit').addEventListener('click', function () {
         if (!run) return;
