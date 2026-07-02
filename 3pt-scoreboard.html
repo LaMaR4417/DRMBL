@@ -41,9 +41,11 @@
         .side .nm { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; text-transform: uppercase; text-align: center; line-height: .95; font-size: clamp(30px, 5.5vw, 84px); }
         .side .tm { color: var(--dim); text-transform: uppercase; letter-spacing: 3px; margin-top: 1vh; font-size: clamp(12px, 1.8vw, 24px); }
         .side .sc { font-family: 'Bebas Neue', sans-serif; line-height: .85; font-size: clamp(140px, 30vh, 460px); }
-        .side.lead, .side.win { background: linear-gradient(180deg, rgba(200,164,92,.22), rgba(200,164,92,.04) 62%, transparent 88%); }
-        .side.lead .nm, .side.lead .sc, .side.win .nm, .side.win .sc { color: var(--gold); }
+        .side.win { background: linear-gradient(180deg, rgba(200,164,92,.22), rgba(200,164,92,.04) 62%, transparent 88%); }
+        .side.win .nm, .side.win .sc { color: var(--gold); }
         .side.lose { opacity: .35; }
+        @keyframes goldpulse { 0% { background: rgba(200,164,92,.40); } 100% { background: transparent; } }
+        .side.pulse-gold { animation: goldpulse .55s ease; }
         .side .tag { margin-top: 1vh; font-family: 'Bebas Neue', sans-serif; letter-spacing: 4px; color: var(--gold); font-size: clamp(16px, 2.4vw, 32px); opacity: 0; }
         .side.win .tag { opacity: 1; }
 
@@ -95,6 +97,9 @@
     <script>
     (function () {
         var $ = function (id) { return document.getElementById(id); };
+        var prevA = null, prevB = null;
+
+        function pulse(id) { var el = $(id); el.classList.remove('pulse-gold'); void el.offsetWidth; el.classList.add('pulse-gold'); }
 
         function fmt(t) {
             t = Math.max(0, t == null ? 0 : t);
@@ -105,6 +110,7 @@
         function showIdle(msg) {
             $('board').classList.remove('show');
             $('idle').style.display = 'flex';
+            prevA = null; prevB = null;
             if (msg) $('idle-msg').textContent = msg;
         }
 
@@ -117,19 +123,20 @@
             $('a-team').textContent = (p.a && p.a.team) || '';
             $('b-name').textContent = (p.b && p.b.name) || '';
             $('b-team').textContent = (p.b && p.b.team) || '';
-            $('a-score').textContent = p.scoreA != null ? p.scoreA : 0;
-            $('b-score').textContent = p.scoreB != null ? p.scoreB : 0;
+            var sa = p.scoreA != null ? p.scoreA : 0, sb = p.scoreB != null ? p.scoreB : 0;
+            $('a-score').textContent = sa;
+            $('b-score').textContent = sb;
+
+            // Pulse the side that just scored (on an increase).
+            if (prevA != null && sa > prevA) pulse('side-a');
+            if (prevB != null && sb > prevB) pulse('side-b');
+            prevA = sa; prevB = sb;
 
             var a = $('side-a'), b = $('side-b');
-            a.classList.remove('win', 'lose', 'lead'); b.classList.remove('win', 'lose', 'lead');
+            a.classList.remove('win', 'lose'); b.classList.remove('win', 'lose');
             if (p.finished && p.winner) {
                 a.classList.add(p.winner === 'a' ? 'win' : 'lose');
                 b.classList.add(p.winner === 'b' ? 'win' : 'lose');
-            } else {
-                // Live: gold-fade whoever is currently leading.
-                var sa = p.scoreA || 0, sb = p.scoreB || 0;
-                if (sa > sb) a.classList.add('lead');
-                else if (sb > sa) b.classList.add('lead');
             }
 
             var timer = $('timer');
