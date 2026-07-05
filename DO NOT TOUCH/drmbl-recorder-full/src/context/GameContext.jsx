@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, useState, useRef, useCallback } from 'react';
 import { buildBoxScore, buildEmptyPlayerStats } from '../data/boxScore';
 import { subscribeLiveSync } from '../data/api';
+import { ALL_STAR_POOL, ALL_STAR_TEAMS } from '../data/allStars';
 
 const STORAGE_KEY = 'drmbl-tracker-active-game';
 const BROADCAST_CHANNEL = 'drmbl-live-game';
@@ -25,6 +26,11 @@ const initialState = {
 
   // Selected scheduled game from the season (null = custom matchup)
   selectedGame: null,
+
+  // All-Star exhibition mode: both sides share the ALL_STAR_POOL roster and the
+  // squad-assignment screen replaces the normal attendance screen. The game is
+  // always saved as customGame so it can't touch schedule/standings/stats.
+  allStarMode: false,
 
   // Team selections — set during game pick or custom matchup, roster loaded async from API
   // { teamID, name, slot, roster: [...] | null }
@@ -173,6 +179,27 @@ function gameReducer(state, action) {
       setNestedValue(newSettings, action.path, action.value);
       return { ...state, settings: newSettings };
     }
+
+    case 'START_ALLSTAR': {
+      // Seed both squads with the same shared pool; a player "claimed" on one
+      // side (attendance) is hidden on the other by the AllStar screen.
+      const pool = ALL_STAR_POOL.map((p) => ({ ...p }));
+      return {
+        ...initialState,
+        setupStep: 5,
+        allStarMode: true,
+        selectedLeague: { id: 'DRMBL' },
+        selectedSeason: null,
+        selectedGame: null,
+        homeTeam: { ...ALL_STAR_TEAMS.home, slot: null, roster: pool },
+        awayTeam: { ...ALL_STAR_TEAMS.away, slot: null, roster: pool.map((p) => ({ ...p })) },
+      };
+    }
+
+    // Attach the active season without clearing teams/attendance (SET_SEASON
+    // resets those — this fires in the background after START_ALLSTAR).
+    case 'ALLSTAR_SET_SEASON':
+      return { ...state, selectedSeason: action.season };
 
     case 'SET_HOME_TEAM':
       return {
@@ -735,6 +762,7 @@ function gameReducer(state, action) {
         selectedLeague: action.selectedLeague || null,
         selectedSeason: action.selectedSeason,
         selectedGame: action.selectedGame || null,
+        allStarMode: !!action.allStarMode,
         homeTeam: action.homeTeam,
         awayTeam: action.awayTeam,
         boxScore: action.boxScore,

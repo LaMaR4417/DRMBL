@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGameDispatch } from '../context/GameContext';
 import { fetchLiveGames, deleteLiveGame } from '../data/api';
+import { startAllStarFlow } from '../data/allStars';
 import { useTranslation } from '../i18n/useTranslation';
 
 function formatQuarter(q) {
@@ -53,6 +54,7 @@ export default function HomeScreen() {
       selectedLeague: ts.selectedLeague || null,
       selectedSeason: ts.selectedSeason,
       selectedGame: ts.selectedGame || null,
+      allStarMode: !!ts.allStarMode,
       homeTeam: ts.homeTeam,
       awayTeam: ts.awayTeam,
       boxScore: game.boxScore,
@@ -144,6 +146,12 @@ export default function HomeScreen() {
             onClick={() => dispatch({ type: 'SET_STEP', step: 1 })}
           >
             {t('home', 'newGame')}
+          </button>
+          <button
+            className="btn btn-large btn-allstar"
+            onClick={() => startAllStarFlow(dispatch)}
+          >
+            {'⭐'} {t('home', 'allStarGame')}
           </button>
         </div>
       </div>

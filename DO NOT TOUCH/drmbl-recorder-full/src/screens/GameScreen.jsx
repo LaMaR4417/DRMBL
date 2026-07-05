@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGame, useGameDispatch, useLiveSync } from '../context/GameContext';
 import { syncLiveGame, saveEndGame } from '../data/api';
+import { ALL_STAR_FALLBACK_SEASON_ID } from '../data/allStars';
 import { useTranslation } from '../i18n/useTranslation';
 
 function formatClock(totalSeconds) {
@@ -108,7 +109,7 @@ export default function GameScreen() {
   const initialSynced = useRef(false);
 
   // Build metadata to persist alongside box score for resume support
-  const syncMeta = { settings: game.settings, selectedLeague: game.selectedLeague, selectedSeason: game.selectedSeason, selectedGame: game.selectedGame, homeTeam: game.homeTeam, awayTeam: game.awayTeam };
+  const syncMeta = { settings: game.settings, selectedLeague: game.selectedLeague, selectedSeason: game.selectedSeason, selectedGame: game.selectedGame, allStarMode: game.allStarMode, homeTeam: game.homeTeam, awayTeam: game.awayTeam };
 
   // One-time sync when GameScreen first mounts with a box score
   useEffect(() => {
@@ -581,7 +582,9 @@ export default function GameScreen() {
       game.awayTeam.teamID,
       game.homeTeam.slot,
       game.awayTeam.slot,
-      game.selectedSeason?.id,
+      // All-Star mode may not have finished (or failed) the background season
+      // fetch — the save API hard-requires a season id, so fall back.
+      game.selectedSeason?.id || (game.allStarMode ? ALL_STAR_FALLBACK_SEASON_ID : undefined),
       {
         scheduleGameId: game.selectedGame?.id || null,
         customGame: !game.selectedGame,

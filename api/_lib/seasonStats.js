@@ -277,6 +277,10 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
     for (var bi = 0; bi < boxScores.length; bi++) {
         var bs = boxScores[bi];
         if (!bs.teamInfo || !bs.teamInfo.home || !bs.teamInfo.away) continue;
+        // Exhibitions never feed season stats: custom/debug recordings and the
+        // All-Star game carry the season id but must not count toward player or
+        // team season totals, even when a later full recompute sweeps them in.
+        if (bs.customGame === true || bs.allStarGame === true) continue;
         // Only count completed games
         var status = bs.gameInfo && bs.gameInfo.general && bs.gameInfo.general.status;
         if (status !== 'final') continue;

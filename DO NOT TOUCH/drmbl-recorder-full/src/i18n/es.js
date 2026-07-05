@@ -16,6 +16,7 @@ export const es = {
     title: 'STAT TRACKER',
     subtitle: 'App de Estadísticas de Baloncesto',
     newGame: 'Nuevo Juego',
+    allStarGame: 'Juego de Estrellas',
     resumeGame: 'Reanudar Juego',
     vs: 'vs',
     loadingGames: 'Cargando juegos activos...',
@@ -23,6 +24,13 @@ export const es = {
     activeGames: 'Juegos Activos',
     live: 'EN VIVO',
     stopped: 'DETENIDO',
+  },
+
+  allstar: {
+    screenTitle: 'Juego de Estrellas — Equipos',
+    hint: 'Toca un jugador para asignarlo a ese equipo — desaparecerá de la otra lista. Tócalo de nuevo para regresarlo a ambas. Los números y capitanes son opcionales.',
+    loadingSettings: 'Cargando configuración...',
+    needPlayers: 'Cada equipo necesita al menos 5 jugadores',
   },
 
   leagueSelect: {

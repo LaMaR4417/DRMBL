@@ -24,6 +24,9 @@ export default function GameSelectScreen() {
       const all = [];
       for (const week of season.weeklySchedule) {
         for (const g of week.games || []) {
+          // Title-only event cards (All-Star ceremonies/contests) have no
+          // home/away matchup — nothing to record, and resolveSlot would throw.
+          if (!g.home || !g.away) continue;
           all.push({ ...g, week: week.week, weekDate: week.date, weekType: week.type || null });
         }
       }
@@ -34,6 +37,7 @@ export default function GameSelectScreen() {
 
   // Resolve slot letters to team names, handling seeded placeholders via standings
   function resolveSlot(slot) {
+    if (typeof slot !== 'string') return '';
     // Check if it's a seed reference like "#1 Seed"
     const seedMatch = slot.match(/^#(\d+) Seed$/);
     if (seedMatch) {
@@ -197,7 +201,10 @@ export default function GameSelectScreen() {
                 const isSelected = game.selectedGame?.id === g.id;
                 const homeInGame = inGameTeams.has(homeName);
                 const awayInGame = inGameTeams.has(awayName);
-                const disabled = !resolvable || homeInGame || awayInGame;
+                // All-Star week matchups use ad-hoc squads — record them via
+                // the dedicated All-Star flow, not the scheduled-game path.
+                const isAllStarWeek = g.weekType === 'allstar';
+                const disabled = !resolvable || homeInGame || awayInGame || isAllStarWeek;
 
                 return (
                   <button

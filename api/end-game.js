@@ -358,6 +358,9 @@ module.exports = async function (req, res) {
                 for (var pi = 0; pi < allGames.length; pi++) {
                     var pg = allGames[pi];
                     if (pg.completion) continue; // already played, skip
+                    // Event cards (e.g. All-Star week ceremonies) have a title but no
+                    // home/away matchup — nothing to resolve, and .match() would throw.
+                    if (typeof pg.home !== "string" || typeof pg.away !== "string") continue;
 
                     // Resolve #N Seed patterns
                     if (seedToSlot[pg.home]) {

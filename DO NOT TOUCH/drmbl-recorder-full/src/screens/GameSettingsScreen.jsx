@@ -8,6 +8,8 @@ export default function GameSettingsScreen() {
   const dispatch = useGameDispatch();
   const { t } = useTranslation();
   const settings = game.settings;
+  // All-Star mode skips game select (step 3), so Back returns to squad assignment.
+  const backStep = game.allStarMode ? 5 : 3;
 
   const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +95,7 @@ export default function GameSettingsScreen() {
     return (
       <div className="screen settings-screen">
         <div className="screen-header">
-          <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 3 })}>
+          <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: backStep })}>
             {t('common', 'back')}
           </button>
           <h2>{t('settings', 'screenTitle')}</h2>
@@ -108,7 +110,7 @@ export default function GameSettingsScreen() {
     return (
       <div className="screen settings-screen">
         <div className="screen-header">
-          <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 3 })}>
+          <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: backStep })}>
             {t('common', 'back')}
           </button>
           <h2>{t('settings', 'screenTitle')}</h2>
@@ -129,7 +131,7 @@ export default function GameSettingsScreen() {
   return (
     <div className="screen settings-screen">
       <div className="screen-header">
-        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 3 })}>
+        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: backStep })}>
           {t('common', 'back')}
         </button>
         <h2>{t('settings', 'screenTitle')}</h2>

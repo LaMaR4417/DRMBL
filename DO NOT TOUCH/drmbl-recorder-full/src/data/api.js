@@ -14,6 +14,15 @@ export async function fetchSeasons() {
   return data.seasons || [];
 }
 
+// The active DRMBL season (registry-driven lookup). Used by All-Star mode,
+// which skips the league/season pick but still needs the season id at save time.
+export async function fetchDrmblActiveSeason() {
+  const res = await fetch('/api/seasons?league=drmbl');
+  if (!res.ok) throw new Error('Failed to load active DRMBL season');
+  const data = await res.json();
+  return data.season || null;
+}
+
 export async function fetchSeasonTeams(seasonId) {
   const url = seasonId
     ? `/api/season?id=${encodeURIComponent(seasonId)}`
@@ -85,6 +94,7 @@ export function syncLiveGame(boxScore, meta) {
         selectedLeague: meta.selectedLeague || null,
         selectedSeason: meta.selectedSeason,
         selectedGame: meta.selectedGame || null,
+        allStarMode: !!meta.allStarMode,
         homeTeam: meta.homeTeam,
         awayTeam: meta.awayTeam,
       } : null,

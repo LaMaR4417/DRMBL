@@ -47,7 +47,7 @@ function gatherCompletedRegularGames(seasonDoc, standingsMap) {
     if (seasonDoc.weeklySchedule) {
         for (var wi = 0; wi < seasonDoc.weeklySchedule.length; wi++) {
             var wk = seasonDoc.weeklySchedule[wi];
-            if (wk.type === "seeded" || wk.type === "playoffs") continue;
+            if (wk.type === "seeded" || wk.type === "playoffs" || wk.type === "allstar") continue;
             var games = wk.games || [];
             for (var gi = 0; gi < games.length; gi++) {
                 var g = games[gi];
@@ -166,7 +166,7 @@ function recomputeStandings(seasonDoc) {
     if (seasonDoc.weeklySchedule) {
         for (var wi = 0; wi < seasonDoc.weeklySchedule.length; wi++) {
             var wk = seasonDoc.weeklySchedule[wi];
-            if (wk.type === "seeded" || wk.type === "playoffs") continue;
+            if (wk.type === "seeded" || wk.type === "playoffs" || wk.type === "allstar") continue;
             var games = wk.games || [];
 
             for (var gi = 0; gi < games.length; gi++) {

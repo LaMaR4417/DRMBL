@@ -16,6 +16,7 @@ export const en = {
     title: 'STAT TRACKER',
     subtitle: 'Basketball Scorekeeping App',
     newGame: 'New Game',
+    allStarGame: 'All-Star Game',
     resumeGame: 'Resume Game',
     vs: 'vs',
     loadingGames: 'Loading active games...',
@@ -23,6 +24,13 @@ export const en = {
     activeGames: 'Active Games',
     live: 'LIVE',
     stopped: 'STOPPED',
+  },
+
+  allstar: {
+    screenTitle: 'All-Star Game — Squads',
+    hint: 'Tap a player to put them on that squad — they disappear from the other side. Tap again to release them back to both lists. Numbers and captains are optional.',
+    loadingSettings: 'Loading game settings...',
+    needPlayers: 'Each squad needs at least 5 players',
   },
 
   leagueSelect: {
