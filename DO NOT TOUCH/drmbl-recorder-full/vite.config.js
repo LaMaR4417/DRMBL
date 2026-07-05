@@ -49,9 +49,26 @@ function serveProjectRoot() {
   }
 }
 
+// Mirrors the built index.html to /drmbl-recorder/all-star/ after every build.
+// That path is the dedicated All-Star entry: same bundle (assets load from the
+// absolute /drmbl-recorder/full/assets/ URLs), and App.jsx switches into
+// All-Star mode by pathname. A real file is required — vercel.json rewrites
+// can't target *.html destinations while cleanUrls is on.
+function copyAllStarEntry() {
+  return {
+    name: 'copy-all-star-entry',
+    closeBundle() {
+      const src = path.resolve(projectRoot, 'drmbl-recorder/full/index.html')
+      const destDir = path.resolve(projectRoot, 'drmbl-recorder/all-star')
+      fs.mkdirSync(destDir, { recursive: true })
+      fs.copyFileSync(src, path.join(destDir, 'index.html'))
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), serveProjectRoot()],
+  plugins: [react(), serveProjectRoot(), copyAllStarEntry()],
   base: '/drmbl-recorder/full/',
   build: {
     outDir: '../../drmbl-recorder/full',
