@@ -155,6 +155,13 @@ module.exports = async function (req, res) {
                     cleanedBS.id = baseId + '.g' + (attempt + 1);
                     continue;
                 }
+                if (createErr && createErr.code === 409 && customGame) {
+                    // Custom/All-Star re-save (End Game → Back to Game → End
+                    // Game keeps the same timestamped id): overwrite so the
+                    // corrected final wins instead of failing forever.
+                    await boxScoresContainer.items.upsert(cleanedBS);
+                    break;
+                }
                 throw createErr;
             }
         }

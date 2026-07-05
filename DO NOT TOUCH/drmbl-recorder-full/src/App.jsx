@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { GameProvider, useGame, useGameDispatch } from './context/GameContext';
+import { GameProvider, useGame, useGameDispatch, getSavedGame } from './context/GameContext';
 import { LanguageProvider } from './context/LanguageContext';
 import LangToggle from './components/LangToggle';
 import TipOffOverlay from './components/TipOffOverlay';
@@ -34,7 +34,15 @@ function AppContent() {
   useEffect(() => {
     if (bootedRef.current) return;
     bootedRef.current = true;
-    if (isAllStarEntry()) startAllStarFlow(dispatch);
+    if (!isAllStarEntry()) return;
+    // A mid-game refresh must NOT boot a fresh setup: a new all-star game
+    // reuses the same deterministic gameId and would overwrite the live doc.
+    // If this device has an unfinished game snapshot, land on Home so the
+    // operator resumes it; the ⭐ button remains the deliberate fresh start.
+    const saved = getSavedGame();
+    const inProgress = saved?.boxScore && saved.boxScore.gameInfo?.general?.status !== 'final';
+    if (inProgress) return;
+    startAllStarFlow(dispatch);
   }, [dispatch]);
 
   switch (game.setupStep) {

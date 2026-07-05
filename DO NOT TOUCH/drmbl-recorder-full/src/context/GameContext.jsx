@@ -101,6 +101,7 @@ function gameReducer(state, action) {
     case 'SET_LEAGUE':
       return {
         ...state,
+        allStarMode: false,
         selectedLeague: action.league,
         selectedSeason: null,
         selectedGame: null,

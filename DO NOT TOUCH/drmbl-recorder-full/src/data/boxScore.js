@@ -161,6 +161,22 @@ export function buildBoxScore(gameState) {
       ? `${leaguePrefix.toLowerCase()}-custom-${slugify(homeName)}-vs-${slugify(awayName)}`
       : `${slugify(homeName)}-vs-${slugify(awayName)}`;
 
+  // All-Star shared pool: each side's box-score roster must exclude players
+  // claimed by the OTHER squad, or the in-game Late Add list would offer
+  // players who are actively playing on the opposite team.
+  let homeTeamSrc = gameState.homeTeam;
+  let awayTeamSrc = gameState.awayTeam;
+  if (isAllStar) {
+    homeTeamSrc = {
+      ...gameState.homeTeam,
+      roster: gameState.homeTeam.roster.filter((p) => !gameState.awayAttendance.has(p.playerID)),
+    };
+    awayTeamSrc = {
+      ...gameState.awayTeam,
+      roster: gameState.awayTeam.roster.filter((p) => !gameState.homeAttendance.has(p.playerID)),
+    };
+  }
+
   return {
     id,
     gameId,
@@ -195,7 +211,7 @@ export function buildBoxScore(gameState) {
     },
     teamInfo: {
       home: buildTeamSide(
-        gameState.homeTeam,
+        homeTeamSrc,
         gameState.homeAttendance,
         gameState.homeNumberOverrides,
         gameState.homeStarters,
@@ -203,7 +219,7 @@ export function buildBoxScore(gameState) {
         gameState.settings,
       ),
       away: buildTeamSide(
-        gameState.awayTeam,
+        awayTeamSrc,
         gameState.awayAttendance,
         gameState.awayNumberOverrides,
         gameState.awayStarters,

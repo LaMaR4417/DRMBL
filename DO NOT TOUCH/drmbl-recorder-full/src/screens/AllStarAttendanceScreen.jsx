@@ -314,11 +314,15 @@ export default function AllStarAttendanceScreen() {
   return (
     <div className="screen attendance-screen allstar-screen">
       <div className="screen-header">
-        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 4 })}>
-          {t('common', 'back')}
+        {/* Plain step change (not RESET_GAME): reset would delete the localStorage
+            snapshot that guards an unfinished game against the ?allstar auto-boot. */}
+        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
+          {t('common', 'home')}
         </button>
         <h2>{'⭐'} {t('allstar', 'screenTitle')}</h2>
-        <div className="header-spacer" />
+        <button className="btn btn-back" onClick={() => dispatch({ type: 'SET_STEP', step: 4 })}>
+          {t('settings', 'screenTitle')}
+        </button>
       </div>
 
       <p className="allstar-hint">{t('allstar', 'hint')}</p>
