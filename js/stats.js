@@ -4,8 +4,19 @@
     // players still appear on the leaderboards and grid, marked with *.
     var minGamesQualified = 4;
 
-    function isQualified(p) { return (p.gamesPlayed || 0) >= minGamesQualified; }
+    function isQualified(p) { return (p.gamesPlayed || 0) >= qualThreshold(); }
     function nameWithAsterisk(p) { return (p.name || '') + (isQualified(p) ? '' : '*'); }
+
+    // Regular-season vs playoff leaderboards. The stats doc carries both datasets:
+    //   players / teams               → regular season
+    //   playoffPlayers / playoffTeams → playoffs
+    var activeMode = 'regular';
+    function curPlayers() { return (statsDoc && (activeMode === 'playoffs' ? statsDoc.playoffPlayers : statsDoc.players)) || []; }
+    function curTeams() { return (statsDoc && (activeMode === 'playoffs' ? statsDoc.playoffTeams : statsDoc.teams)) || []; }
+    function hasPlayoffStats() { return !!(statsDoc && statsDoc.playoffPlayers && statsDoc.playoffPlayers.length); }
+    // Playoffs have only a handful of games, so the regular-season qualification gate
+    // (minGamesQualified) doesn't apply — anyone who played a playoff game qualifies.
+    function qualThreshold() { return activeMode === 'playoffs' ? 1 : minGamesQualified; }
 
     // ── State ──
     var statsDoc = null;
@@ -129,9 +140,46 @@
         els.detail.classList.add('hidden');
     }
 
+    // ── Mode toggle (Regular Season / Playoffs) ──
+    // Only shown once playoff games exist; swaps which dataset the leaderboards read.
+    function renderModeToggle() {
+        if (!els.modeToggle) return;
+        if (!hasPlayoffStats()) {
+            els.modeToggle.classList.add('hidden');
+            els.modeToggle.innerHTML = '';
+            return;
+        }
+        els.modeToggle.classList.remove('hidden');
+        els.modeToggle.innerHTML =
+            '<button type="button" class="stats-mode-btn' + (activeMode === 'regular' ? ' active' : '') + '" data-mode="regular">Regular Season</button>' +
+            '<button type="button" class="stats-mode-btn' + (activeMode === 'playoffs' ? ' active' : '') + '" data-mode="playoffs">Playoffs</button>';
+        var btns = els.modeToggle.querySelectorAll('.stats-mode-btn');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].addEventListener('click', function () {
+                var mode = this.getAttribute('data-mode');
+                if (mode === activeMode) return;
+                activeMode = mode;
+                renderModeToggle();
+                // Re-render the active view. Team filter resets to 'all' since the
+                // two datasets can have different teams.
+                if (els.detail && !els.detail.classList.contains('hidden')) {
+                    var stat = els.detailStat.value || 'ppg';
+                    primarySort = { field: stat, dir: 'desc' };
+                    renderDetail(stat, 'all');
+                    setUrlState(stat, 'all');
+                } else {
+                    renderLanding();
+                    setUrlState(null, null);
+                }
+            });
+        }
+    }
+
     // ── URL state ──
     function applyUrlState() {
         var params = new URLSearchParams(window.location.search);
+        activeMode = (params.get('mode') === 'playoffs' && hasPlayoffStats()) ? 'playoffs' : 'regular';
+        renderModeToggle();
         var stat = params.get('stat');
         var team = params.get('team');
         primarySort = null;
@@ -145,11 +193,12 @@
 
     function setUrlState(stat, team) {
         var p = new URLSearchParams();
+        if (activeMode === 'playoffs') p.set('mode', 'playoffs');
         if (stat) p.set('stat', stat);
         if (team && team !== 'all') p.set('team', team);
         var search = p.toString();
         var url = window.location.pathname + (search ? '?' + search : '');
-        history.pushState({ stat: stat, team: team }, '', url);
+        history.pushState({ stat: stat, team: team, mode: activeMode }, '', url);
     }
 
     // ── Landing render ──
@@ -191,7 +240,7 @@
     }
 
     function renderLeaderboardCard(statDef) {
-        var players = (statsDoc.players || [])
+        var players = curPlayers()
             .filter(function (p) { return p.gamesPlayed > 0; })
             .sort(function (a, b) { return statDef.accessor(b) - statDef.accessor(a); })
             .slice(0, 5);
@@ -222,7 +271,7 @@
     }
 
     function renderTeamCard(statDef) {
-        var teams = (statsDoc.teams || [])
+        var teams = curTeams()
             .filter(function (t) { return t.gamesPlayed > 0; })
             .sort(function (a, b) {
                 if (statDef.ascending) return statDef.accessor(a) - statDef.accessor(b);
@@ -273,8 +322,9 @@
         var teamSel = els.detailTeam;
         teamSel.innerHTML = '<option value="all">All Teams</option>';
         var teamSet = {};
-        for (var p = 0; p < (statsDoc.players || []).length; p++) {
-            var pl = statsDoc.players[p];
+        var modePlayers = curPlayers();
+        for (var p = 0; p < modePlayers.length; p++) {
+            var pl = modePlayers[p];
             if (pl.teamID && !teamSet[pl.teamID]) {
                 teamSet[pl.teamID] = pl.teamName;
             }
@@ -299,7 +349,7 @@
         var pdir = primarySort && primarySort.dir;
 
         var hideUnqualified = els.detailQualified && els.detailQualified.getAttribute('aria-pressed') === 'true';
-        var players = (statsDoc.players || [])
+        var players = curPlayers()
             .filter(function (p) { return p.gamesPlayed > 0; })
             .filter(function (p) { return !hideUnqualified || isQualified(p); })
             .filter(function (p) { return teamFilter === 'all' || p.teamID === teamFilter; })
@@ -319,7 +369,9 @@
             });
 
         var html = '<div class="stats-table-area">';
-        html += '<p class="stats-qualified-note">* Players with fewer than ' + minGamesQualified + ' games are not yet qualified for stat leaders.</p>';
+        if (activeMode === 'regular') {
+            html += '<p class="stats-qualified-note">* Players with fewer than ' + minGamesQualified + ' games are not yet qualified for stat leaders.</p>';
+        }
         html += '<div class="stats-scroll-top"><div class="stats-scroll-top-inner"></div></div>';
         html += '<div class="stats-table-wrap">';
         html += '<table class="stats-table">';
@@ -453,6 +505,7 @@
     function init() {
         els.landing = document.getElementById('stats-landing');
         els.detail = document.getElementById('stats-detail');
+        els.modeToggle = document.getElementById('stats-mode-toggle');
         els.back = document.getElementById('stats-back');
         els.detailStat = document.getElementById('stats-detail-stat');
         els.detailQualified = document.getElementById('stats-detail-qualified');

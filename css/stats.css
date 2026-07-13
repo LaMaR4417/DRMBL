@@ -1,5 +1,38 @@
 /* ── STATS PAGE ── */
 
+/* Regular Season / Playoffs mode toggle (segmented control) */
+.stats-mode-toggle {
+    display: flex;
+    max-width: 360px;
+    margin: 0 auto 28px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.stats-mode-toggle.hidden {
+    display: none;
+}
+.stats-mode-btn {
+    flex: 1;
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.55);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.stats-mode-btn:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+.stats-mode-btn.active {
+    background: #d4a23a;
+    color: #1a1a1a;
+}
+
 /* Player name links → profile page (inherit color, underline on hover) */
 .stats-card-player-link,
 .st-player-link {

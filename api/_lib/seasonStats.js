@@ -251,6 +251,21 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
     var leagueAbbr = (seasonDoc.league && seasonDoc.league.abbreviation) || 'Unknown';
     var seasonId = seasonDoc.id;
 
+    // Box scores tied to playoff weeks (schedule weeks with type:'playoffs') are
+    // aggregated into a SEPARATE playoff leaderboard so the regular-season leaders
+    // stay regular-season-only. Everything else counts as a regular-season game.
+    var playoffIds = {};
+    var wsched = seasonDoc.weeklySchedule || [];
+    for (var wsi = 0; wsi < wsched.length; wsi++) {
+        if (wsched[wsi].type !== 'playoffs') continue;
+        var pgs = wsched[wsi].games || [];
+        for (var pgi = 0; pgi < pgs.length; pgi++) {
+            if (pgs[pgi].boxScoreID) playoffIds[pgs[pgi].boxScoreID] = true;
+        }
+    }
+
+    // Aggregate one subset of box scores into { players, teams, processed }.
+    function aggregate(subset) {
     // playerID → entry  (only includes players who actually played at least 1 game)
     var playerMap = {};
     // teamID → entry  (initialize from season.teams, so 0-game teams still appear)
@@ -274,8 +289,8 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
 
     var processed = 0;
 
-    for (var bi = 0; bi < boxScores.length; bi++) {
-        var bs = boxScores[bi];
+    for (var bi = 0; bi < subset.length; bi++) {
+        var bs = subset[bi];
         if (!bs.teamInfo || !bs.teamInfo.home || !bs.teamInfo.away) continue;
         // Exhibitions never feed season stats: custom/debug recordings and the
         // All-Star game carry the season id but must not count toward player or
@@ -392,6 +407,23 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
         te.averages = computeTeamAverages(te.totals, te.gamesPlayed, te.gamesWithFullStats);
     }
 
+        return {
+            players: Object.values(playerMap),
+            teams: Object.values(teamMap),
+            processed: processed
+        };
+    }
+
+    // Split box scores into regular-season vs playoff buckets and aggregate each.
+    var regularBS = [];
+    var playoffBS = [];
+    for (var xi = 0; xi < boxScores.length; xi++) {
+        if (playoffIds[boxScores[xi].id]) playoffBS.push(boxScores[xi]);
+        else regularBS.push(boxScores[xi]);
+    }
+    var reg = aggregate(regularBS);
+    var post = aggregate(playoffBS);
+
     // Stats doc ID uses slug-friendly league prefix (Copa Beta → Copa_Beta) so it
     // matches box-score / team-doc ID conventions across leagues.
     var leagueSlug = leagueAbbr.replace(/\s+/g, '_');
@@ -403,9 +435,12 @@ function recomputeSeasonStats(seasonDoc, boxScores) {
         seasonID: seasonId,
         leagueID: leagueAbbr,
         lastUpdated: new Date().toISOString(),
-        gamesProcessed: processed,
-        players: Object.values(playerMap),
-        teams: Object.values(teamMap)
+        gamesProcessed: reg.processed,
+        players: reg.players,
+        teams: reg.teams,
+        playoffGamesProcessed: post.processed,
+        playoffPlayers: post.players,
+        playoffTeams: post.teams
     };
 }
 
