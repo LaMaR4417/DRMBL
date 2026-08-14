@@ -21,11 +21,12 @@ var SEASON_LABEL = 'Spring 2026 Season';
      stat    – short stat line shown under the name, e.g. '28.4 PPG' (optional)
      icon    – emoji shown on the card (optional)
      featured– true → big highlighted card up top. Featured cards sit
-               side-by-side in a row (MVP + DPOY).
+               side-by-side in a row (MVP + Finals MVP + DPOY).
    Add, remove, or reorder freely.
 ──────────────────────────────────────────────────────────────────────────── */
 var PERSONAL_AWARDS = [
-    { id: 'mvp',  title: 'Most Valuable Player',         icon: '🏆', featured: true, winner: 'Christian Washington', team: 'R. Blitz', stat: '' },
+    { id: 'mvp',  title: 'Most Valuable Player',        icon: '🏆', featured: true, winner: 'Christian Washington', team: 'R. Blitz', stat: '' },
+    { id: 'fmvp', title: 'Finals Most Valuable Player', icon: '🏅', featured: true, winner: 'Gabriel Esquivel', team: 'R. Blitz', stat: '' },
     { id: 'dpoy', title: 'Defensive Player of the Year', icon: '🛡️', featured: true, winner: 'Tucker Terlizzi', team: 'R. Blitz', stat: '' }
 ];
 
@@ -182,7 +183,7 @@ var ALL_STAR_CONTESTS = [
         // Reveal-all / hide-all toggle.
         html += '<div class="awards-controls"><button type="button" class="awards-reveal-all" data-reveal="Reveal All" data-hide="Hide All">Reveal All</button></div>';
 
-        // Featured awards (MVP + DPOY) — side-by-side, equally large.
+        // Featured awards (MVP + Finals MVP + DPOY) — side-by-side, equally large.
         if (featured.length) {
             html += '<div class="award-featured-row">';
             for (var f = 0; f < featured.length; f++) {
